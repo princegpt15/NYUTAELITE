@@ -2,33 +2,30 @@ import type { Testimonial } from '../types';
 
 export const TESTIMONIALS: Testimonial[] = [
   {
-    id: 'test-1',
+    id: 'rev-1',
     rating: 5,
-    quote:
-      'The quality consistency from NYUTAELITE is unmatched. In the snack manufacturing business, uniform size and crunch are everything. Deliveries are always on schedule.',
-    name: 'Aravind Mehta',
-    role: 'Procurement Director',
-    company: 'NutriBites FMCG',
-    location: 'Mumbai',
-  },
-  {
-    id: 'test-2',
-    rating: 5,
-    quote:
-      'We switched to NYUTAELITE six months ago and our retail margins improved by 18%. The vacuum packaging preserves freshness remarkably well during monsoon.',
-    name: 'Priya Nanda',
-    role: 'Head of Purchasing',
-    company: 'Organic Mart Retail',
-    location: 'Delhi NCR',
-  },
-  {
-    id: 'test-3',
-    rating: 5,
-    quote:
-      'Transparent pricing, zero hassle with GST billing, and prompt customer support. Exactly what a wholesale distributor needs from a reliable bulk supplier.',
-    name: 'Suresh Jain',
-    role: 'Managing Partner',
-    company: 'Jain Superfoods Wholesale',
+    quote: 'The Premium 250g pack is outstanding. Big, clean nuts with virtually zero bitter seeds or hard shell pieces. Roasts up super crunchy!',
+    name: 'Ananya Sharma',
+    role: 'Verified Customer',
     location: 'Bangalore',
+    date: '15 Sep 2026',
+  },
+  {
+    id: 'rev-2',
+    rating: 5,
+    quote: 'We order the Normal 200g packs for daily tea time. Fresh, light, and delivered in air-tight packaging. Will definitely reorder.',
+    name: 'Vikram Singh',
+    role: 'Verified Customer',
+    location: 'Delhi',
+    date: '22 Sep 2026',
+  },
+  {
+    id: 'rev-3',
+    rating: 5,
+    quote: 'Superior quality makhana. You can visibly tell the difference between their Premium and standard grocery store brands.',
+    name: 'Priya Rajan',
+    role: 'Verified Customer',
+    location: 'Mumbai',
+    date: '28 Sep 2026',
   },
 ];

@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import prisma from '../lib/prisma.js';
 import { razorpayService } from '../services/razorpay.service.js';
 import { env } from '../config/env.js';
-import { PaymentStatus, PaymentProvider } from '@prisma/client';
+import { PaymentStatus, PaymentProvider, OrderStatus } from '@prisma/client';
 
 /**
  * Create a Razorpay order for an existing internal order.
@@ -11,21 +11,48 @@ import { PaymentStatus, PaymentProvider } from '@prisma/client';
  */
 export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = (req as any).user.id; // set by auth middleware
+    const userId = (req as any).user?.id;
     const { orderId } = req.body;
+
     // Fetch order and ensure ownership & payable status
-    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true },
+    });
+
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
+
     if (order.userId !== userId) {
       return res.status(403).json({ success: false, message: 'Forbidden' });
     }
-    if (order.paymentStatus !== 'PENDING' || order.status !== 'PENDING') {
-      return res.status(400).json({ success: false, message: 'Order is not payable' });
+
+    if (order.paymentStatus === PaymentStatus.CAPTURED) {
+      return res.status(400).json({ success: false, message: 'Order is already paid' });
     }
-    // Create Razorpay order via service
+
+    if (order.status === OrderStatus.CANCELLED) {
+      return res.status(400).json({ success: false, message: 'Order has been cancelled' });
+    }
+
+    // Create Razorpay order via service (authoritative totalAmount from DB)
     const razorpayOrder = await razorpayService.createRazorpayOrder(order.id);
+
+    // Create or update initial pending payment record
+    await prisma.payment.create({
+      data: {
+        orderId: order.id,
+        userId: order.userId,
+        provider: PaymentProvider.RAZORPAY,
+        providerOrderId: razorpayOrder.id,
+        amount: order.totalAmount,
+        currency: razorpayOrder.currency || 'INR',
+        status: PaymentStatus.PENDING,
+        signatureVerified: false,
+      },
+    });
+
     return res.json({
       success: true,
       data: {
@@ -43,59 +70,100 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
 
 /**
  * Verify payment signature from frontend after Razorpay checkout.
- * Updates Payment and Order statuses inside a transaction.
+ * Updates Payment and Order statuses, decrements product stock, and clears user cart in a transaction.
  */
 export const verifyPayment = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = (req as any).user.id;
+    const userId = (req as any).user?.id;
     const { orderId, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-    // Verify signature first
-    const isValid = razorpayService.verifyPaymentSignature({ razorpay_order_id, razorpay_payment_id, razorpay_signature });
+
+    // Verify cryptographic signature first
+    const isValid = razorpayService.verifyPaymentSignature({
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+    });
+
     if (!isValid) {
-      return res.status(400).json({ success: false, message: 'Invalid signature' });
+      return res.status(400).json({ success: false, message: 'Invalid payment signature' });
     }
+
     // Fetch internal order and ensure ownership
-    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true },
+    });
+
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
+
     if (order.userId !== userId) {
       return res.status(403).json({ success: false, message: 'Forbidden' });
     }
-    // Idempotency: check if payment already recorded
-    const existingPayment = await prisma.payment.findFirst({ where: { providerPaymentId: razorpay_payment_id } });
+
+    // Idempotency: check if payment already captured
+    const existingPayment = await prisma.payment.findFirst({
+      where: { providerPaymentId: razorpay_payment_id, status: PaymentStatus.CAPTURED },
+    });
+
     if (existingPayment) {
-      // Return existing state
       return res.json({ success: true, data: existingPayment });
     }
-    // Fetch Razorpay payment to double‑check amount
-    const razorpayPayment = await razorpayService.fetchPayment(razorpay_payment_id);
-    // Ensure amount is a number (paise) and convert to INR
-    const amount = Number(razorpayPayment.amount ?? 0) / 100;
-    // Transaction: create payment, update order statuses
+
+    // Execute payment recording, order update, stock decrement, and cart clearing inside a transaction
     await prisma.$transaction(async (tx) => {
+      // 1. Record / update payment
       await tx.payment.create({
         data: {
           orderId: order.id,
+          userId: order.userId,
           provider: PaymentProvider.RAZORPAY,
           providerOrderId: razorpay_order_id,
           providerPaymentId: razorpay_payment_id,
-          amount,
-          currency: razorpayPayment.currency,
+          amount: order.totalAmount,
+          currency: order.currency || 'INR',
           status: PaymentStatus.CAPTURED,
           signatureVerified: true,
-          rawResponse: razorpayPayment as any,
+          rawResponse: { razorpay_order_id, razorpay_payment_id, razorpay_signature },
         },
       });
+
+      // 2. Update order status to CONFIRMED and paymentStatus to CAPTURED
       await tx.order.update({
         where: { id: order.id },
         data: {
           paymentStatus: PaymentStatus.CAPTURED,
-          status: 'CONFIRMED',
+          status: OrderStatus.CONFIRMED,
+        },
+      });
+
+      // 3. Decrement stock for ordered items
+      for (const item of order.items) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            stock: {
+              decrement: item.quantity,
+            },
+          },
+        });
+      }
+
+      // 4. Clear user's active cart items
+      await tx.cartItem.deleteMany({
+        where: {
+          cart: {
+            userId: order.userId,
+          },
         },
       });
     });
-    const paymentRecord = await prisma.payment.findFirst({ where: { providerPaymentId: razorpay_payment_id } });
+
+    const paymentRecord = await prisma.payment.findFirst({
+      where: { providerPaymentId: razorpay_payment_id },
+    });
+
     return res.json({ success: true, data: paymentRecord });
   } catch (err) {
     next(err);
@@ -105,18 +173,31 @@ export const verifyPayment = async (req: Request, res: Response, next: NextFunct
 
 /**
  * Razorpay webhook handler.
- * Must be mounted with express.raw({ type: 'application/json' }) to preserve raw body.
+ * Verifies raw webhook signature using RAZORPAY_WEBHOOK_SECRET and processes events idempotently.
  */
 export const webhookHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const signature = req.headers['x-razorpay-signature'] as string;
-    const rawBody = req.body.toString(); // raw Buffer turned into string by raw middleware
+    const signature = (req.headers['x-razorpay-signature'] as string) || '';
+    const rawBody = (req as any).rawBody
+      ? (req as any).rawBody.toString('utf8')
+      : Buffer.isBuffer(req.body)
+      ? req.body.toString('utf8')
+      : typeof req.body === 'string'
+      ? req.body
+      : JSON.stringify(req.body);
+
     if (!signature || !razorpayService.verifyWebhookSignature(rawBody, signature)) {
       return res.status(400).json({ success: false, message: 'Invalid webhook signature' });
     }
-    const event = JSON.parse(rawBody);
-    const eventId = event?.payload?.payment?.entity?.id || event?.payload?.order?.entity?.id || '';
+
+    const event = typeof req.body === 'object' && !Buffer.isBuffer(req.body) ? req.body : JSON.parse(rawBody);
     const eventType = event.event;
+    const eventId =
+      event?.event_id ||
+      event?.id ||
+      (event?.payload?.payment?.entity?.id ? `${eventType}_${event.payload.payment.entity.id}` : '') ||
+      (event?.payload?.order?.entity?.id ? `${eventType}_${event.payload.order.entity.id}` : '') ||
+      `evt_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
     // Idempotent check – if already processed, return early
     const existing = await prisma.paymentWebhookEvent.findUnique({ where: { eventId } });
@@ -124,26 +205,144 @@ export const webhookHandler = async (req: Request, res: Response, next: NextFunc
       return res.json({ success: true, message: 'Event already processed' });
     }
 
-    // Process supported events inside a transaction; only after success we record the event as processed
+    // Process supported events inside a transaction
     await prisma.$transaction(async (tx) => {
       if (eventType === 'payment.captured') {
         const payment = event.payload.payment.entity;
-        await tx.payment.updateMany({
-          where: { providerPaymentId: payment.id, status: { not: PaymentStatus.CAPTURED } },
-          data: { status: PaymentStatus.CAPTURED, rawResponse: payment as any },
-        });
+        const razorpayOrderId = payment.order_id;
+
+        // Find associated internal order
+        const order = razorpayOrderId
+          ? await tx.order.findFirst({ where: { razorpayOrderId }, include: { items: true } })
+          : null;
+
+        if (order) {
+          // Check if already marked captured
+          if (order.paymentStatus !== PaymentStatus.CAPTURED) {
+            await tx.order.update({
+              where: { id: order.id },
+              data: {
+                paymentStatus: PaymentStatus.CAPTURED,
+                status: OrderStatus.CONFIRMED,
+              },
+            });
+
+            // Decrement stock
+            for (const item of order.items) {
+              await tx.product.update({
+                where: { id: item.productId },
+                data: {
+                  stock: {
+                    decrement: item.quantity,
+                  },
+                },
+              });
+            }
+
+            // Clear cart
+            await tx.cartItem.deleteMany({
+              where: {
+                cart: {
+                  userId: order.userId,
+                },
+              },
+            });
+          }
+
+          // Record or update payment record
+          const existingPayment = await tx.payment.findFirst({
+            where: { providerPaymentId: payment.id },
+          });
+
+          if (existingPayment) {
+            await tx.payment.update({
+              where: { id: existingPayment.id },
+              data: {
+                status: PaymentStatus.CAPTURED,
+                signatureVerified: true,
+                rawResponse: payment as any,
+              },
+            });
+          } else {
+            await tx.payment.create({
+              data: {
+                orderId: order.id,
+                userId: order.userId,
+                provider: PaymentProvider.RAZORPAY,
+                providerOrderId: payment.order_id,
+                providerPaymentId: payment.id,
+                amount: Number(payment.amount ?? 0) / 100,
+                currency: payment.currency || 'INR',
+                status: PaymentStatus.CAPTURED,
+                signatureVerified: true,
+                rawResponse: payment as any,
+              },
+            });
+          }
+        }
       } else if (eventType === 'payment.failed') {
         const payment = event.payload.payment.entity;
-        await tx.payment.updateMany({
-          where: { providerPaymentId: payment.id },
-          data: { status: PaymentStatus.FAILED, rawResponse: payment as any },
-        });
+        const razorpayOrderId = payment.order_id;
+        const order = razorpayOrderId
+          ? await tx.order.findFirst({ where: { razorpayOrderId } })
+          : null;
+
+        if (order) {
+          await tx.order.update({
+            where: { id: order.id },
+            data: { paymentStatus: PaymentStatus.FAILED },
+          });
+
+          await tx.payment.create({
+            data: {
+              orderId: order.id,
+              userId: order.userId,
+              provider: PaymentProvider.RAZORPAY,
+              providerOrderId: payment.order_id,
+              providerPaymentId: payment.id,
+              amount: Number(payment.amount ?? 0) / 100,
+              currency: payment.currency || 'INR',
+              status: PaymentStatus.FAILED,
+              signatureVerified: false,
+              rawResponse: payment as any,
+            },
+          });
+        }
       } else if (eventType === 'order.paid') {
         const rhOrder = event.payload.order.entity;
-        await tx.order.updateMany({
-          where: { razorpayOrderId: rhOrder.id, paymentStatus: { not: PaymentStatus.CAPTURED } },
-          data: { paymentStatus: PaymentStatus.CAPTURED, status: 'CONFIRMED' },
+        const order = await tx.order.findFirst({
+          where: { razorpayOrderId: rhOrder.id },
+          include: { items: true },
         });
+
+        if (order && order.paymentStatus !== PaymentStatus.CAPTURED) {
+          await tx.order.update({
+            where: { id: order.id },
+            data: {
+              paymentStatus: PaymentStatus.CAPTURED,
+              status: OrderStatus.CONFIRMED,
+            },
+          });
+
+          for (const item of order.items) {
+            await tx.product.update({
+              where: { id: item.productId },
+              data: {
+                stock: {
+                  decrement: item.quantity,
+                },
+              },
+            });
+          }
+
+          await tx.cartItem.deleteMany({
+            where: {
+              cart: {
+                userId: order.userId,
+              },
+            },
+          });
+        }
       } else if (eventType === 'refund.created' || eventType === 'refund.processed') {
         const refund = event.payload.refund.entity;
         await tx.payment.updateMany({
@@ -151,11 +350,13 @@ export const webhookHandler = async (req: Request, res: Response, next: NextFunc
           data: { status: PaymentStatus.REFUNDED, rawResponse: refund as any },
         });
       }
-      // Record the webhook event as processed only after successful DB updates
+
+      // Record webhook event as processed
       await tx.paymentWebhookEvent.create({
         data: { eventId, eventType, processed: true, processedAt: new Date() },
       });
     });
+
     return res.json({ success: true, message: 'Webhook processed' });
   } catch (err) {
     next(err);

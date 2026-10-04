@@ -12,10 +12,17 @@ export function validate(schema: ZodSchema<any>, source: 'body' | 'query' | 'par
     const result = schema.safeParse(data);
     if (!result.success) {
       const errors = result.error.format();
+      const flatErrors: string[] = [];
+      result.error.issues.forEach((issue) => {
+        const field = issue.path.join('.');
+        flatErrors.push(field ? `${field}: ${issue.message}` : issue.message);
+      });
+      const message = flatErrors.length > 0 ? `Validation error: ${flatErrors.join(', ')}` : 'Validation error';
+
       return res.status(422).json({
         success: false,
-        message: 'Validation error',
-        error: { code: 'VALIDATION_ERROR', details: errors },
+        message,
+        error: { code: 'VALIDATION_ERROR', details: errors, issues: result.error.issues },
       });
     }
     // replace the validated data (typed) back onto the request for downstream use

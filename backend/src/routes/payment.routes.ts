@@ -1,6 +1,5 @@
 // src/routes/payment.routes.ts
 import { Router } from 'express';
-import express from 'express'; // for raw middleware
 import { requireAuth, requireAdmin } from '../middleware/auth.middleware.js';
 import { validate } from '../middleware/validate.middleware.js';
 import { createOrderSchema, verifyPaymentSchema, refundSchema } from '../validators/payment.validator.js';
@@ -24,10 +23,9 @@ router.post(
   verifyPayment,
 );
 
-// Razorpay webhook – no auth, raw body needed
+// Razorpay webhook – no auth
 router.post(
   '/webhook',
-  express.raw({ type: 'application/json' }),
   webhookHandler,
 );
 

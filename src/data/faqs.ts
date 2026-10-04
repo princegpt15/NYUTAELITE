@@ -3,58 +3,65 @@ import type { FAQ } from '../types';
 export const FAQS: FAQ[] = [
   {
     id: 'faq-1',
-    question: 'What is the minimum order quantity?',
+    question: 'What is makhana?',
     answer:
-      'Our minimum order quantity (MOQ) is 10 KG. This allows businesses, specialty retailers, and regional brands to evaluate our Grade A quality before committing to larger commercial bulk batches.',
-    category: 'Orders & Pricing',
+      'Makhana (also known as fox nuts or puffed lotus seeds) is a natural plant-based snack harvested from Euryale ferox water plants. Naturally light, crisp, and nutrient-dense, it has been cherished in Indian culinary tradition for centuries.',
+    category: 'Product Information',
   },
   {
     id: 'faq-2',
-    question: 'Do you offer wholesale pricing?',
+    question: 'What is Premium Quality Makhana?',
     answer:
-      'Yes, absolutely. We offer tiered wholesale pricing directly linked to volume: 10–24 KG at ₹480/kg, 25–49 KG at ₹450/kg, 50–99 KG at ₹420/kg, and 100 KG+ at ₹390/kg. For container loads (1,000 KG+), our commercial sales team provides customized contract quotes.',
-    category: 'Orders & Pricing',
+      'Our Premium Quality Makhana is hand-selected for larger nut size, uniform round shape, pristine white color, and superior crisp expansion with minimal shell residue. Ideal for direct snacking or gourmet serving.',
+    category: 'Product Information',
   },
   {
     id: 'faq-3',
-    question: 'Where do you deliver?',
+    question: 'What is Normal Quality Makhana?',
     answer:
-      'We deliver pan-India to all commercial pin codes. Shipments are handled via specialized logistics partners with door delivery, palletized handling, and continuous freight tracking.',
-    category: 'Shipping & Delivery',
+      'Normal Quality Makhana is our standard everyday grade. While slightly more varied in size, it delivers the exact same authentic flavor and wholesome crunch, making it fantastic for daily roasting, home spicing, or traditional dishes.',
+    category: 'Product Information',
   },
   {
     id: 'faq-4',
-    question: 'How long does delivery take?',
+    question: 'What pack sizes are available?',
     answer:
-      'Orders are dispatched within 24–48 hours of confirmation. Delivery to metro cities (Delhi, Mumbai, Bangalore, Hyderabad, Chennai, Kolkata) takes 3–5 business days, while tier-2 and tier-3 locations typically take 5–7 business days.',
-    category: 'Shipping & Delivery',
+      'Both Premium and Normal qualities are offered in three convenient pouch sizes: 100g, 200g, and 250g. Each pack is sealed in air-tight food-grade packaging to maintain fresh crunch.',
+    category: 'Ordering & Delivery',
   },
   {
     id: 'faq-5',
-    question: 'Do you provide GST invoices?',
+    question: 'How can I order?',
     answer:
-      'Yes, 100%. Every single shipment is accompanied by a compliant GST tax invoice with full HSN code details (HSN 19041090), enabling your enterprise to claim complete Input Tax Credit (ITC).',
-    category: 'Billing & Compliance',
+      'Browse our pantry collection online, select your preferred quality and pack weight, click "Add to Cart" or "Buy Now", and proceed through our seamless online checkout.',
+    category: 'Ordering & Delivery',
   },
   {
     id: 'faq-6',
-    question: 'What quality grade is your makhana?',
+    question: 'What payment methods are supported?',
     answer:
-      'All our wholesale inventory is Grade A Premium (5+ Soot / Jumbo size). The nuts are machine-sorted for size uniformity, air-popped, moisture-checked to < 10%, and free from black residue or bitter seeds.',
-    category: 'Quality & Specifications',
+      'We accept all major secure payment methods via Razorpay, including UPI (Google Pay, PhonePe, Paytm), Credit and Debit Cards, Net Banking, and digital wallets.',
+    category: 'Ordering & Delivery',
   },
   {
     id: 'faq-7',
-    question: 'How is the makhana packaged for bulk transit?',
+    question: 'How long does delivery take?',
     answer:
-      'We pack in heavy-duty food-grade poly bags vacuum-sealed inside corrugated master export cartons (typically 10 KG or 25 KG per carton). This guarantees zero moisture ingress and prevents transit breakage.',
-    category: 'Quality & Specifications',
+      'Orders are packed and dispatched within 24 hours. Delivery typically takes 3 to 5 business days for major metro cities and 4 to 7 business days for regional locations across India.',
+    category: 'Ordering & Delivery',
   },
   {
     id: 'faq-8',
-    question: 'Can I request a sample before placing a large order?',
+    question: 'How can I track my order?',
     answer:
-      'Yes! Registered commercial buyers can request a verified 500g sample kit. You only pay nominal express courier charges, which get credited against your first bulk order.',
-    category: 'Orders & Pricing',
+      'Once your order is shipped, you will receive a tracking link via email and SMS. You can also view active order status anytime under your Account page on our website.',
+    category: 'Ordering & Delivery',
+  },
+  {
+    id: 'faq-9',
+    question: 'What is the return/refund policy?',
+    answer:
+      'If your package arrives damaged or unsealed, please notify us within 48 hours of delivery with photos of the package. We will immediately arrange a replacement or issue a full refund.',
+    category: 'Returns & Support',
   },
 ];

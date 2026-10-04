@@ -2,60 +2,60 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import lotusImg from '../assets/images/lotus-source.png';
-const brandEmblem = '/nyutaelite-logo.png';
+const brandEmblem = '/nyuta-elite-logo.png';
 
 export const About: React.FC = () => {
   return (
-    <div className="bg-[#FAF7F2] min-h-screen">
+    <div className="bg-[#FCFAF5] min-h-screen">
       {/* Hero Banner */}
-      <section className="bg-[#173F35] text-white py-16 lg:py-24 border-b border-[#12332B]">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 text-center max-w-3xl">
-          <span className="text-xs font-bold tracking-widest text-[#D8A62A] uppercase">
-            OUR HERITAGE & MISSION
+      <section className="bg-[#123B2A] text-white py-16 lg:py-24 border-b border-[#092218]">
+        <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-12 text-center max-w-3xl">
+          <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#C6A15B]">
+            OUR HERITAGE &amp; MISSION
           </span>
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight mt-2 mb-4">
-            From the Ponds of Mithila to India's Leading Food Businesses.
+          <h1 className="font-serif text-4xl sm:text-6xl font-bold tracking-wide mt-2 mb-4">
+            Freshly Harvested Makhana for Mindful Snacking.
           </h1>
-          <p className="text-sm sm:text-base text-[#A5BDB5] leading-relaxed">
-            NYUTAELITE Foods is dedicated to transforming makhana (fox nut) wholesale supply with transparent farm-gate procurement, strict grading, and seamless commercial logistics.
+          <p className="text-sm sm:text-base text-[#D5DED6] leading-relaxed">
+            NYUTA ELITE MAKHANA is dedicated to bringing authentic, carefully selected Euryale ferox (fox nuts) directly from freshwater lotus ponds to your home pantry.
           </p>
         </div>
       </section>
 
       {/* Origin & Story */}
-      <section className="py-16 sm:py-20">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-16 sm:py-24 border-b border-[#E8DECB]">
+        <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
             <div className="lg:col-span-6 space-y-5">
-              <span className="text-xs font-bold tracking-widest text-[#C89B3C] uppercase">
-                AUTHENTIC BIHAR SOURCING
+              <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#C6A15B]">
+                AUTHENTIC BIHAR HARVEST
               </span>
-              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#1C2520] tracking-tight">
-                Empowering Over 500+ Traditional Harvesting Families
+              <h2 className="font-serif text-3xl sm:text-5xl font-bold text-[#092218] leading-tight">
+                Cultivated by Traditional Harvesting Communities
               </h2>
-              <p className="text-sm sm:text-base text-[#5E6C65] leading-relaxed">
-                More than 85% of the world’s makhana is harvested in the freshwater wetlands of Bihar. For generations, local Mallah and farming communities have cultivated Euryale ferox with remarkable patience and skill.
+              <p className="text-sm sm:text-base text-[#68756E] leading-relaxed">
+                More than 85% of the world’s finest makhana is harvested in the pristine freshwater wetlands of Mithila, Bihar. For generations, local farming families have cultivated lotus plants with unmatched care and patience.
               </p>
-              <p className="text-sm sm:text-base text-[#5E6C65] leading-relaxed">
-                By eliminating intermediate agents, NYUTAELITE provides direct fair-price compensation to local cultivators while supplying FMCG manufacturers and distributors with consistent, Grade A wholesale quality.
+              <p className="text-sm sm:text-base text-[#68756E] leading-relaxed">
+                At NYUTA ELITE, we select only pure, unbleached, naturally air-popped fox nuts. Each pack is graded for uniform texture, size, and pop density before being sealed for ultimate crunch.
               </p>
 
-              <div className="pt-2">
+              <div className="pt-3">
                 <Link
-                  to="/products/premium-makhana"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#173F35] text-white font-semibold text-sm hover:bg-[#112F28] transition-colors"
+                  to="/products/makhana"
+                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-[#123B2A] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#092218] transition-colors"
                 >
-                  <span>Explore Bulk Grades</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span>Explore Pantry Packs</span>
+                  <ArrowRight className="w-4 h-4 text-[#C6A15B]" />
                 </Link>
               </div>
             </div>
 
             <div className="lg:col-span-6 flex justify-center">
-              <div className="relative w-full max-w-[480px] aspect-square rounded-3xl overflow-hidden shadow-lg border border-[#E6DFD3]">
+              <div className="relative w-full max-w-[480px] aspect-square rounded-2xl overflow-hidden shadow-md border border-[#E8DECB]">
                 <img
                   src={lotusImg}
-                  alt="Lotus seed pod in Bihar pond"
+                  alt="Lotus seed pod in Bihar freshwater pond"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -64,57 +64,57 @@ export const About: React.FC = () => {
         </div>
       </section>
 
-      {/* Brand Seal Showcase */}
-      <section className="bg-white py-16 border-y border-[#E6DFD3]">
-        <div className="max-w-[1000px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-center gap-8 bg-[#F7F2E8] p-8 rounded-3xl border border-[#E6DFD3]">
+      {/* Quality Seal */}
+      <section className="bg-white py-16 border-b border-[#E8DECB]">
+        <div className="max-w-[960px] mx-auto px-5 sm:px-8">
+          <div className="flex flex-col sm:flex-row items-center gap-8 bg-[#F7F1E5] p-8 rounded-2xl border border-[#E8DECB]">
             <img
               src={brandEmblem}
-              alt="NYUTAELITE Makhana Premium Quality Seal"
-              className="w-36 h-36 rounded-full shadow-md shrink-0 object-cover"
+              alt="NYUTA ELITE Makhana Quality Seal"
+              className="w-28 h-28 rounded-full shadow-sm shrink-0 object-cover border-2 border-[#C6A15B]"
             />
             <div className="space-y-2 text-center sm:text-left">
-              <span className="text-xs font-bold text-[#C89B3C] uppercase tracking-wider">
-                CERTIFIED BRAND SEAL
+              <span className="text-[11px] font-bold text-[#C6A15B] uppercase tracking-wider">
+                CERTIFIED BRAND GUARANTEE
               </span>
-              <h3 className="text-xl sm:text-2xl font-bold text-[#1C2520]">
-                NYUTAELITE Premium Quality Seal
+              <h3 className="font-serif text-2xl font-bold text-[#092218]">
+                The NYUTA ELITE Freshness Standard
               </h3>
-              <p className="text-xs sm:text-sm text-[#5E6C65] leading-relaxed">
-                Every batch certified under the NYUTAELITE quality assurance seal guarantees 100% vegetarian, non-GMO, naturally puffed fox nuts with full trace-back records to Bihar harvest clusters.
+              <p className="text-xs sm:text-sm text-[#68756E] leading-relaxed">
+                Every batch certified under the NYUTA ELITE seal guarantees 100% vegetarian, non-GMO, naturally puffed fox nuts with zero artificial colors or chemical bleaching.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Business Policy Sections (Legal Anchors) */}
-      <section className="py-16 max-w-[1000px] mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        <div id="privacy" className="bg-white p-8 rounded-3xl border border-[#E6DFD3] space-y-3">
-          <h3 className="text-xl font-bold text-[#1C2520]">Privacy Policy</h3>
-          <p className="text-xs sm:text-sm text-[#5E6C65] leading-relaxed">
-            NYUTAELITE Foods respects the privacy of all commercial customers. We collect business contact details, GST registration numbers, and warehouse shipping addresses strictly for invoicing, logistics compliance, and customer service. Data is never rented or sold to third-party advertisers.
+      {/* Customer Policies (Legal Anchors) */}
+      <section className="py-16 max-w-[960px] mx-auto px-5 sm:px-8 space-y-8">
+        <div id="privacy" className="bg-white p-8 rounded-2xl border border-[#E8DECB] space-y-3">
+          <h3 className="font-serif text-2xl font-bold text-[#092218]">Privacy Policy</h3>
+          <p className="text-xs sm:text-sm text-[#68756E] leading-relaxed">
+            NYUTA ELITE MAKHANA respects the privacy of all customers. We collect delivery information, email, and phone contact details strictly for order fulfillment, logistics tracking, and customer support. Your data is never rented or shared with third parties.
           </p>
         </div>
 
-        <div id="terms" className="bg-white p-8 rounded-3xl border border-[#E6DFD3] space-y-3">
-          <h3 className="text-xl font-bold text-[#1C2520]">Terms & Conditions</h3>
-          <p className="text-xs sm:text-sm text-[#5E6C65] leading-relaxed">
-            All bulk transactions on the NYUTAELITE B2B wholesale platform are governed by commercial procurement contracts. Minimum Order Quantity (MOQ) is 10 KG. Prices quoted on our website are wholesale base prices subject to 5% GST (HSN 19041090).
+        <div id="terms" className="bg-white p-8 rounded-2xl border border-[#E8DECB] space-y-3">
+          <h3 className="font-serif text-2xl font-bold text-[#092218]">Terms of Service</h3>
+          <p className="text-xs sm:text-sm text-[#68756E] leading-relaxed">
+            All orders placed on the NYUTA ELITE website are processed and shipped across India. Product prices include applicable GST. Prices and availability are subject to change without prior notice.
           </p>
         </div>
 
-        <div id="shipping" className="bg-white p-8 rounded-3xl border border-[#E6DFD3] space-y-3">
-          <h3 className="text-xl font-bold text-[#1C2520]">Shipping Policy</h3>
-          <p className="text-xs sm:text-sm text-[#5E6C65] leading-relaxed">
-            Orders are dispatched within 24 to 48 hours of order and payment confirmation. We utilize surface and air express cargo networks for pan-India coverage. Consignments are packed in multi-wall vacuum packs inside 7-ply corrugated cartons.
+        <div id="shipping" className="bg-white p-8 rounded-2xl border border-[#E8DECB] space-y-3">
+          <h3 className="font-serif text-2xl font-bold text-[#092218]">Shipping Policy</h3>
+          <p className="text-xs sm:text-sm text-[#68756E] leading-relaxed">
+            Orders are packed and dispatched within 24 hours of payment. Standard delivery takes 3 to 5 business days for major metro cities and 4 to 7 business days for regional pin codes. Free express shipping applies on orders above ₹499.
           </p>
         </div>
 
-        <div id="refund" className="bg-white p-8 rounded-3xl border border-[#E6DFD3] space-y-3">
-          <h3 className="text-xl font-bold text-[#1C2520]">Refund & Quality Guarantee Policy</h3>
-          <p className="text-xs sm:text-sm text-[#5E6C65] leading-relaxed">
-            In the rare event of transit damage or quality deviations against the batch Certificate of Analysis (COA), claims reported within 48 hours of delivery will be investigated for immediate replacement or credit note adjustment.
+        <div id="refund" className="bg-white p-8 rounded-2xl border border-[#E8DECB] space-y-3">
+          <h3 className="font-serif text-2xl font-bold text-[#092218]">Returns &amp; Refund Policy</h3>
+          <p className="text-xs sm:text-sm text-[#68756E] leading-relaxed">
+            In the event of transit damage or unsealed packages, claims reported within 48 hours of delivery will be processed immediately for full replacement or refund.
           </p>
         </div>
       </section>

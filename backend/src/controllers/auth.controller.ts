@@ -20,35 +20,49 @@ const loginSchema = z.object({
 
 export const register = [
   validate(registerSchema, 'body'),
-  async (req: Request, res: Response) => {
-    const body = req.body as RegisterBody;
-    const result = await authService.register(body);
-    return res.status(201).json({ success: true, message: 'User registered', data: result });
+  async (req: Request, res: Response, next: any) => {
+    try {
+      const body = req.body as RegisterBody;
+      const result = await authService.register(body);
+      res.status(201).json({ success: true, message: 'User registered', data: result });
+    } catch (err) {
+      next(err);
+    }
   },
 ];
 
 export const login = [
   validate(loginSchema, 'body'),
-  async (req: Request, res: Response) => {
-    const body = req.body as LoginBody;
-    const result = await authService.login(body);
-    return res.status(200).json({ success: true, message: 'Logged in', data: result });
+  async (req: Request, res: Response, next: any) => {
+    try {
+      const body = req.body as LoginBody;
+      const result = await authService.login(body);
+      res.status(200).json({ success: true, message: 'Logged in', data: result });
+    } catch (err) {
+      next(err);
+    }
   },
 ];
 
-export const refresh = async (req: Request, res: Response) => {
-  const { refreshToken } = req.body as { refreshToken: string };
-  const result = await authService.refreshToken(refreshToken);
-  return res.status(200).json({ success: true, message: 'Token refreshed', data: result });
+export const refresh = async (req: Request, res: Response, next: any) => {
+  try {
+    const { refreshToken } = req.body as { refreshToken: string };
+    const result = await authService.refreshToken(refreshToken);
+    res.status(200).json({ success: true, message: 'Token refreshed', data: result });
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const logout = async (_req: Request, res: Response) => {
-  // In this minimal version we just respond – token revocation can be added later
-  return res.status(200).json({ success: true, message: 'Logged out' });
+  res.status(200).json({ success: true, message: 'Logged out' });
 };
 
-export const me = async (req: Request, res: Response) => {
-  // auth.middleware guarantees req.user
-  const user = await authService.getMe((req as any).user.id);
-  return res.status(200).json({ success: true, message: 'User profile', data: user });
+export const me = async (req: Request, res: Response, next: any) => {
+  try {
+    const user = await authService.getMe((req as any).user.id);
+    res.status(200).json({ success: true, message: 'User profile', data: user });
+  } catch (err) {
+    next(err);
+  }
 };

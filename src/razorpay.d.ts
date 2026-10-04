@@ -6,6 +6,7 @@ interface RazorpayPaymentResponse {
 
 interface RazorpayCheckout {
   open: () => void;
+  on?: (event: string, callback: (response: any) => void) => void;
 }
 
 interface RazorpayOptions {
@@ -16,11 +17,16 @@ interface RazorpayOptions {
   description: string;
   order_id: string;
   handler: (response: RazorpayPaymentResponse) => void | Promise<void>;
-  modal: {
-    ondismiss: () => void;
+  prefill?: {
+    name?: string;
+    email?: string;
+    contact?: string;
   };
-  theme: {
-    color: string;
+  modal?: {
+    ondismiss?: () => void;
+  };
+  theme?: {
+    color?: string;
   };
 }
 

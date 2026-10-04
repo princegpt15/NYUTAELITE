@@ -1,339 +1,194 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Trash2, ArrowLeft, ShieldCheck, CheckCircle2, ShoppingBag } from 'lucide-react';
+// src/pages/Cart.tsx
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Minus, Plus, ShieldCheck, Trash2, ArrowLeft, ArrowRight, ShoppingBag, Truck } from 'lucide-react';
 import { cartService } from '../services/cart';
 import type { CartItem } from '../types';
+
 export const Cart: React.FC = () => {
   const [items, setItems] = useState<CartItem[]>(cartService.getItems());
-  const [checkoutComplete, setCheckoutComplete] = useState(false);
-  const [isPaying, setIsPaying] = useState(false);
-  const [paymentError, setPaymentError] = useState('');
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const update = () => setItems(cartService.getItems());
-    const unsub = cartService.subscribe(update);
-    return () => unsub();
-  }, []);
+  useEffect(() => cartService.subscribe(setItems), []);
 
-  const totals = cartService.getTotals();
+  const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const totalMrp = items.reduce((acc, item) => acc + item.mrp * item.quantity, 0);
+  const savings = Math.max(0, totalMrp - subtotal);
+  const freeShippingThreshold = 499;
+  const remainingForFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
+  const shippingFee = subtotal >= freeShippingThreshold || subtotal === 0 ? 0 : 40;
+  const grandTotal = subtotal + shippingFee;
 
-  const handleQtyChange = (productId: string, newQty: number) => {
-    cartService.updateQuantity(productId, Math.max(10, newQty));
-    setItems(cartService.getItems());
-  };
-
-  const handleRemove = (productId: string) => {
-    cartService.removeItem(productId);
-    setItems(cartService.getItems());
-  };
-
-  const loadRazorpay = () =>
-    new Promise<boolean>((resolve) => {
-      if (window.Razorpay) {
-        resolve(true);
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-
-  const handleCheckout = async () => {
-    const keyId = import.meta.env.VITE_RAZORPAY_KEY_ID;
-    if (!keyId) {
-      setPaymentError('Payments are not configured yet. Please contact NYUTAELITE support.');
-      return;
-    }
-
-    setIsPaying(true);
-    setPaymentError('');
-
-    try {
-      const [razorpayLoaded, orderResponse] = await Promise.all([
-        loadRazorpay(),
-        fetch('/.netlify/functions/create-razorpay-order', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            items: items.map(({ productId, quantity }) => ({ productId, quantity })),
-          }),
-        }),
-      ]);
-      const order = await orderResponse.json();
-
-      if (!razorpayLoaded || !window.Razorpay) {
-        throw new Error('Unable to load the secure payment window.');
-      }
-      if (!orderResponse.ok) {
-        throw new Error(order.error || 'Unable to start payment.');
-      }
-
-      const checkout = new window.Razorpay({
-        key: keyId,
-        amount: order.amount,
-        currency: order.currency,
-        name: 'NYUTAELITE Foods',
-        description: 'Bulk Makhana Order',
-        order_id: order.orderId,
-        handler: async (payment) => {
-          try {
-            const verificationResponse = await fetch('/.netlify/functions/verify-razorpay-payment', {
-              method: 'POST',
-              headers: { 'content-type': 'application/json' },
-              body: JSON.stringify(payment),
-            });
-            const verification = await verificationResponse.json();
-            if (!verificationResponse.ok || !verification.verified) {
-              throw new Error(verification.error || 'Payment verification failed.');
-            }
-
-            setCheckoutComplete(true);
-            cartService.clearCart();
-          } catch (error) {
-            setPaymentError(error instanceof Error ? error.message : 'Payment verification failed.');
-          } finally {
-            setIsPaying(false);
-          }
-        },
-        modal: {
-          ondismiss: () => setIsPaying(false),
-        },
-        theme: { color: '#00C950' },
-      });
-      checkout.open();
-    } catch (error) {
-      setPaymentError(error instanceof Error ? error.message : 'Unable to start payment.');
-      setIsPaying(false);
-    }
-  };
-
-  if (checkoutComplete) {
+  if (!items.length) {
     return (
-      <div className="min-h-[calc(100vh-68px)] bg-[#F7F2E8] py-16 px-4 flex items-center justify-center">
-        <div className="max-w-md w-full bg-white rounded-3xl p-8 text-center border border-[#E6DFD3] shadow-md space-y-5 animate-in zoom-in-95 duration-200">
-          <div className="w-16 h-16 rounded-full bg-[#00C950]/15 text-[#00C950] mx-auto flex items-center justify-center">
-            <CheckCircle2 className="w-10 h-10" />
-          </div>
-          <h2 className="text-2xl font-extrabold text-[#1C2520]">Wholesale Order Placed!</h2>
-          <p className="text-sm text-[#5E6C65] leading-relaxed">
-            Thank you for ordering with NYUTAELITE Foods. Your B2B proforma invoice and freight dispatch tracking have been generated.
+      <div className="min-h-[calc(100vh-68px)] bg-[#FCFAF5] px-4 py-20 text-center">
+        <div className="max-w-md mx-auto bg-white p-8 rounded-2xl border border-[#E8DECB] shadow-xs space-y-4">
+          <ShoppingBag className="w-12 h-12 text-[#68756E]/40 mx-auto" />
+          <h1 className="font-serif text-3xl font-bold text-[#1C1C1C]">Your Cart is Empty</h1>
+          <p className="text-xs text-[#68756E]">
+            You have not added any makhana packs to your cart yet.
           </p>
-          <div className="pt-2 flex flex-col gap-3">
-            <Link
-              to="/orders"
-              className="w-full py-3 rounded-xl bg-[#173F35] text-white font-semibold text-sm hover:bg-[#112F28] transition-colors"
-            >
-              View Order History
-            </Link>
-            <Link
-              to="/"
-              className="w-full py-3 rounded-xl bg-[#F7F2E8] text-[#1C2520] font-semibold text-sm hover:bg-[#EBE4D5] border border-[#E6DFD3] transition-colors"
-            >
-              Return to Home
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (items.length === 0) {
-    return (
-      <div className="min-h-[calc(100vh-68px)] bg-[#F7F2E8] py-16 px-4 flex items-center justify-center">
-        <div className="max-w-md w-full bg-white rounded-3xl p-8 sm:p-10 text-center border border-[#E6DFD3] shadow-xs space-y-4">
-          <div className="w-16 h-16 rounded-full bg-[#F7F2E8] text-[#5E6C65] mx-auto flex items-center justify-center">
-            <ShoppingBag className="w-8 h-8" />
-          </div>
-          <h2 className="text-2xl font-bold text-[#1C2520]">Your Wholesale Cart is Empty</h2>
-          <p className="text-sm text-[#5E6C65]">
-            You have not added any bulk makhana packs to your cart yet.
-          </p>
-          <div className="pt-3">
-            <Link
-              to="/products/premium-makhana"
-              className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-[#00C950] hover:bg-[#00b347] text-white font-bold text-sm shadow-sm transition-all"
-            >
-              Browse Premium Makhana
-            </Link>
-          </div>
+          <Link
+            to="/#pantry"
+            className="inline-flex items-center gap-2 bg-[#123B2A] text-white text-xs font-bold uppercase tracking-wider px-6 py-3.5 rounded-lg hover:bg-[#092218] transition-colors"
+          >
+            Browse Makhana Packs
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-[calc(100vh-68px)] bg-[#F7F2E8] py-10 lg:py-16">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <span className="text-xs font-bold tracking-widest text-[#C89B3C] uppercase">
-              PROCUREMENT SUMMARY
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1C2520] tracking-tight mt-1">
-              Wholesale Shopping Cart
-            </h1>
-          </div>
-          <Link
-            to="/products/premium-makhana"
-            className="hidden sm:inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#173F35] hover:text-[#00C950]"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Continue Shopping</span>
-          </Link>
-        </div>
+    <div className="min-h-[calc(100vh-68px)] bg-[#FCFAF5] py-10 sm:py-14">
+      <div className="mx-auto max-w-[1280px] px-5 sm:px-8 lg:px-12">
+        <Link
+          to="/#pantry"
+          className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#123B2A] hover:text-[#092218] mb-6"
+        >
+          <ArrowLeft className="h-4 w-4" /> Continue Shopping
+        </Link>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-          {/* LEFT: Items List */}
-          <div className="lg:col-span-8 space-y-4">
-            {items.map((item: CartItem) => (
-              <div
-                key={item.productId}
-                className="bg-white rounded-2xl p-5 sm:p-6 border border-[#E6DFD3] shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-[#F7F2E8] border border-[#E6DFD3] p-2 shrink-0 overflow-hidden">
-                    <img
-                      src={item.image}
-                      alt={item.productName}
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  <div>
-                    <span className="text-[11px] font-bold text-[#00C950] uppercase tracking-wider">
-                      {item.grade}
-                    </span>
-                    <h3 className="text-base sm:text-lg font-bold text-[#1C2520]">
-                      {item.productName}
-                    </h3>
-                    <p className="text-xs text-[#5E6C65] mt-0.5">
-                      Tier rate: <span className="font-bold text-[#173F35]">₹{item.pricePerKg}</span> / kg
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between w-full sm:w-auto gap-6 pt-3 sm:pt-0 border-t sm:border-0 border-[#F0EBE1]">
-                  {/* Quantity Stepper */}
-                  <div className="flex items-center border border-[#E6DFD3] rounded-lg overflow-hidden bg-white">
-                    <button
-                      type="button"
-                      onClick={() => handleQtyChange(item.productId, item.quantity - 5)}
-                      disabled={item.quantity <= 10}
-                      className="px-2.5 py-1.5 text-sm font-bold text-[#1C2520] hover:bg-neutral-100 disabled:opacity-30"
-                    >
-                      -
-                    </button>
-                    <span className="px-3 py-1.5 text-xs font-bold text-[#1C2520] border-x border-[#E6DFD3] min-w-14 text-center">
-                      {item.quantity} KG
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleQtyChange(item.productId, item.quantity + 5)}
-                      className="px-2.5 py-1.5 text-sm font-bold text-[#1C2520] hover:bg-neutral-100"
-                    >
-                      +
-                    </button>
-                  </div>
-
-                  {/* Subtotal */}
-                  <div className="text-right">
-                    <span className="text-lg font-extrabold text-[#173F35] block">
-                      ₹{item.subtotal.toLocaleString('en-IN')}
-                    </span>
-                    <span className="text-[10px] text-[#5E6C65]">excl. GST</span>
-                  </div>
-
-                  {/* Remove Button */}
-                  <button
-                    type="button"
-                    onClick={() => handleRemove(item.productId)}
-                    className="text-[#85948E] hover:text-red-500 p-1.5 transition-colors"
-                    aria-label="Remove item"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-
-            <div className="sm:hidden pt-2">
-              <Link
-                to="/products/premium-makhana"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#173F35]"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Continue Shopping</span>
-              </Link>
+        <div className="grid gap-10 lg:grid-cols-12 items-start">
+          {/* Left: Cart Items */}
+          <section className="lg:col-span-7 space-y-4">
+            <div>
+              <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#C6A15B]">
+                YOUR SELECTION
+              </span>
+              <h1 className="font-serif text-3xl font-bold text-[#092218]">Shopping Cart</h1>
             </div>
-          </div>
 
-          {/* RIGHT: Order Summary Card */}
-          <div className="lg:col-span-4">
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#E6DFD3] shadow-md space-y-5">
-              <h2 className="text-lg font-bold text-[#1C2520] pb-3 border-b border-[#E6DFD3]">
-                Order Summary
-              </h2>
+            <div className="space-y-3">
+              {items.map((item) => (
+                <article
+                  key={item.productId}
+                  className="flex items-center gap-4 bg-white p-4 rounded-xl border border-[#E8DECB] shadow-xs"
+                >
+                  <img
+                    src={item.image}
+                    alt={item.productName}
+                    className="h-16 w-16 bg-[#F7F1E5] rounded-lg object-contain p-2 shrink-0 border border-[#E8DECB]"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[9px] font-bold uppercase tracking-wider bg-[#123B2A] text-white px-1.5 py-0.5 rounded">
+                        {item.quality}
+                      </span>
+                      <span className="text-xs font-bold text-[#123B2A]">{item.weightGrams}g</span>
+                    </div>
+                    <h2 className="font-bold text-[#1C1C1C] text-sm sm:text-base truncate mt-0.5">
+                      {item.productName}
+                    </h2>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-sm font-extrabold text-[#123B2A]">₹{item.price}</span>
+                      <span className="text-xs text-[#68756E] line-through">₹{item.mrp}</span>
+                    </div>
+                  </div>
 
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between text-[#5E6C65]">
-                  <span>Total Volume</span>
-                  <span className="font-semibold text-[#1C2520]">{totals.totalKg} KG</span>
-                </div>
-                <div className="flex justify-between text-[#5E6C65]">
-                  <span>Taxable Subtotal</span>
-                  <span className="font-semibold text-[#1C2520]">
-                    ₹{totals.subtotal.toLocaleString('en-IN')}
-                  </span>
-                </div>
-                <div className="flex justify-between text-[#5E6C65]">
-                  <span>GST (5% HSN 1904)</span>
-                  <span className="font-semibold text-[#1C2520]">
-                    ₹{totals.gst.toLocaleString('en-IN')}
-                  </span>
-                </div>
-                <div className="flex justify-between text-[#5E6C65]">
-                  <span>Freight Delivery</span>
-                  <span className="font-semibold text-[#1C2520]">
-                    {totals.shipping === 0 ? (
-                      <span className="text-[#00C950] font-bold">FREE (50 KG+)</span>
-                    ) : (
-                      `₹${totals.shipping}`
-                    )}
-                  </span>
-                </div>
+                  {/* Quantity Controller */}
+                  <div className="flex items-center border border-[#E8DECB] rounded-lg bg-white">
+                    <button
+                      aria-label="Decrease quantity"
+                      onClick={() => cartService.updateQuantity(item.productId, item.quantity - 1)}
+                      className="p-2 text-[#123B2A] hover:bg-[#F7F1E5] transition-colors"
+                    >
+                      <Minus className="h-3.5 w-3.5" />
+                    </button>
+                    <span className="w-8 text-center text-xs font-extrabold">{item.quantity}</span>
+                    <button
+                      aria-label="Increase quantity"
+                      onClick={() => cartService.updateQuantity(item.productId, item.quantity + 1)}
+                      className="p-2 text-[#123B2A] hover:bg-[#F7F1E5] transition-colors"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+
+                  <button
+                    aria-label="Remove item"
+                    onClick={() => cartService.removeItem(item.productId)}
+                    className="p-2 text-[#68756E] hover:text-red-600 transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </article>
+              ))}
+            </div>
+
+            {/* Savings Notice */}
+            {savings > 0 && (
+              <div className="bg-[#F7F1E5] p-3.5 rounded-xl border border-[#C6A15B]/40 text-xs font-bold text-[#123B2A] flex items-center justify-between">
+                <span>Total Pantry Savings:</span>
+                <span className="text-sm font-extrabold">₹{savings}</span>
               </div>
+            )}
+          </section>
 
-              <div className="pt-4 border-t border-[#E6DFD3] flex items-baseline justify-between">
-                <div>
-                  <span className="text-base font-extrabold text-[#1C2520] block">
-                    Estimated Total
-                  </span>
-                  <span className="text-[11px] text-[#5E6C65]">Includes taxes & freight</span>
-                </div>
-                <span className="text-2xl font-black text-[#173F35]">
-                  ₹{totals.total.toLocaleString('en-IN')}
+          {/* Right: Cart Summary & Proceed to Checkout */}
+          <aside className="lg:col-span-5 bg-white p-6 sm:p-8 rounded-2xl border border-[#E8DECB] shadow-sm space-y-5">
+            <h2 className="font-serif text-2xl font-bold text-[#092218] pb-3 border-b border-[#E8DECB]">
+              Cart Summary
+            </h2>
+
+            {/* Free Shipping Bar */}
+            <div className="bg-[#F7F1E5] p-4 rounded-xl border border-[#E8DECB] text-xs">
+              {remainingForFreeShipping > 0 ? (
+                <p className="text-[#1C1C1C] font-medium">
+                  Add <span className="font-bold text-[#123B2A]">₹{remainingForFreeShipping}</span> more for <span className="font-bold text-[#123B2A]">FREE Express Shipping</span>!
+                </p>
+              ) : (
+                <p className="text-[#123B2A] font-bold flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-[#C6A15B]" /> You unlocked FREE Express Delivery!
+                </p>
+              )}
+              <div className="w-full bg-[#E8DECB] h-1.5 rounded-full mt-2.5 overflow-hidden">
+                <div
+                  className="bg-[#123B2A] h-full transition-all duration-500 rounded-full"
+                  style={{ width: `${Math.min(100, (subtotal / freeShippingThreshold) * 100)}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Order Calculation Breakdown */}
+            <div className="pt-2 space-y-2 text-xs text-[#68756E]">
+              <div className="flex justify-between">
+                <span>Subtotal ({items.reduce((a, b) => a + b.quantity, 0)} items)</span>
+                <span className="font-bold text-[#1C1C1C]">₹{subtotal}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Express Pan-India Delivery</span>
+                <span className="font-bold text-[#1C1C1C]">
+                  {shippingFee === 0 ? <span className="text-[#123B2A]">FREE</span> : `₹${shippingFee}`}
                 </span>
               </div>
-
-              <button
-                type="button"
-                onClick={handleCheckout}
-                disabled={isPaying}
-                className="w-full py-4 rounded-xl bg-[#00C950] hover:bg-[#00b347] disabled:cursor-not-allowed disabled:opacity-60 text-white font-bold text-sm sm:text-base shadow-sm transition-all cursor-pointer"
-              >
-                {isPaying ? 'Opening Secure Payment...' : 'Pay Securely with Razorpay'}
-              </button>
-
-              {paymentError && <p className="text-center text-xs text-red-600">{paymentError}</p>}
-
-              <div className="pt-2 flex items-center justify-center gap-2 text-xs text-[#5E6C65]">
-                <ShieldCheck className="w-4 h-4 text-[#00C950]" />
-                <span>100% Tax Deductible B2B GST Invoicing</span>
+              <div className="flex justify-between text-sm font-extrabold text-[#1C1C1C] pt-3 border-t border-[#E8DECB]">
+                <span>Estimated Total</span>
+                <span className="text-[#123B2A] text-lg">₹{grandTotal}</span>
               </div>
             </div>
-          </div>
+
+            <button
+              type="button"
+              onClick={() => navigate('/checkout')}
+              className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 bg-[#123B2A] hover:bg-[#092218] text-xs font-extrabold uppercase tracking-widest text-white rounded-lg transition-colors cursor-pointer shadow-md"
+            >
+              <span>Proceed to Checkout</span>
+              <ArrowRight className="h-4 w-4 text-[#C6A15B]" />
+            </button>
+
+            {/* Value Badges */}
+            <div className="grid grid-cols-2 gap-2 pt-3 text-[11px] text-[#68756E] border-t border-[#E8DECB]">
+              <div className="flex items-center gap-1.5">
+                <Truck className="w-3.5 h-3.5 text-[#123B2A]" />
+                <span>Pan-India Delivery</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#123B2A]" />
+                <span>100% Authentic Bihar</span>
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
     </div>
