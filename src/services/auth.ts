@@ -13,6 +13,19 @@ import { getAccessToken, setTokens, clearTokens, getRefreshToken } from './authS
 
 const AUTH_STORAGE_KEY = 'nyutaelite_user';
 
+type AuthListener = (user: User | null) => void;
+const listeners = new Set<AuthListener>();
+
+function notifyListeners(user: User | null): void {
+  listeners.forEach((listener) => {
+    try {
+      listener(user);
+    } catch (e) {
+      console.error('Auth listener error:', e);
+    }
+  });
+}
+
 function normalizeUser(rawUser: any): User {
   if (!rawUser) return rawUser;
   return {
@@ -33,6 +46,14 @@ function storeUser(user: any): void {
 }
 
 export const authService = {
+  /** Subscribe to auth state changes */
+  subscribe(listener: AuthListener): () => void {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  },
+
   /** Retrieve the current user from localStorage only if valid tokens exist. */
   getCurrentUser(): User | null {
     try {
@@ -69,7 +90,9 @@ export const authService = {
     const data = res?.data ?? res;
     setTokens(data.accessToken, data.refreshToken);
     storeUser(data.user);
-    return data.user;
+    const normalized = normalizeUser(data.user);
+    notifyListeners(normalized);
+    return normalized;
   },
 
   /** Login with email / password. */
@@ -79,7 +102,9 @@ export const authService = {
     const data = res?.data ?? res;
     setTokens(data.accessToken, data.refreshToken);
     storeUser(data.user);
-    return data.user;
+    const normalized = normalizeUser(data.user);
+    notifyListeners(normalized);
+    return normalized;
   },
 
   /** Refresh the access token using the stored refresh token. */
@@ -101,6 +126,7 @@ export const authService = {
     }
     clearTokens();
     localStorage.removeItem(AUTH_STORAGE_KEY);
+    notifyListeners(null);
   },
 
   /** Restore a session on app start.
@@ -108,13 +134,21 @@ export const authService = {
    *  - On 401, attempt a token refresh and retry.
    *  - If everything fails, clear tokens/user.
    */
-  async restoreSession(): Promise<void> {
-    const token = getAccessToken();
-    if (!token) return;
+  async restoreSession(): Promise<User | null> {
+    const accessToken = getAccessToken();
+    const refreshToken = getRefreshToken();
+    if (!accessToken && !refreshToken) {
+      notifyListeners(null);
+      return null;
+    }
+
     try {
       const res = await api.get<any>('/auth/me');
       const me = res?.data ?? res;
       storeUser(me);
+      const normalized = normalizeUser(me);
+      notifyListeners(normalized);
+      return normalized;
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         try {
@@ -122,15 +156,23 @@ export const authService = {
           const res = await api.get<any>('/auth/me');
           const me = res?.data ?? res;
           storeUser(me);
+          const normalized = normalizeUser(me);
+          notifyListeners(normalized);
+          return normalized;
         } catch {
-          // Refresh failed – clear everything
+          // Refresh explicitly failed – clear authentication
           clearTokens();
           localStorage.removeItem(AUTH_STORAGE_KEY);
+          notifyListeners(null);
+          return null;
         }
       } else {
-        // Other errors – clear state for safety
-        clearTokens();
-        localStorage.removeItem(AUTH_STORAGE_KEY);
+        // Transient network or server error (e.g. 500, 502, 429) - keep local session intact
+        const existing = this.getCurrentUser();
+        if (existing) {
+          notifyListeners(existing);
+        }
+        return existing;
       }
     }
   },

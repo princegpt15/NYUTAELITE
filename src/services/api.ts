@@ -175,10 +175,13 @@ async function request<T>(
 
   if (!response.ok) {
     if (response.status === 401 && !isAuthEndpoint) {
-      clearTokens();
-      localStorage.removeItem(AUTH_USER_KEY);
-      throw new ApiError('Please log in or register to place your order.', 401, data);
+      // If we don't have a valid refresh token (or refresh failed), session is truly expired
+      if (!getRefreshToken()) {
+        clearTokens();
+        localStorage.removeItem(AUTH_USER_KEY);
+      }
     }
+
     let message = (data && data.message) || response.statusText || 'API request failed';
     if (data?.error?.details && typeof data.error.details === 'object') {
       const fieldErrors: string[] = [];

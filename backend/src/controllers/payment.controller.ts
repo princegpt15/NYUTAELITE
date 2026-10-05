@@ -9,7 +9,7 @@ import { PaymentStatus, PaymentProvider, OrderStatus } from '@prisma/client';
  * Create a Razorpay order for an existing internal order.
  * Returns the Razorpay order payload and public key.
  */
-export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
+export const createOrder = async (req: Request, res: Response, _next?: NextFunction) => {
   try {
     const userId = (req as any).user?.id;
     const { orderId } = req.body;
@@ -36,8 +36,14 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
       return res.status(400).json({ success: false, message: 'Order has been cancelled' });
     }
 
+    // Ensure order amount meets Razorpay minimum (>= 100 paise)
+    const amountPaise = Math.round(order.totalAmount * 100);
+    if (amountPaise < 100) {
+      return res.status(400).json({ success: false, message: 'Order amount must be at least 100 paise' });
+    }
     // Create Razorpay order via service (authoritative totalAmount from DB)
     const razorpayOrder = await razorpayService.createRazorpayOrder(order.id);
+
 
     // Create or update initial pending payment record
     await prisma.payment.create({
@@ -62,9 +68,13 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
         keyId: env.RAZORPAY_KEY_ID,
       },
     });
-  } catch (err) {
-    next(err);
-    return;
+  } catch (err: any) {
+    const errorMsg = err?.error?.description || err?.message || 'Payment gateway initialization failed';
+    return res.status(502).json({
+      success: false,
+      message: `Payment gateway error: ${errorMsg}`,
+      error: { code: 'GATEWAY_ERROR' },
+    });
   }
 };
 
@@ -83,6 +93,8 @@ export const verifyPayment = async (req: Request, res: Response, next: NextFunct
       razorpay_payment_id,
       razorpay_signature,
     });
+    // Diagnostic log (does not expose secrets)
+    console.debug('Payment signature verification result:', isValid);
 
     if (!isValid) {
       return res.status(400).json({ success: false, message: 'Invalid payment signature' });

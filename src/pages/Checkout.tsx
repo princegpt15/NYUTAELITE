@@ -14,11 +14,11 @@ import { cartService } from '../services/cart';
 import { authService } from '../services/auth';
 import { orderService } from '../services/orders';
 import { paymentService } from '../services/payment';
-import type { CartItem, Address, Order } from '../types';
+import type { CartItem, Address, Order, User } from '../types';
 
 export const Checkout: React.FC = () => {
   const navigate = useNavigate();
-  const currentUser = authService.getCurrentUser();
+  const [currentUser, setCurrentUser] = useState<User | null>(() => authService.getCurrentUser());
 
   const [items, setItems] = useState<CartItem[]>(cartService.getItems());
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -41,6 +41,25 @@ export const Checkout: React.FC = () => {
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
   const [loadingCart, setLoadingCart] = useState(true);
 
+  // Subscribe to auth state updates
+  useEffect(() => {
+    const handleAuth = (user: User | null) => {
+      setCurrentUser(user);
+      if (user) {
+        setFormData((prev) => ({
+          ...prev,
+          fullName: prev.fullName || user.fullName || '',
+          phone: prev.phone || user.phone || '',
+        }));
+      }
+    };
+    const unsubscribe = authService.subscribe(handleAuth);
+    if (!currentUser && authService.getCurrentUser()) {
+      handleAuth(authService.getCurrentUser());
+    }
+    return unsubscribe;
+  }, [currentUser]);
+
   // Subscribe to cart updates
   useEffect(() => {
     return cartService.subscribe((cartItems) => {
@@ -50,8 +69,11 @@ export const Checkout: React.FC = () => {
   }, []);
 
   // Fetch saved addresses if authenticated
+  const fetchedRef = React.useRef(false);
   useEffect(() => {
+    if (fetchedRef.current) return;
     if (currentUser) {
+      fetchedRef.current = true;
       orderService
         .getAddresses()
         .then((addrs) => {
@@ -128,11 +150,19 @@ export const Checkout: React.FC = () => {
     }
   };
 
-  const handleSubmitOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmitOrder = async (e?: React.FormEvent) => {
+    if (e && e.preventDefault) e.preventDefault();
     setErrorMessage(null);
 
-    if (!currentUser) {
+    let activeUser = currentUser || authService.getCurrentUser();
+    if (!activeUser) {
+      activeUser = await authService.restoreSession();
+      if (activeUser) {
+        setCurrentUser(activeUser);
+      }
+    }
+
+    if (!activeUser) {
       setErrorMessage('Please log in or register to place your order.');
       navigate('/login?redirect=/checkout');
       return;
