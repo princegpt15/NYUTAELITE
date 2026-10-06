@@ -35,6 +35,7 @@ function normalizeUser(rawUser: any): User {
     email: rawUser.email,
     phone: rawUser.phone || '',
     gstNumber: rawUser.gstNumber,
+    role: rawUser.role || 'CUSTOMER',
     createdAt: rawUser.createdAt || new Date().toISOString(),
   };
 }

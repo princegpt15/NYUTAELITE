@@ -11,6 +11,7 @@ import cartRoutes from './routes/cart.routes.js';
 import orderRoutes from './routes/order.routes.js';
 import addressRoutes from './routes/address.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 import { errorHandler } from './middleware/error.middleware.js';
 
 const app = express();
@@ -77,6 +78,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/admin', adminRoutes);
 // 404 handler
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ success: false, message: 'Not Found', error: { code: 'NOT_FOUND' } });

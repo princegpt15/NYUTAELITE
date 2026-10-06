@@ -43,6 +43,10 @@ export interface FAQ {
   category?: string;
 }
 
+export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+export type PaymentStatus = 'PENDING' | 'AUTHORIZED' | 'CAPTURED' | 'FAILED' | 'REFUNDED';
+export type ShippingStatus = 'PENDING' | 'SHIPPED' | 'DELIVERED' | 'RETURNED';
+
 export interface User {
   id: string;
   fullName: string;
@@ -50,6 +54,7 @@ export interface User {
   email: string;
   phone: string;
   gstNumber?: string;
+  role?: 'CUSTOMER' | 'ADMIN';
   createdAt: string;
 }
 
@@ -89,9 +94,9 @@ export interface Order {
   taxAmount?: number;
   totalAmount: number;
   currency: string;
-  status: 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
-  paymentStatus: 'PENDING' | 'AUTHORIZED' | 'CAPTURED' | 'FAILED' | 'REFUNDED';
-  shippingStatus: 'PENDING' | 'SHIPPED' | 'DELIVERED' | 'RETURNED';
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  shippingStatus: ShippingStatus;
   razorpayOrderId?: string;
   shippingAddress?: Address | any;
   createdAt: string;
