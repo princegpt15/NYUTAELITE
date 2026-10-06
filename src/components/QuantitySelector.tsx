@@ -1,110 +1,78 @@
 import React from 'react';
-import { Minus, Plus, Info } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
 
 interface QuantitySelectorProps {
   quantity: number;
   onChange: (quantity: number) => void;
-  minOrder?: number;
+  min?: number;
+  max?: number;
+  className?: string;
+  size?: 'sm' | 'md' | 'lg';
 }
 
 export const QuantitySelector: React.FC<QuantitySelectorProps> = ({
   quantity,
   onChange,
-  minOrder = 10,
+  min = 1,
+  max = 10,
+  className = '',
+  size = 'md',
 }) => {
-  const presets = [10, 25, 50, 100];
-  const isPreset = presets.includes(quantity);
-
-  const handleDecrement = () => {
-    if (quantity > minOrder) {
+  const handleDecrement = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (quantity > min) {
       onChange(quantity - 1);
     }
   };
 
-  const handleIncrement = () => {
-    onChange(quantity + 1);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseInt(e.target.value, 10);
-    if (!isNaN(val)) {
-      onChange(Math.max(minOrder, val));
+  const handleIncrement = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (quantity < max) {
+      onChange(quantity + 1);
     }
   };
 
+  const sizeClasses = {
+    sm: 'h-8 text-xs',
+    md: 'h-10 text-sm',
+    lg: 'h-12 text-base',
+  };
+
+  const buttonSizeClasses = {
+    sm: 'w-8 h-8',
+    md: 'w-10 h-10',
+    lg: 'w-12 h-12',
+  };
+
   return (
-    <div className="space-y-3.5">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-[#1C2520]">Select Bulk Quantity</h3>
-      </div>
+    <div
+      className={`inline-flex items-center border border-[#E8DECB] rounded-xl bg-white shadow-2xs overflow-hidden ${sizeClasses[size]} ${className}`}
+    >
+      <button
+        type="button"
+        onClick={handleDecrement}
+        disabled={quantity <= min}
+        className={`flex items-center justify-center text-[#123B2A] hover:bg-[#F7F1E5] active:bg-[#E8DECB] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer ${buttonSizeClasses[size]}`}
+        aria-label="Decrease quantity"
+      >
+        <Minus className="w-3.5 h-3.5" />
+      </button>
 
-      {/* Preset pills */}
-      <div className="flex flex-wrap gap-2">
-        {presets.map((preset) => (
-          <button
-            key={preset}
-            type="button"
-            onClick={() => onChange(preset)}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              quantity === preset
-                ? 'bg-[#173F35] text-white shadow-sm'
-                : 'bg-[#F7F2E8] text-[#1C2520] hover:bg-[#EBE4D5] border border-[#E6DFD3]'
-            }`}
-          >
-            {preset} KG
-          </button>
-        ))}
-        <button
-          type="button"
-          onClick={() => {
-            if (isPreset) onChange(30);
-          }}
-          className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-            !isPreset
-              ? 'bg-[#173F35] text-white shadow-sm'
-              : 'bg-[#F7F2E8] text-[#1C2520] hover:bg-[#EBE4D5] border border-[#E6DFD3]'
-          }`}
-        >
-          Custom Quantity
-        </button>
-      </div>
+      <span className="min-w-8 px-2 text-center font-extrabold text-[#1C1C1C] select-none">
+        {quantity}
+      </span>
 
-      {/* Minimum Order Note */}
-      <div className="flex items-center gap-1.5 text-xs text-[#5E6C65]">
-        <Info className="w-3.5 h-3.5 text-[#00C950]" />
-        <span>Minimum Order Quantity: {minOrder} KG</span>
-      </div>
-
-      {/* Stepper with KG label */}
-      <div className="flex items-center gap-3">
-        <div className="inline-flex items-center border border-[#E6DFD3] rounded-lg bg-white overflow-hidden shadow-xs">
-          <button
-            type="button"
-            onClick={handleDecrement}
-            disabled={quantity <= minOrder}
-            className="p-2.5 text-[#1C2520] hover:bg-neutral-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer"
-            aria-label="Decrease quantity"
-          >
-            <Minus className="w-4 h-4" />
-          </button>
-          <input
-            type="number"
-            min={minOrder}
-            value={quantity}
-            onChange={handleInputChange}
-            className="w-16 text-center text-sm font-semibold text-[#1C2520] focus:outline-none border-x border-[#E6DFD3] py-2"
-          />
-          <button
-            type="button"
-            onClick={handleIncrement}
-            className="p-2.5 text-[#1C2520] hover:bg-neutral-100 transition-colors cursor-pointer"
-            aria-label="Increase quantity"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
-        </div>
-        <span className="text-sm font-semibold text-[#5E6C65]">KG</span>
-      </div>
+      <button
+        type="button"
+        onClick={handleIncrement}
+        disabled={quantity >= max}
+        className={`flex items-center justify-center text-[#123B2A] hover:bg-[#F7F1E5] active:bg-[#E8DECB] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer ${buttonSizeClasses[size]}`}
+        aria-label="Increase quantity"
+      >
+        <Plus className="w-3.5 h-3.5" />
+      </button>
     </div>
   );
 };

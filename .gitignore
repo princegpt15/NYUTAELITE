@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Razorpay credentials and local env files
+.env
+.env*
+backend/debug_env.js
+scratch/

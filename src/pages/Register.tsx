@@ -19,7 +19,8 @@ export const Register: React.FC = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
-const [error, setError] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const validate = () => {
     const errs: Record<string, string> = {};
@@ -65,10 +66,12 @@ const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     const validationErrors = validate();
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length === 0) {
+      setLoading(true);
       try {
         await authService.register({
           fullName: formData.fullName,
@@ -86,6 +89,8 @@ const [error, setError] = useState('');
         } else {
           setError('Registration failed');
         }
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -117,9 +122,9 @@ const [error, setError] = useState('');
               </p>
             </div>
             {error && (
-              <p className="mt-2 text-sm text-red-600">
+              <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-600 text-xs font-semibold border border-red-200">
                 {error}
-              </p>
+              </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -202,9 +207,10 @@ const [error, setError] = useState('');
 
               <button
                 type="submit"
-                className="w-full py-3.5 rounded-lg bg-[#123B2A] hover:bg-[#092218] text-white text-xs font-extrabold uppercase tracking-widest transition-colors shadow-xs cursor-pointer mt-2"
+                disabled={loading}
+                className="w-full py-3.5 rounded-lg bg-[#123B2A] hover:bg-[#092218] text-white text-xs font-extrabold uppercase tracking-widest transition-colors shadow-xs cursor-pointer disabled:opacity-50 mt-2"
               >
-                Create Account
+                {loading ? 'Creating Account...' : 'Create Account'}
               </button>
 
               <div className="text-center pt-2">

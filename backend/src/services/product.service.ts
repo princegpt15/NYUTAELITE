@@ -1,5 +1,5 @@
 // src/services/product.service.ts
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma.js';
 
 /**
  * Service class handling product related operations.
@@ -7,12 +7,6 @@ import { PrismaClient } from '@prisma/client';
  * and retrieving a single product by its ID.
  */
 export class ProductService {
-  private prisma: PrismaClient;
-
-  constructor() {
-    this.prisma = new PrismaClient();
-  }
-
   /**
    * List products with optional pagination, category filter and search.
    */
@@ -37,8 +31,8 @@ export class ProductService {
     }
 
     const [total, products] = await Promise.all([
-      this.prisma.product.count({ where }),
-      this.prisma.product.findMany({
+      prisma.product.count({ where }),
+      prisma.product.findMany({
         where,
         skip,
         take: limit,
@@ -58,7 +52,7 @@ export class ProductService {
    * Retrieve a single active product by its ID.
    */
   async getProductById(id: string) {
-    const product = await this.prisma.product.findFirst({
+    const product = await prisma.product.findFirst({
       where: { id, isActive: true },
     });
     if (!product) {

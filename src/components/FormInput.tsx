@@ -19,13 +19,13 @@ export const FormInput: React.FC<FormInputProps> = ({
   ...props
 }) => {
   const [showPassword, setShowPassword] = useState(false);
-  const inputId = id || `input-${label.toLowerCase().replace(/\s+/g, '-')}`;
+  const inputId = id || `input-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 
   const resolvedType = isPassword ? (showPassword ? 'text' : 'password') : type;
 
   return (
     <div className="space-y-1.5 w-full">
-      <label htmlFor={inputId} className="block text-xs sm:text-sm font-semibold text-[#1C2520]">
+      <label htmlFor={inputId} className="block text-xs font-bold uppercase tracking-wider text-[#1C1C1C]">
         {label}
       </label>
 
@@ -33,10 +33,10 @@ export const FormInput: React.FC<FormInputProps> = ({
         <input
           id={inputId}
           type={resolvedType}
-          className={`w-full px-4 py-2.5 sm:py-3 rounded-xl border text-sm text-[#1C2520] placeholder-[#9EAAA4] bg-white transition-colors focus:outline-none focus:ring-2 ${
+          className={`w-full px-3.5 py-3 rounded-xl border text-xs sm:text-sm text-[#1C1C1C] placeholder-[#68756E]/60 bg-white transition-all focus:outline-none focus:ring-2 ${
             error
               ? 'border-red-400 focus:border-red-500 focus:ring-red-100'
-              : 'border-[#E6DFD3] focus:border-[#00C950] focus:ring-[#00C950]/20'
+              : 'border-[#E8DECB] focus:border-[#123B2A] focus:ring-[#123B2A]/15'
           } ${isPassword ? 'pr-11' : ''} ${className}`}
           {...props}
         />
@@ -45,7 +45,7 @@ export const FormInput: React.FC<FormInputProps> = ({
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#85948E] hover:text-[#1C2520] p-1 focus:outline-none cursor-pointer"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#68756E] hover:text-[#123B2A] p-1 focus:outline-none cursor-pointer"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -54,11 +54,11 @@ export const FormInput: React.FC<FormInputProps> = ({
       </div>
 
       {helperText && !error && (
-        <p className="text-[11px] sm:text-xs text-[#5E6C65]">{helperText}</p>
+        <p className="text-[11px] text-[#68756E]">{helperText}</p>
       )}
 
       {error && (
-        <p className="text-[11px] sm:text-xs text-red-500 font-medium animate-in fade-in duration-100">
+        <p className="text-[11px] text-red-600 font-semibold animate-in fade-in duration-100">
           {error}
         </p>
       )}

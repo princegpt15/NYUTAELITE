@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
-Sitemap: http://localhost:5173/sitemap.xml
+
+Sitemap: https://nutyaelite.com/sitemap.xml
