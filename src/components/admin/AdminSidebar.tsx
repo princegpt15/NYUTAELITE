@@ -3,13 +3,21 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
+  BarChart3,
   ShoppingBag,
   Boxes,
   Users,
   CreditCard,
+  TicketPercent,
+  Bell,
+  Activity,
   LogOut,
   ExternalLink,
   X,
+  Star,
+  Megaphone,
+  TrendingUp,
+  FlaskConical,
 } from 'lucide-react';
 import { authService } from '../../services/auth';
 import type { User } from '../../types';
@@ -30,10 +38,18 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ currentUser, isOpen 
 
   const navItems = [
     { label: 'Dashboard', path: '/admin', icon: LayoutDashboard, end: true },
+    { label: 'Analytics', path: '/admin/analytics', icon: BarChart3, end: false },
+    { label: 'Growth & Funnels', path: '/admin/growth-analytics', icon: TrendingUp, end: false },
+    { label: 'Experiments', path: '/admin/experiments', icon: FlaskConical, end: false },
+    { label: 'Campaigns & CRM', path: '/admin/campaigns', icon: Megaphone, end: false },
+    { label: 'System Health', path: '/admin/system-health', icon: Activity, end: false },
     { label: 'Orders', path: '/admin/orders', icon: ShoppingBag, end: false },
     { label: 'Products', path: '/admin/products', icon: Boxes, end: false },
+    { label: 'Reviews', path: '/admin/reviews', icon: Star, end: false },
+    { label: 'Coupons', path: '/admin/coupons', icon: TicketPercent, end: false },
     { label: 'Customers', path: '/admin/customers', icon: Users, end: false },
     { label: 'Payments', path: '/admin/payments', icon: CreditCard, end: false },
+    { label: 'Notifications', path: '/admin/notifications', icon: Bell, end: false },
   ];
 
   const sidebarContent = (

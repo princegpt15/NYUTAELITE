@@ -26,7 +26,15 @@ export const AdminLayout: React.FC = () => {
         />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-          <Outlet />
+          <React.Suspense
+            fallback={
+              <div className="flex items-center justify-center min-h-[300px] py-16" aria-busy="true">
+                <div className="w-8 h-8 border-3 border-amber-600 border-t-transparent rounded-full animate-spin" />
+              </div>
+            }
+          >
+            <Outlet />
+          </React.Suspense>
         </main>
       </div>
     </div>

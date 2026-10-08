@@ -14,4 +14,12 @@ export const env = {
   RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET ?? '',
   RAZORPAY_ACCOUNT_ID: process.env.RAZORPAY_ACCOUNT_ID ?? '',
   RAZORPAY_MERCHANT_ID: process.env.RAZORPAY_MERCHANT_ID ?? '',
+  EMAIL_PROVIDER: process.env.EMAIL_PROVIDER ?? 'mock',
+  EMAIL_FROM: process.env.EMAIL_FROM ?? 'NYUTA ELITE MAKHANA <orders@nutyaelite.com>',
+  EMAIL_API_KEY: process.env.EMAIL_API_KEY ?? '',
+  EMAIL_API_URL: process.env.EMAIL_API_URL ?? '',
+  WHATSAPP_PROVIDER: process.env.WHATSAPP_PROVIDER ?? 'disabled',
+  WHATSAPP_ACCESS_TOKEN: process.env.WHATSAPP_ACCESS_TOKEN ?? '',
+  WHATSAPP_PHONE_NUMBER_ID: process.env.WHATSAPP_PHONE_NUMBER_ID ?? '',
+  APP_VERSION: process.env.NYUTA_ELITE_VERSION ?? '0.17.0',
 };

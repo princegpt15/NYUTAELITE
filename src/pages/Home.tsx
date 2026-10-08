@@ -23,6 +23,7 @@ import { fetchProducts } from '../services/products';
 import { FAQS } from '../data/faqs';
 import { TESTIMONIALS } from '../data/testimonials';
 import { cartService } from '../services/cart';
+import { trackViewItemList, trackSelectItem } from '../services/analytics';
 import { Toast } from '../components/Toast';
 
 import heroImage from '../assets/images/brand/makhana-hero.png';
@@ -156,6 +157,13 @@ function ProductCardItem({
         {/* Product Image Container */}
         <Link
           to={`/products/makhana?sku=${product.id}`}
+          onClick={() =>
+            trackSelectItem({
+              listId: 'home_pantry_collection',
+              listName: 'Home Pantry Collection',
+              product,
+            })
+          }
           className="block relative aspect-[4/3] overflow-hidden rounded-xl bg-[#F7F1E5]"
         >
           <img
@@ -204,7 +212,16 @@ function ProductCardItem({
             </span>
           </div>
 
-          <Link to={`/products/makhana?sku=${product.id}`}>
+          <Link
+            to={`/products/makhana?sku=${product.id}`}
+            onClick={() =>
+              trackSelectItem({
+                listId: 'home_pantry_collection',
+                listName: 'Home Pantry Collection',
+                product,
+              })
+            }
+          >
             <h3 className="font-serif mt-1 text-xl font-bold text-[#1C1C1C] group-hover:text-[#123B2A] transition-colors">
               {product.name}
             </h3>
@@ -326,6 +343,24 @@ export const Home: React.FC = () => {
       return 0;
     });
 
+  useEffect(() => {
+    if (!loading && !error && filteredProducts.length > 0) {
+      const listId =
+        qualityFilter !== 'All' || weightFilter !== 0
+          ? `home_filtered_${qualityFilter.toLowerCase()}_${weightFilter || 'all'}`
+          : 'home_pantry_collection';
+      const listName =
+        qualityFilter !== 'All' || weightFilter !== 0
+          ? `Filtered Pantry (${qualityFilter}${weightFilter ? ` ${weightFilter}g` : ''})`
+          : 'Home Pantry Collection';
+      trackViewItemList({
+        listId,
+        listName,
+        products: filteredProducts,
+      });
+    }
+  }, [loading, error, filteredProducts, qualityFilter, weightFilter]);
+
   return (
     <div className="bg-[#FCFAF5] text-[#1C1C1C]">
       {/* 1. HERO SECTION (EDITORIAL 2-COLUMN SPLIT) */}
@@ -370,6 +405,9 @@ export const Home: React.FC = () => {
                   alt="NYUTA ELITE makhana served in a warm ceramic bowl"
                   className="h-full w-full object-cover object-[75%_center] transition-transform duration-700 hover:scale-105"
                   fetchPriority="high"
+                  decoding="async"
+                  width={800}
+                  height={600}
                 />
                 {/* Floating Badge */}
                 <div className="absolute bottom-4 left-4 bg-[#123B2A]/90 backdrop-blur-md text-white p-3.5 rounded-xl border border-[#C6A15B]/40 shadow-lg max-w-xs">
@@ -566,6 +604,10 @@ export const Home: React.FC = () => {
                     src={heroImage}
                     alt="Premium Makhana jumbo nuts"
                     className="w-full h-full object-cover object-[70%_center]"
+                    loading="lazy"
+                    decoding="async"
+                    width={600}
+                    height={338}
                   />
                 </div>
 
@@ -621,6 +663,10 @@ export const Home: React.FC = () => {
                     src={macroImage}
                     alt="Normal Makhana everyday nuts"
                     className="w-full h-full object-cover object-[70%_center]"
+                    loading="lazy"
+                    decoding="async"
+                    width={600}
+                    height={338}
                   />
                 </div>
 
@@ -696,6 +742,10 @@ export const Home: React.FC = () => {
                   src={macroImage}
                   alt="Macro texture of makhana"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                  decoding="async"
+                  width={400}
+                  height={500}
                 />
               </div>
               <div className="overflow-hidden rounded-2xl bg-[#F7F1E5] aspect-[4/5] mt-6 border border-[#E8DECB]">
@@ -703,6 +753,10 @@ export const Home: React.FC = () => {
                   src={featuredImage}
                   alt="Pantry bowl of makhana"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                  decoding="async"
+                  width={400}
+                  height={500}
                 />
               </div>
             </div>
@@ -741,6 +795,10 @@ export const Home: React.FC = () => {
                       src={item.image}
                       alt={item.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                      decoding="async"
+                      width={400}
+                      height={300}
                     />
                   </div>
                   <p className="text-xs text-[#D5DED6] leading-relaxed">{item.description}</p>
@@ -777,6 +835,9 @@ export const Home: React.FC = () => {
                   alt={`${moment.name} makhana moment`}
                   className={`h-full w-full object-cover transition duration-500 group-hover:scale-105 ${moment.position}`}
                   loading="lazy"
+                  decoding="async"
+                  width={400}
+                  height={500}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#092218]/90 via-[#092218]/30 to-transparent" />
                 <div className="absolute bottom-6 left-6 right-6 text-white">
@@ -797,7 +858,15 @@ export const Home: React.FC = () => {
         <div className="mx-auto max-w-[1280px] px-5 sm:px-8 lg:px-12">
           <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
             <div className="lg:col-span-5 aspect-[4/3] overflow-hidden rounded-3xl bg-white border border-[#E8DECB] shadow-sm">
-              <img src={heroImage} alt="Bowl of healthy makhana" className="w-full h-full object-cover" />
+              <img
+                src={heroImage}
+                alt="Bowl of healthy makhana"
+                className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+                width={600}
+                height={450}
+              />
             </div>
 
             <div className="lg:col-span-7 space-y-6">

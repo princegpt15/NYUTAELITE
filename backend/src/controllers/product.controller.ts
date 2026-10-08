@@ -9,8 +9,8 @@ const productService = new ProductService();
 
 // Validation for query parameters (page, limit, category, search)
 const querySchema = z.object({
-  page: z.string().optional().transform((v) => (v ? Number(v) : 1)),
-  limit: z.string().optional().transform((v) => (v ? Number(v) : 12)),
+  page: z.string().optional().transform((v) => (v ? Math.max(1, parseInt(v, 10) || 1) : 1)),
+  limit: z.string().optional().transform((v) => (v ? Math.min(100, Math.max(1, parseInt(v, 10) || 12)) : 12)),
   category: z.string().optional(),
   search: z.string().optional(),
 });

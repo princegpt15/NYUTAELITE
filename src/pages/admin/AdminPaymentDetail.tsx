@@ -235,7 +235,9 @@ export const AdminPaymentDetail: React.FC = () => {
 
           <div className="p-4 rounded-xl bg-[#FCFAF5] border border-[#E8DECB] space-y-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#68756E] block">
-              Razorpay Payment ID
+              {payment.refundSummary?.isRefundTransaction
+                ? 'Razorpay Refund ID'
+                : 'Razorpay Payment ID'}
             </span>
             <span className="font-mono text-xs font-bold text-[#123B2A] break-all block">
               {payment.providerPaymentId || '—'}
@@ -258,6 +260,51 @@ export const AdminPaymentDetail: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Safe Refund Audit Section (Section 15 Requirement) */}
+        {(payment.status === 'REFUNDED' ||
+          payment.order?.paymentStatus === 'REFUNDED' ||
+          (payment.refundSummary && payment.refundSummary.totalRefundedAmount > 0)) && (
+          <div className="p-4 rounded-xl bg-red-50/60 border border-red-200 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-red-800">
+                REFUND AUDIT SUMMARY (SERVER-AUTHORITATIVE)
+              </span>
+              <StatusBadge status="REFUNDED" type="payment" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+              <div>
+                <span className="text-[10px] uppercase font-bold text-[#68756E] block">
+                  Refund Amount
+                </span>
+                <span className="font-extrabold text-red-700 text-sm">
+                  {formatCurrency(
+                    payment.refundSummary?.totalRefundedAmount || payment.amount,
+                    payment.currency
+                  )}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-[#68756E] block">
+                  Refund Status
+                </span>
+                <span className="font-bold text-[#1C1C1C]">
+                  {payment.refundSummary?.refundStatus || 'REFUNDED'}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-[#68756E] block">
+                  Refund ID
+                </span>
+                <span className="font-mono font-bold text-[#123B2A] break-all">
+                  {payment.refundSummary?.isRefundTransaction
+                    ? payment.providerPaymentId
+                    : payment.refundSummary?.refundRecords?.[0]?.providerPaymentId || '—'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center justify-between gap-2 pt-2 text-[11px] text-[#68756E]">
           <span>

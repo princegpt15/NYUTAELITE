@@ -35,11 +35,13 @@ function getBaseUrl(): string {
 export class ApiError extends Error {
   status: number;
   data?: any;
-  constructor(message: string, status: number, data?: any) {
+  requestId?: string;
+  constructor(message: string, status: number, data?: any, requestId?: string) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.data = data;
+    this.requestId = requestId;
   }
 }
 
@@ -201,7 +203,8 @@ async function request<T>(
         message = `${message}: ${fieldErrors.join(' | ')}`;
       }
     }
-    throw new ApiError(message, response.status, data);
+    const requestId = response.headers.get('x-request-id') || data?.requestId;
+    throw new ApiError(message, response.status, data, requestId || undefined);
   }
 
   return data as T;

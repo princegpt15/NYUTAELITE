@@ -4,6 +4,7 @@ import { CheckCircle2 } from 'lucide-react';
 import { FormInput } from '../components/FormInput';
 import { authService } from '../services/auth';
 import { ApiError } from '../services/api';
+import { trackSignUp } from '../services/analytics';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -79,6 +80,7 @@ export const Register: React.FC = () => {
           phone: formData.phone,
           password: formData.password,
         });
+        trackSignUp('email');
         setSuccess(true);
         setTimeout(() => {
           navigate('/');

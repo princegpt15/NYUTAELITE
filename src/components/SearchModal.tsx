@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import type { PantryProduct } from '../types';
 import { fetchProducts } from '../services/products';
 import { cartService } from '../services/cart';
+import { trackSearch, trackSelectItem } from '../services/analytics';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -73,6 +74,15 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onIte
       setResults(filtered);
     }
   }, [query, products]);
+
+  // Debounced GA4 search tracking (safe against PII)
+  useEffect(() => {
+    if (!isOpen || query.trim().length < 2) return;
+    const timer = setTimeout(() => {
+      trackSearch(query);
+    }, 450);
+    return () => clearTimeout(timer);
+  }, [isOpen, query]);
 
   if (!isOpen) return null;
 
@@ -186,7 +196,14 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onIte
                     >
                       <Link
                         to={`/products/makhana?sku=${product.id}`}
-                        onClick={handleClose}
+                        onClick={() => {
+                          trackSelectItem({
+                            listId: 'search_results',
+                            listName: 'Storefront Search Results',
+                            product,
+                          });
+                          handleClose();
+                        }}
                         className="flex items-center gap-3 min-w-0 flex-1"
                       >
                         <img

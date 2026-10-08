@@ -1,6 +1,27 @@
 // backend/src/services/admin.service.ts
 import prisma from '../lib/prisma.js';
-import type { Prisma, OrderStatus, ShippingStatus, PaymentStatus } from '@prisma/client';
+import { razorpayService } from './razorpay.service.js';
+import {
+  extractOrderCouponMeta,
+  normalizeCouponCode,
+  createCouponError,
+} from './coupon.service.js';
+import { notificationService } from './notification/notification.service.js';
+import { loyaltyService } from './loyalty.service.js';
+import { referralService } from './referral.service.js';
+import type {
+  Prisma,
+  OrderStatus,
+  ShippingStatus,
+  PaymentStatus,
+  Coupon,
+  CouponDiscountType,
+  NotificationType,
+  NotificationChannel,
+  NotificationStatus,
+} from '@prisma/client';
+
+const activeRefundOrderLocks = new Set<string>();
 
 export class AdminService {
   /**
@@ -131,7 +152,7 @@ export class AdminService {
     to?: string;
   }) {
     const page = Math.max(1, Number(params.page) || 1);
-    const limit = Math.min(100, Math.max(1, Number(params.limit) || 20));
+    const limit = Math.min(100, Math.max(1, Number(params.limit) || 15));
     const skip = (page - 1) * limit;
 
     const where: Prisma.OrderWhereInput = {};
@@ -148,8 +169,15 @@ export class AdminService {
 
     if (params.from || params.to) {
       where.createdAt = {};
-      if (params.from) where.createdAt.gte = new Date(params.from);
-      if (params.to) where.createdAt.lte = new Date(params.to);
+      if (params.from) {
+        where.createdAt.gte = new Date(params.from);
+      }
+      if (params.to) {
+        const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(params.to);
+        where.createdAt.lte = isDateOnly
+          ? new Date(`${params.to}T23:59:59.999Z`)
+          : new Date(params.to);
+      }
     }
 
     if (params.search) {
@@ -180,6 +208,7 @@ export class AdminService {
           status: true,
           paymentStatus: true,
           shippingStatus: true,
+          shippingAddress: true,
           createdAt: true,
           updatedAt: true,
           user: {
@@ -197,8 +226,18 @@ export class AdminService {
       }),
     ]);
 
+    const formattedOrders = orders.map((o) => {
+      const { couponMeta } = extractOrderCouponMeta(o.shippingAddress);
+      const { shippingAddress: _ignored, ...rest } = o;
+      return {
+        ...rest,
+        discountAmount: Number(o.discountAmount || 0),
+        couponCode: couponMeta?.couponCode || null,
+      };
+    });
+
     return {
-      orders,
+      orders: formattedOrders,
       pagination: {
         page,
         limit,
@@ -214,7 +253,23 @@ export class AdminService {
   async getOrderById(id: string) {
     const order = await prisma.order.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        userId: true,
+        orderNumber: true,
+        subtotal: true,
+        shippingAmount: true,
+        discountAmount: true,
+        taxAmount: true,
+        totalAmount: true,
+        currency: true,
+        status: true,
+        paymentStatus: true,
+        shippingStatus: true,
+        razorpayOrderId: true,
+        shippingAddress: true,
+        createdAt: true,
+        updatedAt: true,
         user: {
           select: {
             id: true,
@@ -226,7 +281,14 @@ export class AdminService {
           },
         },
         items: {
-          include: {
+          select: {
+            id: true,
+            orderId: true,
+            productId: true,
+            productName: true,
+            quantity: true,
+            price: true,
+            subtotal: true,
             product: {
               select: {
                 id: true,
@@ -240,6 +302,7 @@ export class AdminService {
           },
         },
         payments: {
+          orderBy: { createdAt: 'desc' },
           select: {
             id: true,
             provider: true,
@@ -257,52 +320,217 @@ export class AdminService {
     });
 
     if (!order) {
-      const error: any = new Error('Order not found');
+      const error: any = new Error('Order not found.');
       error.statusCode = 404;
       error.code = 'NOT_FOUND';
       throw error;
     }
 
-    return order;
+    const capturedPayment = order.payments.find(
+      (p) =>
+        p.status === 'CAPTURED' ||
+        (order.paymentStatus === 'REFUNDED' &&
+          p.status === 'REFUNDED' &&
+          p.providerPaymentId &&
+          p.providerPaymentId.startsWith('pay_'))
+    );
+    const refundRecords = order.payments.filter(
+      (p) =>
+        p.status === 'REFUNDED' &&
+        (!p.providerPaymentId ||
+          p.providerPaymentId.startsWith('rfnd_') ||
+          (capturedPayment && p.id !== capturedPayment.id))
+    );
+
+    const capturedAmountPaise = capturedPayment
+      ? Math.round(capturedPayment.amount * 100)
+      : order.paymentStatus === 'CAPTURED' || order.paymentStatus === 'REFUNDED'
+      ? Math.round(order.totalAmount * 100)
+      : 0;
+
+    let previouslyRefundedPaise = refundRecords.reduce(
+      (sum, r) => sum + Math.round(r.amount * 100),
+      0
+    );
+    if (order.paymentStatus === 'REFUNDED' && previouslyRefundedPaise === 0) {
+      previouslyRefundedPaise = capturedAmountPaise;
+    }
+
+    const remainingRefundablePaise =
+      order.paymentStatus === 'REFUNDED'
+        ? 0
+        : Math.max(0, capturedAmountPaise - previouslyRefundedPaise);
+
+    const isRefundEligible =
+      order.paymentStatus === 'CAPTURED' &&
+      Boolean(capturedPayment && capturedPayment.providerPaymentId && capturedPayment.amount > 0) &&
+      remainingRefundablePaise > 0 &&
+      (order.status === 'CANCELLED' ||
+        order.status === 'DELIVERED' ||
+        order.shippingStatus === 'RETURNED');
+
+    const latestRefund =
+      refundRecords.length > 0
+        ? refundRecords[0]
+        : order.paymentStatus === 'REFUNDED' && capturedPayment
+        ? capturedPayment
+        : null;
+
+    const { cleanShippingAddress, couponMeta } = extractOrderCouponMeta(order.shippingAddress);
+
+    return {
+      ...order,
+      discountAmount: Number(order.discountAmount || 0),
+      shippingAddress: cleanShippingAddress,
+      couponCode: couponMeta?.couponCode || null,
+      couponMeta: couponMeta || null,
+      refundSummary: {
+        isEligible: isRefundEligible,
+        capturedAmount: Number((capturedAmountPaise / 100).toFixed(2)),
+        previouslyRefundedAmount: Number((previouslyRefundedPaise / 100).toFixed(2)),
+        remainingRefundableAmount: Number((remainingRefundablePaise / 100).toFixed(2)),
+        refundStatus:
+          order.paymentStatus === 'REFUNDED' ||
+          (capturedAmountPaise > 0 && remainingRefundablePaise === 0)
+            ? 'REFUNDED'
+            : previouslyRefundedPaise > 0
+            ? 'PARTIALLY_REFUNDED'
+            : 'NONE',
+        latestRefund: latestRefund
+          ? {
+              id: latestRefund.id,
+              refundReference: latestRefund.providerPaymentId,
+              amount: latestRefund.amount,
+              currency: latestRefund.currency,
+              status: latestRefund.status,
+              createdAt: latestRefund.createdAt,
+            }
+          : null,
+      },
+    };
   }
 
   /**
-   * Update order fulfillment / shipping status with transition validation.
+   * Update order fulfillment / shipping status with strict forward-only transition validation
+   * and payment-state safety guards.
    */
   async updateOrderStatus(id: string, data: { orderStatus?: OrderStatus; shippingStatus?: ShippingStatus }) {
     const existing = await prisma.order.findUnique({
       where: { id },
-      select: { id: true, status: true, shippingStatus: true, orderNumber: true },
+      select: {
+        id: true,
+        status: true,
+        shippingStatus: true,
+        paymentStatus: true,
+        orderNumber: true,
+      },
     });
 
     if (!existing) {
-      const error: any = new Error('Order not found');
+      const error: any = new Error('Order not found.');
       error.statusCode = 404;
       error.code = 'NOT_FOUND';
       throw error;
     }
 
-    // Validate state transitions
-    if (data.orderStatus) {
-      if (existing.status === 'CANCELLED' && data.orderStatus !== 'CANCELLED') {
-        const error: any = new Error('Cannot reactivate a cancelled order');
-        error.statusCode = 400;
+    const ALLOWED_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+      PENDING: ['CONFIRMED', 'CANCELLED'],
+      CONFIRMED: ['PROCESSING', 'CANCELLED'],
+      PROCESSING: ['SHIPPED', 'CANCELLED'],
+      SHIPPED: ['DELIVERED'],
+      DELIVERED: [],
+      CANCELLED: [],
+    };
+
+    const nextOrderStatus: OrderStatus = data.orderStatus ?? existing.status;
+
+    // 1. Validate strict forward-only OrderStatus transition when orderStatus is provided
+    if (data.orderStatus !== undefined) {
+      const allowedNext = ALLOWED_TRANSITIONS[existing.status] || [];
+      if (!allowedNext.includes(data.orderStatus)) {
+        const error: any = new Error(
+          `Order cannot be moved from ${existing.status} to ${data.orderStatus}.`
+        );
+        error.statusCode = 422;
         error.code = 'INVALID_STATE_TRANSITION';
         throw error;
       }
-      if (existing.status === 'DELIVERED' && ['PENDING', 'PROCESSING', 'CANCELLED'].includes(data.orderStatus)) {
-        const error: any = new Error('Cannot revert a delivered order to an earlier state');
-        error.statusCode = 400;
-        error.code = 'INVALID_STATE_TRANSITION';
+
+      // 2. Payment / Fulfillment Safety Rules
+      if (data.orderStatus !== 'CANCELLED') {
+        if (existing.paymentStatus === 'FAILED') {
+          const error: any = new Error(
+            'Cannot fulfill order while payment status is FAILED.'
+          );
+          error.statusCode = 422;
+          error.code = 'PAYMENT_NOT_CAPTURED';
+          throw error;
+        }
+
+        if (existing.paymentStatus === 'REFUNDED') {
+          const error: any = new Error(
+            'Cannot fulfill order while payment status is REFUNDED.'
+          );
+          error.statusCode = 422;
+          error.code = 'PAYMENT_REFUNDED';
+          throw error;
+        }
+
+        if (
+          existing.paymentStatus !== 'CAPTURED' &&
+          ['PROCESSING', 'SHIPPED', 'DELIVERED'].includes(data.orderStatus)
+        ) {
+          const error: any = new Error(
+            `Cannot move order to ${data.orderStatus} while payment status is ${existing.paymentStatus}. Payment must be CAPTURED first.`
+          );
+          error.statusCode = 422;
+          error.code = 'PAYMENT_NOT_CAPTURED';
+          throw error;
+        }
+      }
+    }
+
+    // 3. Synchronize and validate ShippingStatus consistency with OrderStatus
+    let nextShippingStatus: ShippingStatus = existing.shippingStatus;
+
+    if (nextOrderStatus === 'SHIPPED') {
+      if (data.shippingStatus && data.shippingStatus !== 'SHIPPED') {
+        const error: any = new Error(
+          `Inconsistent shipping status: when order status is SHIPPED, shipping status must be SHIPPED.`
+        );
+        error.statusCode = 422;
+        error.code = 'INVALID_SHIPPING_TRANSITION';
         throw error;
       }
+      nextShippingStatus = 'SHIPPED';
+    } else if (nextOrderStatus === 'DELIVERED') {
+      if (data.shippingStatus && data.shippingStatus !== 'DELIVERED' && data.shippingStatus !== 'RETURNED') {
+        const error: any = new Error(
+          `Inconsistent shipping status: when order status is DELIVERED, shipping status must be DELIVERED or RETURNED.`
+        );
+        error.statusCode = 422;
+        error.code = 'INVALID_SHIPPING_TRANSITION';
+        throw error;
+      }
+      nextShippingStatus = data.shippingStatus === 'RETURNED' ? 'RETURNED' : 'DELIVERED';
+    } else {
+      // Order is in PENDING, CONFIRMED, PROCESSING, or CANCELLED
+      if (data.shippingStatus && data.shippingStatus !== 'PENDING') {
+        const error: any = new Error(
+          `Cannot set shipping status to ${data.shippingStatus} while order status is ${nextOrderStatus}.`
+        );
+        error.statusCode = 422;
+        error.code = 'INVALID_SHIPPING_TRANSITION';
+        throw error;
+      }
+      nextShippingStatus = 'PENDING';
     }
 
     const updated = await prisma.order.update({
       where: { id },
       data: {
-        ...(data.orderStatus ? { status: data.orderStatus } : {}),
-        ...(data.shippingStatus ? { shippingStatus: data.shippingStatus } : {}),
+        status: nextOrderStatus,
+        shippingStatus: nextShippingStatus,
       },
       select: {
         id: true,
@@ -313,6 +541,32 @@ export class AdminService {
         updatedAt: true,
       },
     });
+
+    if (nextOrderStatus !== existing.status) {
+      const statusToNotificationType: Partial<Record<OrderStatus, NotificationType>> = {
+        CONFIRMED: 'ORDER_CONFIRMED',
+        PROCESSING: 'ORDER_PROCESSING',
+        SHIPPED: 'ORDER_SHIPPED',
+        DELIVERED: 'ORDER_DELIVERED',
+        CANCELLED: 'ORDER_CANCELLED',
+      };
+      const notifType = statusToNotificationType[nextOrderStatus];
+      if (notifType) {
+        notificationService.dispatchOrderEventAsync({
+          orderId: updated.id,
+          type: notifType,
+        });
+      }
+
+      if (nextOrderStatus === 'CONFIRMED' || nextOrderStatus === 'DELIVERED') {
+        loyaltyService.awardOrderPoints(updated.id).catch((err) => {
+          console.error('[AdminService] Failed to award loyalty points:', err);
+        });
+        referralService.qualifyReferralForOrder(updated.id).catch((err) => {
+          console.error('[AdminService] Failed to qualify referral:', err);
+        });
+      }
+    }
 
     return updated;
   }
@@ -794,6 +1048,21 @@ export class AdminService {
             paymentStatus: true,
             shippingStatus: true,
             createdAt: true,
+            payments: {
+              orderBy: { createdAt: 'desc' },
+              select: {
+                id: true,
+                provider: true,
+                providerOrderId: true,
+                providerPaymentId: true,
+                amount: true,
+                currency: true,
+                status: true,
+                signatureVerified: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            },
             user: {
               select: {
                 id: true,
@@ -814,6 +1083,989 @@ export class AdminService {
       throw error;
     }
 
-    return payment;
+    const orderPayments = payment.order?.payments || [];
+    const refundTransactions = orderPayments.filter(
+      (p) =>
+        p.status === 'REFUNDED' &&
+        (!p.providerPaymentId || p.providerPaymentId.startsWith('rfnd_') || p.id !== payment.id)
+    );
+
+    const totalRefundedAmount = Number(
+      refundTransactions.reduce((sum, r) => sum + r.amount, 0).toFixed(2)
+    );
+
+    return {
+      ...payment,
+      refundSummary: {
+        isRefundTransaction:
+          payment.status === 'REFUNDED' &&
+          Boolean(payment.providerPaymentId && payment.providerPaymentId.startsWith('rfnd_')),
+        totalRefundedAmount:
+          payment.status === 'REFUNDED' && totalRefundedAmount === 0
+            ? payment.amount
+            : totalRefundedAmount,
+        refundStatus:
+          payment.status === 'REFUNDED' || payment.order?.paymentStatus === 'REFUNDED'
+            ? 'REFUNDED'
+            : totalRefundedAmount > 0
+            ? 'PARTIALLY_REFUNDED'
+            : 'NONE',
+        refundRecords: refundTransactions,
+      },
+    };
+  }
+
+  /**
+   * Process an authoritative, idempotent full or partial refund for an order.
+   * Derives all financial values strictly from PostgreSQL, calls Razorpay refund API,
+   * and updates Order/Payment state transactionally only after gateway confirmation.
+   */
+  async refundOrder(
+    orderId: string,
+    params: { amount?: number; reason?: string; adminUserId?: string }
+  ) {
+    // 1. Concurrency lock to prevent parallel double-refund requests on the same order
+    if (activeRefundOrderLocks.has(orderId)) {
+      const error: any = new Error('Refund is already being processed.');
+      error.statusCode = 409;
+      error.code = 'REFUND_IN_PROGRESS';
+      throw error;
+    }
+
+    activeRefundOrderLocks.add(orderId);
+
+    try {
+      // 2. Load order and associated payments from PostgreSQL
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: {
+          payments: {
+            orderBy: { createdAt: 'desc' },
+          },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      if (!order) {
+        const error: any = new Error('Order or payment not found.');
+        error.statusCode = 404;
+        error.code = 'NOT_FOUND';
+        throw error;
+      }
+
+      // 3. Identify captured payment and existing refund records
+      const capturedPayment = order.payments.find(
+        (p) =>
+          p.status === 'CAPTURED' &&
+          p.providerPaymentId &&
+          !p.providerPaymentId.startsWith('rfnd_')
+      );
+
+      const refundRecords = order.payments.filter(
+        (p) =>
+          p.status === 'REFUNDED' &&
+          (!p.providerPaymentId ||
+            p.providerPaymentId.startsWith('rfnd_') ||
+            (capturedPayment && p.id !== capturedPayment.id))
+      );
+
+      // 4. Idempotency / Already Refunded Check
+      if (order.paymentStatus === 'REFUNDED') {
+        const latestRefund = refundRecords[0] || order.payments.find((p) => p.status === 'REFUNDED');
+        // If this is a duplicate full-refund request (no specific amount or amount matches already refunded amount),
+        // return the existing refund result idempotently if requested without excess, or 422 if attempting additional refund
+        if (params.amount !== undefined) {
+          const error: any = new Error('Refund amount exceeds the remaining refundable amount.');
+          error.statusCode = 422;
+          error.code = 'REFUND_EXCEEDS_REMAINING';
+          throw error;
+        }
+        const error: any = new Error('Payment is not eligible for refund. Order is already fully refunded.');
+        error.statusCode = 422;
+        error.code = 'ALREADY_REFUNDED';
+        error.details = latestRefund
+          ? {
+              refundId: latestRefund.providerPaymentId || latestRefund.id,
+              amount: latestRefund.amount,
+              status: 'REFUNDED',
+              createdAt: latestRefund.createdAt,
+            }
+          : undefined;
+        throw error;
+      }
+
+      // 5. Strict Payment Status Eligibility Check
+      if (order.paymentStatus !== 'CAPTURED' || !capturedPayment || !capturedPayment.providerPaymentId) {
+        const error: any = new Error('Payment is not eligible for refund.');
+        error.statusCode = 422;
+        error.code = 'PAYMENT_NOT_REFUNDABLE';
+        throw error;
+      }
+
+      if (capturedPayment.amount <= 0 || order.totalAmount <= 0) {
+        const error: any = new Error('Payment is not eligible for refund.');
+        error.statusCode = 422;
+        error.code = 'PAYMENT_NOT_REFUNDABLE';
+        throw error;
+      }
+
+      // Verify order belongs to the payment record
+      if (capturedPayment.orderId !== order.id) {
+        const error: any = new Error('Payment is not eligible for refund.');
+        error.statusCode = 422;
+        error.code = 'PAYMENT_ORDER_MISMATCH';
+        throw error;
+      }
+
+      // 6. Order + Shipping State Eligibility Check:
+      // Refund is only allowed for CANCELLED orders (cancelled before shipping)
+      // or DELIVERED orders (including RETURNED shipping status).
+      const isOrderStateEligible =
+        order.status === 'CANCELLED' ||
+        order.status === 'DELIVERED' ||
+        order.shippingStatus === 'RETURNED';
+
+      if (!isOrderStateEligible) {
+        const error: any = new Error(
+          `Payment is not eligible for refund while order status is ${order.status}. Cancel the order or complete return reception first.`
+        );
+        error.statusCode = 422;
+        error.code = 'ORDER_STATE_NOT_REFUNDABLE';
+        throw error;
+      }
+
+      // 7. Server-Authoritative Paise Calculation
+      const capturedPaise = Math.round(capturedPayment.amount * 100);
+      const previouslyRefundedPaise = refundRecords.reduce(
+        (sum, r) => sum + Math.round(r.amount * 100),
+        0
+      );
+      const remainingRefundablePaise = Math.max(0, capturedPaise - previouslyRefundedPaise);
+
+      if (remainingRefundablePaise <= 0) {
+        const error: any = new Error('Payment is not eligible for refund.');
+        error.statusCode = 422;
+        error.code = 'ALREADY_REFUNDED';
+        throw error;
+      }
+
+      const requestedPaise =
+        params.amount !== undefined
+          ? Math.round(params.amount * 100)
+          : remainingRefundablePaise;
+
+      if (requestedPaise <= 0) {
+        const error: any = new Error('Refund amount must be greater than zero.');
+        error.statusCode = 422;
+        error.code = 'INVALID_REFUND_AMOUNT';
+        throw error;
+      }
+
+      if (requestedPaise > capturedPaise || requestedPaise > remainingRefundablePaise) {
+        const error: any = new Error('Refund amount exceeds the remaining refundable amount.');
+        error.statusCode = 422;
+        error.code = 'REFUND_EXCEEDS_REMAINING';
+        throw error;
+      }
+
+      const newRemainingPaise = remainingRefundablePaise - requestedPaise;
+      const isFullyRefundedAfter = newRemainingPaise === 0;
+      const refundAmountInr = Number((requestedPaise / 100).toFixed(2));
+
+      // 8. Execute Razorpay Refund Request Server-Side
+      let razorpayRefund: any;
+      try {
+        razorpayRefund = await razorpayService.createRefund(
+          capturedPayment.providerPaymentId,
+          requestedPaise
+        );
+      } catch (gatewayErr: any) {
+        const error: any = new Error('Refund could not be completed. No refund was recorded.');
+        error.statusCode = 502;
+        error.code = 'RAZORPAY_REFUND_FAILED';
+        throw error;
+      }
+
+      if (!razorpayRefund || !razorpayRefund.id) {
+        const error: any = new Error('Refund could not be completed. No refund was recorded.');
+        error.statusCode = 502;
+        error.code = 'RAZORPAY_REFUND_FAILED';
+        throw error;
+      }
+
+      // 9. Update PostgreSQL Transactionally (Only after Razorpay confirms refund)
+      const result = await prisma.$transaction(async (tx) => {
+        // Double-check inside transaction that the same provider refund ID wasn't already recorded via webhook
+        const existingRefundRecord = await tx.payment.findUnique({
+          where: { providerPaymentId: razorpayRefund.id },
+        });
+
+        const refundPayment =
+          existingRefundRecord ||
+          (await tx.payment.create({
+            data: {
+              orderId: order.id,
+              userId: order.userId,
+              provider: capturedPayment.provider,
+              providerOrderId: capturedPayment.providerOrderId || order.razorpayOrderId,
+              providerPaymentId: razorpayRefund.id,
+              amount: refundAmountInr,
+              currency: razorpayRefund.currency || capturedPayment.currency || 'INR',
+              status: 'REFUNDED',
+              signatureVerified: true,
+              rawResponse: {
+                ...(typeof razorpayRefund === 'object' ? razorpayRefund : {}),
+                parentPaymentId: capturedPayment.providerPaymentId,
+                adminUserId: params.adminUserId || null,
+                reason: params.reason || null,
+              } as any,
+            },
+          }));
+
+        // Update Order paymentStatus to REFUNDED when full captured amount is refunded
+        const updatedOrder = await tx.order.update({
+          where: { id: order.id },
+          data: {
+            ...(isFullyRefundedAfter ? { paymentStatus: 'REFUNDED' } : {}),
+          },
+          select: {
+            id: true,
+            orderNumber: true,
+            status: true,
+            paymentStatus: true,
+            shippingStatus: true,
+            totalAmount: true,
+            currency: true,
+            updatedAt: true,
+          },
+        });
+
+        return { refundPayment, updatedOrder };
+      });
+
+      const refundReferenceId = result.refundPayment.providerPaymentId || result.refundPayment.id;
+
+      notificationService.dispatchOrderEventAsync({
+        orderId: order.id,
+        type: 'REFUND_COMPLETED',
+        refundAmount: refundAmountInr,
+        refundReference: refundReferenceId,
+        refundReason: params.reason,
+      });
+
+      loyaltyService.reverseOrderPoints(order.id, refundReferenceId).catch((err) => {
+        console.error('[AdminService] Failed to reverse loyalty points:', err);
+      });
+
+      // 10. Return strictly sanitized response (NEVER expose rawResponse or secrets)
+      return {
+        refundId: refundReferenceId,
+        paymentRecordId: result.refundPayment.id,
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        originalPaymentReference: capturedPayment.providerPaymentId,
+        capturedAmount: Number((capturedPaise / 100).toFixed(2)),
+        refundAmount: refundAmountInr,
+        previouslyRefundedAmount: Number(
+          ((previouslyRefundedPaise + requestedPaise) / 100).toFixed(2)
+        ),
+        remainingRefundableAmount: Number((newRemainingPaise / 100).toFixed(2)),
+        currency: result.refundPayment.currency,
+        status: isFullyRefundedAfter ? 'REFUNDED' : 'PARTIALLY_REFUNDED',
+        orderStatus: result.updatedOrder.status,
+        paymentStatus: result.updatedOrder.paymentStatus,
+        shippingStatus: result.updatedOrder.shippingStatus,
+        createdAt: result.refundPayment.createdAt,
+      };
+    } finally {
+      activeRefundOrderLocks.delete(orderId);
+    }
+  }
+
+  /**
+   * Helper to enrich a Coupon record with extended metadata and computed lifecycle status.
+   */
+  private formatAdminCoupon(
+    coupon: Coupon,
+    orderStats?: {
+      ordersCount: number;
+      totalDiscountGiven: number;
+      revenueBeforeDiscount: number;
+      revenueAfterDiscount: number;
+    }
+  ) {
+    const nowMs = Date.now();
+    const startMs = coupon.startsAt ? coupon.startsAt.getTime() : null;
+    const expiryMs = coupon.expiresAt ? coupon.expiresAt.getTime() : null;
+
+    const isExpired = expiryMs !== null && !Number.isNaN(expiryMs) && expiryMs <= nowMs;
+    const isScheduled = startMs !== null && !Number.isNaN(startMs) && startMs > nowMs;
+    const isLimitReached =
+      coupon.usageLimit !== null &&
+      coupon.usageLimit !== undefined &&
+      coupon.usedCount >= coupon.usageLimit;
+
+    let effectiveStatus: 'ACTIVE' | 'INACTIVE' | 'EXPIRED' | 'SCHEDULED' | 'LIMIT_REACHED' = 'ACTIVE';
+    if (!coupon.isActive) {
+      effectiveStatus = 'INACTIVE';
+    } else if (isExpired) {
+      effectiveStatus = 'EXPIRED';
+    } else if (isLimitReached) {
+      effectiveStatus = 'LIMIT_REACHED';
+    } else if (isScheduled) {
+      effectiveStatus = 'SCHEDULED';
+    }
+
+    return {
+      id: coupon.id,
+      code: coupon.code,
+      description: coupon.description ?? null,
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue,
+      minimumOrderAmount: coupon.minimumOrderAmount ?? null,
+      maximumDiscount: coupon.maximumDiscount ?? null,
+      maximumDiscountAmount: coupon.maximumDiscount ?? null,
+      startsAt: coupon.startsAt ? coupon.startsAt.toISOString() : null,
+      expiresAt: coupon.expiresAt ? coupon.expiresAt.toISOString() : null,
+      usageLimit: coupon.usageLimit ?? null,
+      usedCount: coupon.usedCount,
+      usageCount: coupon.usedCount,
+      perCustomerLimit: coupon.perCustomerLimit ?? null,
+      isActive: coupon.isActive,
+      isExpired,
+      isScheduled,
+      isLimitReached,
+      effectiveStatus,
+      createdAt: coupon.createdAt ? coupon.createdAt.toISOString() : null,
+      updatedAt: coupon.updatedAt ? coupon.updatedAt.toISOString() : null,
+      usageStats: {
+        ordersCount: orderStats?.ordersCount ?? coupon.usedCount,
+        totalDiscountGiven: Number((orderStats?.totalDiscountGiven ?? 0).toFixed(2)),
+        revenueBeforeDiscount: Number((orderStats?.revenueBeforeDiscount ?? 0).toFixed(2)),
+        revenueAfterDiscount: Number((orderStats?.revenueAfterDiscount ?? 0).toFixed(2)),
+      },
+    };
+  }
+
+  /**
+   * List coupons with server-side pagination, search, type filter, active filter, and validity filter.
+   */
+  async getCoupons(params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    isActive?: boolean;
+    discountType?: CouponDiscountType;
+    type?: CouponDiscountType;
+    validity?: 'ALL' | 'VALID' | 'EXPIRED' | 'SCHEDULED';
+  }) {
+    const page = Math.max(1, Number(params.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(params.limit) || 15));
+    const skip = (page - 1) * limit;
+
+    const andConditions: Prisma.CouponWhereInput[] = [];
+
+    if (params.search) {
+      const q = params.search.trim();
+      if (q) {
+        andConditions.push({
+          OR: [
+            { code: { contains: q, mode: 'insensitive' } },
+            { description: { contains: q, mode: 'insensitive' } },
+          ],
+        });
+      }
+    }
+
+    if (params.isActive !== undefined) {
+      andConditions.push({ isActive: params.isActive });
+    }
+
+    const typeFilter = params.discountType || params.type;
+    if (typeFilter) {
+      andConditions.push({ discountType: typeFilter });
+    }
+
+    const now = new Date();
+    if (params.validity === 'EXPIRED') {
+      andConditions.push({ expiresAt: { lte: now } });
+    } else if (params.validity === 'SCHEDULED') {
+      andConditions.push({ startsAt: { gt: now } });
+    } else if (params.validity === 'VALID') {
+      if (params.isActive === undefined) {
+        andConditions.push({ isActive: true });
+      }
+      andConditions.push({ OR: [{ startsAt: null }, { startsAt: { lte: now } }] });
+      andConditions.push({ OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] });
+    }
+
+    const where: Prisma.CouponWhereInput =
+      andConditions.length > 0 ? { AND: andConditions } : {};
+
+    const [total, coupons, usageRows] = await Promise.all([
+      prisma.coupon.count({ where }),
+      prisma.coupon.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: [{ isActive: 'desc' }, { code: 'asc' }],
+      }),
+      prisma.$queryRaw<
+        Array<{
+          coupon_code: string;
+          orders_count: bigint;
+          total_discount: number;
+          revenue_before: number;
+          revenue_after: number;
+        }>
+      >`
+        SELECT
+          UPPER("shippingAddress"->'_couponMeta'->>'couponCode') AS coupon_code,
+          COUNT(*)::bigint AS orders_count,
+          COALESCE(SUM("discountAmount"), 0)::float8 AS total_discount,
+          COALESCE(SUM("subtotal"), 0)::float8 AS revenue_before,
+          COALESCE(SUM("totalAmount"), 0)::float8 AS revenue_after
+        FROM "Order"
+        WHERE "shippingAddress"->'_couponMeta'->>'couponCode' IS NOT NULL
+        GROUP BY 1
+      `,
+    ]);
+
+    const statsByCode = new Map<
+      string,
+      {
+        ordersCount: number;
+        totalDiscountGiven: number;
+        revenueBeforeDiscount: number;
+        revenueAfterDiscount: number;
+      }
+    >();
+
+    let totalDiscountGivenAll = 0;
+    let totalOrdersUsingCoupons = 0;
+
+    for (const row of usageRows) {
+      if (row.coupon_code) {
+        const countNum = Number(row.orders_count || 0);
+        const discNum = Number(row.total_discount || 0);
+        totalOrdersUsingCoupons += countNum;
+        totalDiscountGivenAll += discNum;
+        statsByCode.set(row.coupon_code.toUpperCase(), {
+          ordersCount: countNum,
+          totalDiscountGiven: discNum,
+          revenueBeforeDiscount: Number(row.revenue_before || 0),
+          revenueAfterDiscount: Number(row.revenue_after || 0),
+        });
+      }
+    }
+
+    const formatted = coupons.map((c) =>
+      this.formatAdminCoupon(c, statsByCode.get(c.code.toUpperCase()))
+    );
+
+    return {
+      coupons: formatted,
+      summary: {
+        totalCoupons: total,
+        totalOrdersUsingCoupons,
+        totalDiscountGiven: Number(totalDiscountGivenAll.toFixed(2)),
+      },
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  /**
+   * Get single coupon details and usage statistics.
+   */
+  async getCouponById(id: string) {
+    const coupon = await prisma.coupon.findUnique({
+      where: { id },
+    });
+
+    if (!coupon) {
+      const error: any = new Error('Coupon not found.');
+      error.statusCode = 404;
+      error.code = 'NOT_FOUND';
+      throw error;
+    }
+
+    // Aggregate usage statistics and recent orders that used this coupon
+    const [aggRows, recentOrderIds] = await Promise.all([
+      prisma.$queryRaw<
+        Array<{
+          orders_count: bigint;
+          total_discount: number;
+          revenue_before: number;
+          revenue_after: number;
+        }>
+      >`
+        SELECT
+          COUNT(*)::bigint AS orders_count,
+          COALESCE(SUM("discountAmount"), 0)::float8 AS total_discount,
+          COALESCE(SUM("subtotal"), 0)::float8 AS revenue_before,
+          COALESCE(SUM("totalAmount"), 0)::float8 AS revenue_after
+        FROM "Order"
+        WHERE "shippingAddress"->'_couponMeta'->>'couponId' = ${coupon.id}
+           OR UPPER("shippingAddress"->'_couponMeta'->>'couponCode') = ${coupon.code}
+      `,
+      prisma.$queryRaw<Array<{ id: string }>>`
+        SELECT "id"
+        FROM "Order"
+        WHERE "shippingAddress"->'_couponMeta'->>'couponId' = ${coupon.id}
+           OR UPPER("shippingAddress"->'_couponMeta'->>'couponCode') = ${coupon.code}
+        ORDER BY "createdAt" DESC
+        LIMIT 25
+      `,
+    ]);
+
+    const agg = aggRows[0];
+    const orderIds = recentOrderIds.map((r) => r.id);
+
+    const recentOrders =
+      orderIds.length > 0
+        ? await prisma.order.findMany({
+            where: { id: { in: orderIds } },
+            orderBy: { createdAt: 'desc' },
+            select: {
+              id: true,
+              orderNumber: true,
+              subtotal: true,
+              discountAmount: true,
+              shippingAmount: true,
+              totalAmount: true,
+              status: true,
+              paymentStatus: true,
+              createdAt: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          })
+        : [];
+
+    const formatted = this.formatAdminCoupon(coupon, {
+      ordersCount: Math.max(coupon.usedCount, Number(agg?.orders_count || 0)),
+      totalDiscountGiven: Number(agg?.total_discount || 0),
+      revenueBeforeDiscount: Number(agg?.revenue_before || 0),
+      revenueAfterDiscount: Number(agg?.revenue_after || 0),
+    });
+
+    return {
+      ...formatted,
+      recentOrders,
+    };
+  }
+
+  /**
+   * Create a new coupon with normalized code and strict financial rules in PostgreSQL.
+   */
+  async createCoupon(data: {
+    code: string;
+    description?: string | null;
+    discountType: CouponDiscountType;
+    discountValue: number;
+    minimumOrderAmount?: number | null;
+    maximumDiscount?: number | null;
+    maximumDiscountAmount?: number | null;
+    startsAt?: string | null;
+    expiresAt?: string | null;
+    usageLimit?: number | null;
+    perCustomerLimit?: number | null;
+    isActive?: boolean;
+  }) {
+    const normalizedCode = normalizeCouponCode(data.code);
+
+    // Check case-insensitive duplicate code
+    const existing = await prisma.coupon.findFirst({
+      where: {
+        code: { equals: normalizedCode, mode: 'insensitive' },
+      },
+    });
+
+    if (existing) {
+      const error: any = new Error(`A coupon with code "${normalizedCode}" already exists.`);
+      error.statusCode = 409;
+      error.code = 'DUPLICATE_COUPON_CODE';
+      throw error;
+    }
+
+    if (data.discountValue <= 0) {
+      throw createCouponError('Discount value must be greater than zero.', 'INVALID_DISCOUNT_VALUE', 422);
+    }
+
+    if (data.discountType === 'PERCENTAGE' && data.discountValue > 100) {
+      throw createCouponError('Percentage discount cannot exceed 100%.', 'INVALID_PERCENTAGE', 422);
+    }
+
+    const maxDiscount =
+      data.maximumDiscount !== undefined
+        ? data.maximumDiscount
+        : data.maximumDiscountAmount !== undefined
+        ? data.maximumDiscountAmount
+        : null;
+
+    if (maxDiscount !== null && maxDiscount <= 0) {
+      throw createCouponError('Maximum discount must be greater than zero.', 'INVALID_MAX_DISCOUNT', 422);
+    }
+
+    if (data.minimumOrderAmount !== undefined && data.minimumOrderAmount !== null && data.minimumOrderAmount < 0) {
+      throw createCouponError('Minimum order amount cannot be negative.', 'INVALID_MIN_ORDER', 422);
+    }
+
+    if (data.startsAt && data.expiresAt) {
+      const startMs = new Date(data.startsAt).getTime();
+      const endMs = new Date(data.expiresAt).getTime();
+      if (startMs >= endMs) {
+        throw createCouponError('Expiry date must be later than start date.', 'INVALID_DATE_RANGE', 422);
+      }
+    }
+
+    const created = await prisma.coupon.create({
+      data: {
+        code: normalizedCode,
+        description: data.description?.trim() || null,
+        discountType: data.discountType,
+        discountValue: Number(data.discountValue),
+        minimumOrderAmount:
+          data.minimumOrderAmount !== undefined && data.minimumOrderAmount !== null
+            ? Number(data.minimumOrderAmount)
+            : null,
+        maximumDiscount: maxDiscount !== null ? Number(maxDiscount) : null,
+        usageLimit:
+          data.usageLimit !== undefined && data.usageLimit !== null ? Number(data.usageLimit) : null,
+        perCustomerLimit:
+          data.perCustomerLimit !== undefined && data.perCustomerLimit !== null
+            ? Number(data.perCustomerLimit)
+            : null,
+        startsAt: data.startsAt ? new Date(data.startsAt) : null,
+        expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
+        isActive: data.isActive ?? true,
+      },
+    });
+
+    return this.formatAdminCoupon(created);
+  }
+
+  /**
+   * Update an existing coupon's allowed attributes directly in PostgreSQL.
+   * Historical orders that already used the coupon retain their snapshot discount values.
+   */
+  async updateCoupon(
+    id: string,
+    data: {
+      description?: string | null;
+      discountType?: CouponDiscountType;
+      discountValue?: number;
+      minimumOrderAmount?: number | null;
+      maximumDiscount?: number | null;
+      maximumDiscountAmount?: number | null;
+      startsAt?: string | null;
+      expiresAt?: string | null;
+      usageLimit?: number | null;
+      perCustomerLimit?: number | null;
+      isActive?: boolean;
+    }
+  ) {
+    const existing = await prisma.coupon.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      const error: any = new Error('Coupon not found.');
+      error.statusCode = 404;
+      error.code = 'NOT_FOUND';
+      throw error;
+    }
+
+    const nextDiscountType = data.discountType ?? existing.discountType;
+    const nextDiscountValue =
+      data.discountValue !== undefined ? Number(data.discountValue) : existing.discountValue;
+
+    if (nextDiscountValue <= 0) {
+      throw createCouponError('Discount value must be greater than zero.', 'INVALID_DISCOUNT_VALUE', 422);
+    }
+
+    if (nextDiscountType === 'PERCENTAGE' && nextDiscountValue > 100) {
+      throw createCouponError('Percentage discount cannot exceed 100%.', 'INVALID_PERCENTAGE', 422);
+    }
+
+    const nextStartsAt =
+      data.startsAt !== undefined
+        ? data.startsAt
+          ? new Date(data.startsAt)
+          : null
+        : existing.startsAt;
+
+    const nextExpiresAt =
+      data.expiresAt !== undefined
+        ? data.expiresAt
+          ? new Date(data.expiresAt)
+          : null
+        : existing.expiresAt;
+
+    if (nextStartsAt && nextExpiresAt) {
+      const startMs = nextStartsAt.getTime();
+      const endMs = nextExpiresAt.getTime();
+      if (startMs >= endMs) {
+        throw createCouponError('Expiry date must be later than start date.', 'INVALID_DATE_RANGE', 422);
+      }
+    }
+
+    const hasMaxDiscountUpdate =
+      data.maximumDiscount !== undefined || data.maximumDiscountAmount !== undefined;
+    const nextMaxDiscount = hasMaxDiscountUpdate
+      ? data.maximumDiscount !== undefined
+        ? data.maximumDiscount
+        : data.maximumDiscountAmount ?? null
+      : existing.maximumDiscount;
+
+    if (nextMaxDiscount !== null && nextMaxDiscount !== undefined && nextMaxDiscount <= 0) {
+      throw createCouponError('Maximum discount must be greater than zero.', 'INVALID_MAX_DISCOUNT', 422);
+    }
+
+    const updated = await prisma.coupon.update({
+      where: { id },
+      data: {
+        description:
+          data.description !== undefined
+            ? data.description
+              ? data.description.trim()
+              : null
+            : existing.description,
+        discountType: nextDiscountType,
+        discountValue: nextDiscountValue,
+        minimumOrderAmount:
+          data.minimumOrderAmount !== undefined
+            ? data.minimumOrderAmount !== null
+              ? Number(data.minimumOrderAmount)
+              : null
+            : existing.minimumOrderAmount,
+        maximumDiscount: nextMaxDiscount !== null && nextMaxDiscount !== undefined ? Number(nextMaxDiscount) : null,
+        usageLimit:
+          data.usageLimit !== undefined
+            ? data.usageLimit !== null
+              ? Number(data.usageLimit)
+              : null
+            : existing.usageLimit,
+        perCustomerLimit:
+          data.perCustomerLimit !== undefined
+            ? data.perCustomerLimit !== null
+              ? Number(data.perCustomerLimit)
+              : null
+            : existing.perCustomerLimit,
+        startsAt: nextStartsAt,
+        expiresAt: nextExpiresAt,
+        isActive: data.isActive !== undefined ? data.isActive : existing.isActive,
+      },
+    });
+
+    return this.formatAdminCoupon(updated);
+  }
+
+  /**
+   * List customer notifications with server-side pagination and filters (status, channel, type, orderId, search, date range).
+   * Never exposes provider secrets or raw credentials.
+   */
+  async getNotifications(params: {
+    page?: number;
+    limit?: number;
+    status?: NotificationStatus;
+    channel?: NotificationChannel;
+    type?: NotificationType;
+    orderId?: string;
+    search?: string;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const page = Math.max(1, Number(params.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(params.limit) || 20));
+    const skip = (page - 1) * limit;
+
+    const andConditions: Prisma.NotificationWhereInput[] = [];
+
+    if (params.status) {
+      andConditions.push({ status: params.status });
+    }
+    if (params.channel) {
+      andConditions.push({ channel: params.channel });
+    }
+    if (params.type) {
+      andConditions.push({ type: params.type });
+    }
+    if (params.orderId) {
+      const qOrder = params.orderId.trim();
+      if (qOrder) {
+        andConditions.push({
+          OR: [
+            { orderId: qOrder },
+            { order: { orderNumber: { contains: qOrder, mode: 'insensitive' } } },
+          ],
+        });
+      }
+    }
+    if (params.search) {
+      const q = params.search.trim();
+      if (q) {
+        andConditions.push({
+          OR: [
+            { recipient: { contains: q, mode: 'insensitive' } },
+            { subject: { contains: q, mode: 'insensitive' } },
+            { providerMessageId: { contains: q, mode: 'insensitive' } },
+            { order: { orderNumber: { contains: q, mode: 'insensitive' } } },
+            { user: { name: { contains: q, mode: 'insensitive' } } },
+            { user: { email: { contains: q, mode: 'insensitive' } } },
+          ],
+        });
+      }
+    }
+    if (params.startDate || params.endDate) {
+      const createdAtFilter: Prisma.DateTimeFilter = {};
+      if (params.startDate) {
+        createdAtFilter.gte = new Date(params.startDate);
+      }
+      if (params.endDate) {
+        createdAtFilter.lte = new Date(params.endDate);
+      }
+      andConditions.push({ createdAt: createdAtFilter });
+    }
+
+    const where: Prisma.NotificationWhereInput =
+      andConditions.length > 0 ? { AND: andConditions } : {};
+
+    const [total, notifications, sentCount, failedCount, pendingCount] = await Promise.all([
+      prisma.notification.count({ where }),
+      prisma.notification.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          idempotencyKey: true,
+          userId: true,
+          orderId: true,
+          type: true,
+          channel: true,
+          status: true,
+          recipient: true,
+          subject: true,
+          provider: true,
+          providerMessageId: true,
+          errorMessage: true,
+          attemptCount: true,
+          lastAttemptAt: true,
+          sentAt: true,
+          createdAt: true,
+          updatedAt: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+            },
+          },
+          order: {
+            select: {
+              id: true,
+              orderNumber: true,
+              status: true,
+              paymentStatus: true,
+              totalAmount: true,
+            },
+          },
+        },
+      }),
+      prisma.notification.count({ where: { status: 'SENT' } }),
+      prisma.notification.count({ where: { status: 'FAILED' } }),
+      prisma.notification.count({ where: { status: { in: ['PENDING', 'SENDING'] } } }),
+    ]);
+
+    return {
+      notifications,
+      summary: {
+        totalNotifications: sentCount + failedCount + pendingCount,
+        sentCount,
+        failedCount,
+        pendingCount,
+      },
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  /**
+   * Get single notification details by ID for admin inspection.
+   */
+  async getNotificationById(id: string) {
+    const notification = await prisma.notification.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        idempotencyKey: true,
+        userId: true,
+        orderId: true,
+        type: true,
+        channel: true,
+        status: true,
+        recipient: true,
+        subject: true,
+        provider: true,
+        providerMessageId: true,
+        errorMessage: true,
+        attemptCount: true,
+        lastAttemptAt: true,
+        sentAt: true,
+        createdAt: true,
+        updatedAt: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
+        order: {
+          select: {
+            id: true,
+            orderNumber: true,
+            status: true,
+            paymentStatus: true,
+            shippingStatus: true,
+            totalAmount: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+
+    if (!notification) {
+      const error: any = new Error('Notification record not found.');
+      error.statusCode = 404;
+      error.code = 'NOT_FOUND';
+      throw error;
+    }
+
+    return notification;
   }
 }

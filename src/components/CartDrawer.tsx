@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X, Minus, Plus, Trash2, ArrowRight, ShieldCheck, ShoppingBag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { cartService } from '../services/cart';
+import { trackViewCart } from '../services/analytics';
 import type { CartItem } from '../types';
 
 interface CartDrawerProps {
@@ -16,6 +17,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
   useEffect(() => {
     return cartService.subscribe(setItems);
   }, []);
+
+  useEffect(() => {
+    if (isOpen && items.length > 0) {
+      trackViewCart(items, 'drawer');
+    }
+  }, [isOpen, items]);
 
   // Handle ESC key
   useEffect(() => {

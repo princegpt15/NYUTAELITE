@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { resetAnalyticsConsent } from '../services/analytics';
 
 export const Footer: React.FC = () => {
   return (
@@ -111,6 +112,15 @@ export const Footer: React.FC = () => {
                 <Link to="/about#terms" className="hover:text-white transition-colors">
                   Terms of Service
                 </Link>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={resetAnalyticsConsent}
+                  className="hover:text-white transition-colors text-left cursor-pointer"
+                >
+                  Analytics Preferences
+                </button>
               </li>
             </ul>
           </div>

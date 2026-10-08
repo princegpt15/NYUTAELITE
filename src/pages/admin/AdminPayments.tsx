@@ -345,6 +345,9 @@ export const AdminPayments: React.FC = () => {
                 <tbody className="divide-y divide-[#E8DECB]/60">
                   {payments.map((payment) => {
                     const primaryRef = payment.providerPaymentId || payment.providerOrderId || payment.id.slice(0, 12);
+                    const isRefundRow =
+                      payment.status === 'REFUNDED' &&
+                      Boolean(payment.providerPaymentId && payment.providerPaymentId.startsWith('rfnd_'));
                     const customerName = payment.order?.user?.name?.trim() || 'Registered Customer';
                     const customerEmail = payment.order?.user?.email || '—';
 
@@ -358,7 +361,11 @@ export const AdminPayments: React.FC = () => {
                             {primaryRef}
                           </Link>
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            {payment.signatureVerified ? (
+                            {isRefundRow ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-700">
+                                Refund ID
+                              </span>
+                            ) : payment.signatureVerified ? (
                               <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700">
                                 <ShieldCheck className="w-3 h-3" aria-hidden="true" />
                                 HMAC Verified

@@ -91,6 +91,7 @@ export interface Order {
   subtotal: number;
   shippingAmount: number;
   discountAmount?: number;
+  couponCode?: string | null;
   taxAmount?: number;
   totalAmount: number;
   currency: string;
@@ -101,11 +102,36 @@ export interface Order {
   shippingAddress?: Address | any;
   createdAt: string;
   updatedAt?: string;
+  confirmationEmailSent?: boolean;
   items?: OrderItem[];
+  payments?: Array<{
+    id: string;
+    provider: string;
+    amount: number;
+    currency: string;
+    status: PaymentStatus;
+    createdAt: string;
+    updatedAt: string;
+  }>;
 }
 
 export interface CreateOrderPayload {
   addressId?: string;
   address?: Omit<Address, 'id' | 'userId' | 'createdAt'>;
   couponCode?: string;
+}
+
+export interface CouponValidationResult {
+  valid: boolean;
+  couponCode: string;
+  discountType: 'PERCENTAGE' | 'FIXED';
+  discountValue: number;
+  minimumOrderAmount: number | null;
+  maximumDiscount: number | null;
+  subtotal: number;
+  discountAmount: number;
+  shippingAmount: number;
+  totalAmount: number;
+  currency: string;
+  message: string;
 }

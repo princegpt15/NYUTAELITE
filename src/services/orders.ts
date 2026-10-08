@@ -1,8 +1,25 @@
 // src/services/orders.ts
 import { api, ApiError } from './api';
-import type { Order, CreateOrderPayload, Address } from '../types';
+import type { Order, CreateOrderPayload, Address, CouponValidationResult } from '../types';
 
 export const orderService = {
+  /** Validate a coupon code against the authenticated user's live database cart */
+  async validateCoupon(couponCode: string): Promise<CouponValidationResult> {
+    try {
+      const resp = await api.post<{
+        success: boolean;
+        message?: string;
+        data: CouponValidationResult;
+      }>('/coupons/validate', { couponCode });
+      return (resp as any).data ?? resp;
+    } catch (err: any) {
+      if (err instanceof ApiError) {
+        throw err;
+      }
+      throw new ApiError(err?.message || 'Unable to validate coupon. Please try again.', 500);
+    }
+  },
+
   /** Create a new order on backend from the authenticated user's cart */
   async createOrder(payload: CreateOrderPayload | any): Promise<Order> {
     try {
@@ -110,5 +127,57 @@ export const orderService = {
       }
       throw new ApiError(err?.message || 'Failed to save address', 500);
     }
+  },
+
+  /** Authoritatively claim GA4 purchase analytics eligibility on backend PostgreSQL ledger */
+  async claimPurchaseAnalytics(orderIdOrNumber: string): Promise<{
+    eligible: boolean;
+    alreadyRecorded: boolean;
+    idempotencyKey: string | null;
+    reason?: string;
+    payload?: {
+      transactionId: string;
+      orderId: string;
+      currency: string;
+      value: number;
+      tax: number;
+      shipping: number;
+      discount: number;
+      couponCode: string | null;
+      items: any[];
+    };
+  }> {
+    const resp = await api.post<any>(
+      `/orders/${encodeURIComponent(orderIdOrNumber)}/analytics/purchase`,
+      {}
+    );
+    return (resp as any)?.data ?? resp;
+  },
+
+  /** Authoritatively claim GA4 refund analytics eligibility on backend PostgreSQL ledger */
+  async claimRefundAnalytics(
+    orderIdOrNumber: string,
+    refundId?: string | null
+  ): Promise<{
+    eligible: boolean;
+    alreadyRecorded: boolean;
+    idempotencyKey: string | null;
+    refundId: string | null;
+    reason?: string;
+    payload?: {
+      transactionId: string;
+      orderId: string;
+      refundId: string;
+      currency: string;
+      value: number;
+      couponCode: string | null;
+      items: any[];
+    };
+  }> {
+    const resp = await api.post<any>(
+      `/orders/${encodeURIComponent(orderIdOrNumber)}/analytics/refund`,
+      refundId ? { refundId } : {}
+    );
+    return (resp as any)?.data ?? resp;
   },
 };

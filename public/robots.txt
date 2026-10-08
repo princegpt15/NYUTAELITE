@@ -1,4 +1,18 @@
 User-agent: *
 Allow: /
+Allow: /products/makhana
+Allow: /about
+Allow: /faq
+Allow: /contact
+
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api
+Disallow: /api/
+Disallow: /cart
+Disallow: /checkout
+Disallow: /orders
+Disallow: /login
+Disallow: /register
 
 Sitemap: https://nutyaelite.com/sitemap.xml

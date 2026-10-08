@@ -2,6 +2,7 @@
 import type { CartItem } from '../types';
 import { api } from './api';
 import { authService } from './auth';
+import { trackAddToCart, trackRemoveFromCart } from './analytics';
 import productImage from '../assets/images/product-main.png';
 
 // Guest cart uses localStorage key
@@ -118,6 +119,17 @@ export const cartService = {
     quantity: number;
     image?: string;
   }): CartItem[] {
+    const trackedCartItem: CartItem = {
+      productId: item.productId,
+      productName: item.productName,
+      quality: item.quality ?? ('Normal' as any),
+      weightGrams: item.weightGrams ?? 100,
+      price: item.price,
+      mrp: item.mrp ?? item.price,
+      quantity: item.quantity,
+      image: item.image ?? '',
+    };
+
     if (authService.getCurrentUser()) {
       // Optimistic local update
       const existing = cachedItems.find((i) => i.productId === item.productId);
@@ -126,21 +138,11 @@ export const cartService = {
         existing.price = item.price;
         existing.mrp = item.mrp ?? existing.mrp;
       } else {
-        const newItem: CartItem = {
-          productId: item.productId,
-          productName: item.productName,
-          quality: item.quality ?? ('Normal' as any),
-          weightGrams: item.weightGrams ?? 100,
-          price: item.price,
-          mrp: item.mrp ?? item.price,
-          quantity: item.quantity,
-          image: item.image ?? '',
-        };
-        cachedItems.push(newItem);
+        cachedItems.push({ ...trackedCartItem });
       }
       notify(cachedItems);
 
-      // Backend request
+      // Backend request — emit GA4 add_to_cart only after API confirms success
       (async () => {
         try {
           const payload: any = {
@@ -173,6 +175,7 @@ export const cartService = {
             }
             notify(cachedItems);
           }
+          trackAddToCart(trackedCartItem, item.quantity);
         } catch (e) {
           console.error('addItem API error:', e);
           loadAuthenticatedCart().catch(() => {});
@@ -189,26 +192,20 @@ export const cartService = {
       existing.price = item.price;
       existing.mrp = item.mrp ?? existing.mrp;
     } else {
-      const newItem: CartItem = {
-        productId: item.productId,
-        productName: item.productName,
-        quality: item.quality ?? ('Normal' as any),
-        weightGrams: item.weightGrams ?? 100,
-        price: item.price,
-        mrp: item.mrp ?? item.price,
-        quantity: item.quantity,
-        image: item.image ?? '',
-      };
-      items.push(newItem);
+      items.push({ ...trackedCartItem });
     }
-    return saveGuestItems(items);
+    const saved = saveGuestItems(items);
+    trackAddToCart(trackedCartItem, item.quantity);
+    return saved;
   },
 
   /** Updates quantity of a product. */
   updateQuantity(productId: string, quantity: number): CartItem[] {
     if (authService.getCurrentUser()) {
-      // Optimistic update
       const idx = cachedItems.findIndex((i) => i.productId === productId);
+      const snapshotItem = idx >= 0 ? { ...cachedItems[idx] } : null;
+      const prevQty = snapshotItem ? snapshotItem.quantity : 0;
+
       if (idx >= 0) {
         if (quantity > 0) {
           cachedItems[idx].quantity = quantity;
@@ -226,6 +223,13 @@ export const cartService = {
           } else {
             await api.delete<{ success: true }>(`/cart/items/${productId}`);
           }
+          if (snapshotItem) {
+            if (quantity > prevQty) {
+              trackAddToCart(snapshotItem, quantity - prevQty);
+            } else if (quantity < prevQty) {
+              trackRemoveFromCart(snapshotItem, prevQty - Math.max(0, quantity));
+            }
+          }
         } catch (e) {
           console.error('updateQuantity API error:', e);
           loadAuthenticatedCart().catch(() => {});
@@ -236,22 +240,38 @@ export const cartService = {
     }
 
     // Guest path
-    const items = getGuestItems().flatMap((item) => {
+    const currentGuest = getGuestItems();
+    const snapshotGuest = currentGuest.find((i) => i.productId === productId) || null;
+    const prevGuestQty = snapshotGuest ? snapshotGuest.quantity : 0;
+
+    const items = currentGuest.flatMap((item) => {
       if (item.productId !== productId) return [item];
       return quantity > 0 ? [{ ...item, quantity }] : [];
     });
-    return saveGuestItems(items);
+    const saved = saveGuestItems(items);
+    if (snapshotGuest) {
+      if (quantity > prevGuestQty) {
+        trackAddToCart(snapshotGuest, quantity - prevGuestQty);
+      } else if (quantity < prevGuestQty) {
+        trackRemoveFromCart(snapshotGuest, prevGuestQty - Math.max(0, quantity));
+      }
+    }
+    return saved;
   },
 
   /** Removes a product from the cart. */
   removeItem(productId: string): CartItem[] {
     if (authService.getCurrentUser()) {
+      const removedItem = cachedItems.find((i) => i.productId === productId) || null;
       const newCache = cachedItems.filter((i) => i.productId !== productId);
       cachedItems = newCache;
       notify(cachedItems);
       (async () => {
         try {
           await api.delete<{ success: true }>(`/cart/items/${productId}`);
+          if (removedItem) {
+            trackRemoveFromCart(removedItem, removedItem.quantity);
+          }
         } catch (e) {
           console.error('removeItem API error:', e);
           loadAuthenticatedCart().catch(() => {});
@@ -261,8 +281,14 @@ export const cartService = {
     }
 
     // Guest path
-    const items = getGuestItems().filter((i) => i.productId !== productId);
-    return saveGuestItems(items);
+    const currentGuest = getGuestItems();
+    const removedGuestItem = currentGuest.find((i) => i.productId === productId) || null;
+    const items = currentGuest.filter((i) => i.productId !== productId);
+    const saved = saveGuestItems(items);
+    if (removedGuestItem) {
+      trackRemoveFromCart(removedGuestItem, removedGuestItem.quantity);
+    }
+    return saved;
   },
 
   /** Clears the entire cart. */

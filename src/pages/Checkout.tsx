@@ -9,12 +9,20 @@ import {
   CheckCircle2,
   AlertCircle,
   PlusCircle,
+  Tag,
+  X,
 } from 'lucide-react';
 import { cartService } from '../services/cart';
 import { authService } from '../services/auth';
 import { orderService } from '../services/orders';
 import { paymentService } from '../services/payment';
-import type { CartItem, Address, Order, User } from '../types';
+import {
+  trackBeginCheckout,
+  trackAddShippingInfo,
+  trackAddPaymentInfo,
+  trackAuthoritativePurchase,
+} from '../services/analytics';
+import type { CartItem, Address, Order, User, CouponValidationResult } from '../types';
 
 export const Checkout: React.FC = () => {
   const navigate = useNavigate();
@@ -40,6 +48,12 @@ export const Checkout: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
   const [loadingCart, setLoadingCart] = useState(true);
+
+  // Coupon state (display-only preview; backend recalculates authoritatively on order creation)
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<CouponValidationResult | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
 
   // Subscribe to auth state updates
   useEffect(() => {
@@ -89,10 +103,90 @@ export const Checkout: React.FC = () => {
     }
   }, [currentUser]);
 
-  const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const localSubtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const freeShippingThreshold = 499;
-  const shippingFee = subtotal >= freeShippingThreshold || subtotal === 0 ? 0 : 40;
-  const grandTotal = subtotal + shippingFee;
+  const localShippingFee = localSubtotal >= freeShippingThreshold || localSubtotal === 0 ? 0 : 40;
+
+  // Re-validate applied coupon if cart subtotal changes
+  useEffect(() => {
+    if (!appliedCoupon || !currentUser || items.length === 0) return;
+    if (appliedCoupon.subtotal !== localSubtotal) {
+      orderService
+        .validateCoupon(appliedCoupon.couponCode)
+        .then((res) => {
+          setAppliedCoupon(res);
+          setCouponError(null);
+        })
+        .catch((err: any) => {
+          setAppliedCoupon(null);
+          setCouponError(err?.message || 'Coupon is no longer valid for updated cart.');
+        });
+    }
+  }, [localSubtotal, appliedCoupon, currentUser, items.length]);
+
+  const subtotal = appliedCoupon ? appliedCoupon.subtotal : localSubtotal;
+  const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+  const shippingFee = appliedCoupon ? appliedCoupon.shippingAmount : localShippingFee;
+  const grandTotal = appliedCoupon
+    ? appliedCoupon.totalAmount
+    : Math.max(0, Number((subtotal - discountAmount + shippingFee).toFixed(2)));
+
+  // Emit GA4 begin_checkout when entering checkout with items
+  useEffect(() => {
+    if (!loadingCart && items.length > 0 && !createdOrder) {
+      trackBeginCheckout({
+        items,
+        value: grandTotal,
+        couponCode: appliedCoupon?.couponCode ?? null,
+      });
+    }
+  }, [loadingCart, items, grandTotal, appliedCoupon?.couponCode, createdOrder]);
+
+  const handleApplyCoupon = async (e?: React.FormEvent) => {
+    if (e && e.preventDefault) e.preventDefault();
+    setCouponError(null);
+
+    const trimmed = couponInput.trim();
+    if (!trimmed) {
+      setCouponError('Coupon code is required.');
+      return;
+    }
+
+    if (appliedCoupon) {
+      setCouponError('Only one coupon can be applied per order.');
+      return;
+    }
+
+    let activeUser = currentUser || authService.getCurrentUser();
+    if (!activeUser) {
+      activeUser = await authService.restoreSession();
+      if (activeUser) setCurrentUser(activeUser);
+    }
+
+    if (!activeUser) {
+      setCouponError('Please sign in to apply a coupon code.');
+      return;
+    }
+
+    setValidatingCoupon(true);
+    try {
+      const validated = await orderService.validateCoupon(trimmed);
+      setAppliedCoupon(validated);
+      setCouponInput(validated.couponCode);
+      setCouponError(null);
+    } catch (err: any) {
+      setAppliedCoupon(null);
+      setCouponError(err?.message || 'Unable to validate coupon. Please try again.');
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput('');
+    setCouponError(null);
+  };
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -103,8 +197,18 @@ export const Checkout: React.FC = () => {
   const triggerRazorpayPayment = async (order: Order) => {
     setIsSubmitting(true);
     setErrorMessage(null);
+    const cartSnapshot = [...items];
     try {
       const razorpayData = await paymentService.createPaymentOrder(order.id);
+
+      // Track safe add_payment_info after payment gateway order is created on backend
+      trackAddPaymentInfo({
+        items: order.items && order.items.length > 0 ? order.items : cartSnapshot,
+        value: order.totalAmount,
+        paymentType: 'Razorpay',
+        couponCode: order.couponCode || appliedCoupon?.couponCode || null,
+      });
+
       await paymentService.openRazorpayModal({
         order,
         razorpayData,
@@ -116,13 +220,16 @@ export const Checkout: React.FC = () => {
         onSuccess: async (verifyPayload) => {
           try {
             await paymentService.verifyPayment(verifyPayload);
-            cartService.clearCart();
-            setCreatedOrder({
+            const confirmedOrder: Order = {
               ...order,
               status: 'CONFIRMED',
               paymentStatus: 'CAPTURED',
-            });
+            };
+            cartService.clearCart();
+            setCreatedOrder(confirmedOrder);
             setPendingOrder(null);
+            // Fire-and-forget authoritative backend-deduplicated GA4 purchase event
+            void trackAuthoritativePurchase(confirmedOrder, cartSnapshot);
           } catch (err: any) {
             setErrorMessage(err?.message || 'Payment signature verification failed.');
             setPendingOrder(order);
@@ -193,8 +300,21 @@ export const Checkout: React.FC = () => {
         payload = { address: formData };
       }
 
+      if (appliedCoupon?.couponCode) {
+        payload.couponCode = appliedCoupon.couponCode;
+      }
+
       // 1. Create Internal Order in DB (PENDING)
       const order = await orderService.createOrder(payload);
+
+      // Emit GA4 add_shipping_info only after shipping details are validated and accepted by backend
+      trackAddShippingInfo({
+        items: order.items && order.items.length > 0 ? order.items : items,
+        value: order.totalAmount,
+        shippingTier:
+          (order.shippingAmount ?? 0) === 0 ? 'FREE Express Pan-India' : 'Express Pan-India',
+        couponCode: order.couponCode || appliedCoupon?.couponCode || null,
+      });
 
       // 2. Launch Razorpay payment flow
       await triggerRazorpayPayment(order);
@@ -228,7 +348,7 @@ export const Checkout: React.FC = () => {
             </p>
           </div>
 
-          <div className="p-4 bg-[#F7F1E5] rounded-xl border border-[#E8DECB] space-y-3 text-xs">
+          <div className="p-4 bg-[#F7F1E5] rounded-xl border border-[#E8DECB] space-y-2.5 text-xs">
             <div className="flex justify-between font-bold text-[#1C1C1C]">
               <span>Order Status:</span>
               <span className="bg-[#123B2A] text-white px-2 py-0.5 rounded text-[10px] tracking-wider uppercase">
@@ -238,6 +358,24 @@ export const Checkout: React.FC = () => {
             <div className="flex justify-between font-bold text-[#1C1C1C]">
               <span>Payment Status:</span>
               <span className="text-[#123B2A]">{createdOrder.paymentStatus}</span>
+            </div>
+            <div className="flex justify-between text-[#68756E] border-t border-[#E8DECB] pt-2">
+              <span>Subtotal:</span>
+              <span className="font-semibold text-[#1C1C1C]">₹{createdOrder.subtotal}</span>
+            </div>
+            {(createdOrder.discountAmount ?? 0) > 0 && (
+              <div className="flex justify-between text-emerald-700 font-semibold">
+                <span>
+                  Coupon Discount{createdOrder.couponCode ? ` (${createdOrder.couponCode})` : ''}:
+                </span>
+                <span>-₹{createdOrder.discountAmount}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-[#68756E]">
+              <span>Shipping:</span>
+              <span className="font-semibold text-[#1C1C1C]">
+                {(createdOrder.shippingAmount ?? 0) === 0 ? 'FREE' : `₹${createdOrder.shippingAmount}`}
+              </span>
             </div>
             <div className="flex justify-between font-bold text-[#1C1C1C] border-t border-[#E8DECB] pt-2">
               <span>Total Amount:</span>
@@ -593,12 +731,94 @@ export const Checkout: React.FC = () => {
               ))}
             </div>
 
+            {/* Coupon Code Area */}
+            <div className="pt-4 border-t border-[#E8DECB] space-y-2.5">
+              <label
+                htmlFor="checkout-coupon-input"
+                className="block text-[11px] font-bold uppercase tracking-wider text-[#1C1C1C]"
+              >
+                Have a Coupon Code?
+              </label>
+
+              {appliedCoupon ? (
+                <div
+                  id="checkout-coupon-feedback"
+                  role="status"
+                  className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-2"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Tag className="w-4 h-4 text-emerald-700 shrink-0" />
+                    <div className="text-xs min-w-0">
+                      <span className="font-mono font-extrabold text-emerald-900 block">
+                        {appliedCoupon.couponCode} applied
+                      </span>
+                      <span className="text-[11px] font-semibold text-emerald-700 block">
+                        You saved ₹{appliedCoupon.discountAmount}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    aria-label={`Remove coupon ${appliedCoupon.couponCode}`}
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider text-red-700 bg-white border border-red-200 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-400 transition-colors shrink-0"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Remove</span>
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleApplyCoupon} className="flex items-center gap-2">
+                  <input
+                    id="checkout-coupon-input"
+                    type="text"
+                    value={couponInput}
+                    onChange={(e) => {
+                      setCouponInput(e.target.value.toUpperCase());
+                      if (couponError) setCouponError(null);
+                    }}
+                    placeholder="Enter coupon code"
+                    aria-describedby={couponError ? 'checkout-coupon-error' : undefined}
+                    aria-invalid={Boolean(couponError)}
+                    disabled={validatingCoupon || isSubmitting}
+                    className="flex-1 min-w-0 min-h-10 border border-[#E8DECB] rounded-lg px-3 text-xs font-mono uppercase text-[#1C1C1C] placeholder:font-sans placeholder:normal-case focus:outline-none focus:border-[#123B2A] focus:ring-2 focus:ring-[#123B2A]/20 disabled:opacity-60"
+                  />
+                  <button
+                    type="submit"
+                    disabled={validatingCoupon || isSubmitting}
+                    className="min-h-10 px-4 bg-[#123B2A] hover:bg-[#092218] text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#123B2A] disabled:opacity-60 shrink-0"
+                  >
+                    {validatingCoupon ? 'Checking...' : 'Apply'}
+                  </button>
+                </form>
+              )}
+
+              {couponError && (
+                <p
+                  id="checkout-coupon-error"
+                  role="alert"
+                  className="text-[11px] font-semibold text-red-600 flex items-center gap-1.5"
+                >
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{couponError}</span>
+                </p>
+              )}
+            </div>
+
             {/* Calculations Breakdown */}
             <div className="pt-4 border-t border-[#E8DECB] space-y-2 text-xs text-[#68756E]">
               <div className="flex justify-between">
                 <span>Subtotal</span>
                 <span className="font-bold text-[#1C1C1C]">₹{subtotal}</span>
               </div>
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-emerald-700 font-semibold">
+                  <span>
+                    Discount{appliedCoupon?.couponCode ? ` (${appliedCoupon.couponCode})` : ''}
+                  </span>
+                  <span>-₹{discountAmount}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span>Express Pan-India Delivery</span>
                 <span className="font-bold text-[#1C1C1C]">

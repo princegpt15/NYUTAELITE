@@ -4,6 +4,7 @@ import { Lock } from 'lucide-react';
 import { FormInput } from '../components/FormInput';
 import { authService } from '../services/auth';
 import { ApiError } from '../services/api';
+import { trackLogin } from '../services/analytics';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export const Login: React.FC = () => {
   setLoading(true);
   try {
     await authService.login(email, password);
+    trackLogin('email');
     navigate('/');
   } catch (err) {
     if (err instanceof ApiError) {

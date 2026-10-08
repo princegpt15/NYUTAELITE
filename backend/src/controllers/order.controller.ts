@@ -1,6 +1,7 @@
 // backend/src/controllers/order.controller.ts
 import { Response, NextFunction } from 'express';
 import { OrderService } from '../services/order.service.js';
+import { ga4IdempotencyService } from '../services/ga4Idempotency.service.js';
 import { AuthRequest } from '../middleware/auth.middleware.js';
 
 const orderService = new OrderService();
@@ -47,6 +48,31 @@ export async function cancelOrder(req: AuthRequest, res: Response, next: NextFun
     const orderId = req.params.id;
     const cancelled = await orderService.cancelOrder(userId, orderId);
     res.json({ success: true, message: 'Order cancelled', data: cancelled });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/** Authoritatively verify and claim GA4 purchase analytics event eligibility */
+export async function claimOrderPurchaseAnalytics(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const actor = { id: req.user!.id, role: req.user!.role };
+    const orderId = req.params.id;
+    const result = await ga4IdempotencyService.claimPurchaseEvent(orderId, actor);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/** Authoritatively verify and claim GA4 refund analytics event eligibility */
+export async function claimOrderRefundAnalytics(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const actor = { id: req.user!.id, role: req.user!.role };
+    const orderId = req.params.id;
+    const refundId = typeof req.body?.refundId === 'string' ? req.body.refundId : null;
+    const result = await ga4IdempotencyService.claimRefundEvent(orderId, { refundId }, actor);
+    res.json({ success: true, data: result });
   } catch (err) {
     next(err);
   }

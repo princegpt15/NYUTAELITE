@@ -8,20 +8,32 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(uuid())
-  name         String?
-  email        String    @unique
-  phone        String?
-  passwordHash String
-  role         UserRole  @default(CUSTOMER)
-  isVerified   Boolean   @default(false)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  addresses    Address[]
-  carts        Cart?
-  orders       Order[]
-  payments     Payment[]
-  reviews      Review[]
+  id            String         @id @default(uuid())
+  name          String?
+  email         String         @unique
+  phone         String?
+  passwordHash  String
+  role          UserRole       @default(CUSTOMER)
+  isVerified    Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  addresses     Address[]
+  carts         Cart?
+  orders        Order[]
+  payments      Payment[]
+  reviews                  Review[]
+  notifications            Notification[]
+  referralCode             String?                   @unique
+  wishlist                 Wishlist?
+  backInStockSubscriptions BackInStockSubscription[]
+  loyaltyAccount           LoyaltyAccount?
+  sentReferrals            Referral[]                @relation("ReferrerRelation")
+  receivedReferral         Referral?                 @relation("ReferredRelation")
+  preferences              CustomerPreference?
+  cartRecoveries           CartRecovery[]
+  campaignRecipients       CampaignRecipient[]
+
+  @@index([role, createdAt])
 }
 
 model Address {
@@ -40,6 +52,8 @@ model Address {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   user         User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 model Product {
@@ -58,9 +72,14 @@ model Product {
   isActive       Boolean     @default(true)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
-  cartItems      CartItem[]
-  orderItems     OrderItem[]
-  reviews        Review[]
+  cartItems                CartItem[]
+  orderItems               OrderItem[]
+  reviews                  Review[]
+  wishlistItems            WishlistItem[]
+  backInStockSubscriptions BackInStockSubscription[]
+
+  @@index([category, isActive])
+  @@index([isActive, createdAt])
 }
 
 model Cart {
@@ -68,8 +87,9 @@ model Cart {
   userId    String     @unique
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
-  user      User       @relation(fields: [userId], references: [id])
+  user      User           @relation(fields: [userId], references: [id])
   items     CartItem[]
+  recoveries CartRecovery[]
 }
 
 model CartItem {
@@ -83,6 +103,8 @@ model CartItem {
   image       String?
   cart        Cart    @relation(fields: [cartId], references: [id])
   product     Product @relation(fields: [productId], references: [id])
+
+  @@index([cartId])
 }
 
 model Order {
@@ -102,9 +124,21 @@ model Order {
   shippingAddress Json?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
-  user            User           @relation(fields: [userId], references: [id])
+  user            User             @relation(fields: [userId], references: [id])
   items           OrderItem[]
   payments        Payment[]
+  notifications   Notification[]
+  analyticsEvents AnalyticsEvent[]
+  reviews         Review[]
+  campaignId      String?
+  utmCampaign     String?
+  campaign        Campaign?        @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([userId, createdAt])
+  @@index([campaignId])
 }
 
 model OrderItem {
@@ -117,6 +151,9 @@ model OrderItem {
   subtotal    Float
   order       Order   @relation(fields: [orderId], references: [id])
   product     Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
 }
 
 model Payment {
@@ -135,6 +172,9 @@ model Payment {
   userId            String?
   order             Order           @relation(fields: [orderId], references: [id])
   User              User?           @relation(fields: [userId], references: [id])
+
+  @@index([orderId])
+  @@index([status, createdAt])
 }
 
 model PaymentWebhookEvent {
@@ -149,14 +189,48 @@ model PaymentWebhookEvent {
 model Coupon {
   id                 String             @id @default(uuid())
   code               String             @unique
+  description        String?
   discountType       CouponDiscountType
   discountValue      Float
   minimumOrderAmount Float?
   maximumDiscount    Float?
   usageLimit         Int?
   usedCount          Int                @default(0)
+  perCustomerLimit   Int?
+  startsAt           DateTime?
   expiresAt          DateTime?
   isActive           Boolean            @default(true)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @default(now()) @updatedAt
+
+  @@index([isActive])
+}
+
+model Notification {
+  id                String              @id @default(uuid())
+  idempotencyKey    String              @unique
+  userId            String
+  orderId           String
+  type              NotificationType
+  channel           NotificationChannel
+  status            NotificationStatus  @default(PENDING)
+  recipient         String
+  subject           String?
+  provider          String?
+  providerMessageId String?
+  errorMessage      String?
+  attemptCount      Int                 @default(0)
+  lastAttemptAt     DateTime?
+  sentAt            DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @default(now()) @updatedAt
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order             Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, type, channel])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model ContactMessage {
@@ -170,16 +244,31 @@ model ContactMessage {
   createdAt DateTime @default(now())
 }
 
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Review {
-  id         String   @id @default(uuid())
+  id         String       @id @default(uuid())
   userId     String
   productId  String
-  rating     Int      @default(0)
+  orderId    String?
+  title      String?
+  rating     Int          @default(5)
   comment    String?
-  isApproved Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  product    Product  @relation(fields: [productId], references: [id])
-  user       User     @relation(fields: [userId], references: [id])
+  status     ReviewStatus @default(PENDING)
+  isApproved Boolean      @default(false)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @default(now()) @updatedAt
+  product    Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order      Order?       @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, productId, orderId])
+  @@index([productId, status])
+  @@index([userId])
 }
 
 enum UserRole {
@@ -219,3 +308,366 @@ enum CouponDiscountType {
 enum PaymentProvider {
   RAZORPAY
 }
+
+enum NotificationType {
+  ORDER_CONFIRMED
+  ORDER_PROCESSING
+  ORDER_SHIPPED
+  ORDER_DELIVERED
+  ORDER_CANCELLED
+  PAYMENT_SUCCESS
+  PAYMENT_FAILED
+  REFUND_INITIATED
+  REFUND_COMPLETED
+  BACK_IN_STOCK
+  REVIEW_APPROVED
+  REFERRAL_REWARD
+  LOYALTY_REWARD
+}
+
+enum NotificationChannel {
+  EMAIL
+  WHATSAPP
+}
+
+enum NotificationStatus {
+  PENDING
+  SENDING
+  SENT
+  FAILED
+}
+
+enum AnalyticsEventType {
+  PURCHASE
+  REFUND
+}
+
+model AnalyticsEvent {
+  id             String             @id @default(uuid())
+  idempotencyKey String             @unique
+  orderId        String
+  refundId       String?
+  eventType      AnalyticsEventType
+  transactionId  String
+  currency       String             @default("INR")
+  value          Float
+  createdAt      DateTime           @default(now())
+  order          Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, eventType])
+  @@index([refundId])
+}
+
+model Wishlist {
+  id        String         @id @default(uuid())
+  userId    String         @unique
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     WishlistItem[]
+}
+
+model WishlistItem {
+  id         String   @id @default(uuid())
+  wishlistId String
+  productId  String
+  createdAt  DateTime @default(now())
+  wishlist   Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([wishlistId, productId])
+  @@index([wishlistId])
+  @@index([productId])
+}
+
+model BackInStockSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([productId])
+  @@index([userId])
+}
+
+model LoyaltyAccount {
+  id               String               @id @default(uuid())
+  userId           String               @unique
+  availableBalance Int                  @default(0)
+  lifetimeEarned   Int                  @default(0)
+  lifetimeRedeemed Int                  @default(0)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  user             User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions     LoyaltyTransaction[]
+}
+
+enum LoyaltyTransactionType {
+  EARN_ORDER
+  REDEEM_ORDER
+  REFUND_REVERSAL
+  BONUS
+  ADJUSTMENT
+}
+
+model LoyaltyTransaction {
+  id             String                 @id @default(uuid())
+  accountId      String
+  userId         String
+  type           LoyaltyTransactionType
+  points         Int
+  referenceType  String?
+  referenceId    String?
+  idempotencyKey String?                @unique
+  description    String?
+  createdAt      DateTime               @default(now())
+  account        LoyaltyAccount         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([referenceType, referenceId])
+}
+
+model Referral {
+  id             String   @id @default(uuid())
+  referrerId     String
+  referredUserId String   @unique
+  referralCode   String
+  status         String   @default("PENDING")
+  rewardPoints   Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  referrer       User     @relation("ReferrerRelation", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredUser   User     @relation("ReferredRelation", fields: [referredUserId], references: [id], onDelete: Cascade)
+
+  @@index([referrerId])
+  @@index([referralCode])
+}
+
+model CustomerPreference {
+  id                     String    @id @default(uuid())
+  userId                 String    @unique
+  marketingEmailOptIn    Boolean   @default(true)
+  marketingWhatsAppOptIn Boolean   @default(false)
+  unsubscribeToken       String    @unique @default(uuid())
+  unsubscribedAt         DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum CartRecoveryStatus {
+  ELIGIBLE
+  CONTACTED
+  RECOVERED
+  EXPIRED
+  CANCELLED
+}
+
+model CartRecovery {
+  id               String             @id @default(uuid())
+  cartId           String
+  userId           String
+  status           CartRecoveryStatus @default(ELIGIBLE)
+  eligibleAt       DateTime           @default(now())
+  lastAttemptAt    DateTime?
+  attemptCount     Int                @default(0)
+  recoveredAt      DateTime?
+  recoveredOrderId String?
+  idempotencyKey   String?            @unique
+  recoveryToken    String?            @unique
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  cart             Cart               @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([status, eligibleAt])
+  @@index([cartId])
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum CampaignRecipientStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
+  UNSUBSCRIBED
+}
+
+model Campaign {
+  id                    String              @id @default(uuid())
+  name                  String
+  description           String?
+  status                CampaignStatus      @default(DRAFT)
+  channel               NotificationChannel @default(EMAIL)
+  audience              String
+  subject               String
+  content               String
+  couponCode            String?
+  startsAt              DateTime?
+  endsAt                DateTime?
+  maxRecipients         Int?
+  totalRecipients       Int                 @default(0)
+  sentCount             Int                 @default(0)
+  failedCount           Int                 @default(0)
+  skippedCount          Int                 @default(0)
+  attributedOrdersCount Int                 @default(0)
+  attributedRevenue     Float               @default(0)
+  utmCampaign           String?
+  createdBy             String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  recipients            CampaignRecipient[]
+  orders                Order[]
+
+  @@index([status, createdAt])
+  @@index([audience])
+}
+
+model CampaignRecipient {
+  id             String                  @id @default(uuid())
+  campaignId     String
+  userId         String
+  channel        NotificationChannel
+  recipient      String
+  status         CampaignRecipientStatus @default(PENDING)
+  idempotencyKey String                  @unique
+  sentAt         DateTime?
+  errorMessage   String?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  campaign       Campaign                @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user           User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId, status])
+  @@index([userId, status])
+  @@index([channel])
+}
+
+model BehavioralEvent {
+  id        String   @id @default(uuid())
+  eventName String
+  userId    String?
+  visitorId String?
+  productId String?
+  orderId   String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([eventName, createdAt])
+  @@index([productId, eventName])
+  @@index([userId, eventName])
+}
+
+enum ExperimentStatus {
+  DRAFT
+  RUNNING
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+model Experiment {
+  id                String                 @id @default(uuid())
+  key               String                 @unique
+  name              String
+  description       String?
+  status            ExperimentStatus       @default(DRAFT)
+  primaryMetric     String
+  secondaryMetrics  Json?
+  trafficPercentage Int                    @default(100)
+  minSampleSize     Int                    @default(100)
+  startAt           DateTime?
+  endAt             DateTime?
+  createdBy         String?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  variants          ExperimentVariant[]
+  assignments       ExperimentAssignment[]
+  events            ExperimentEvent[]
+  auditLogs         ExperimentAuditLog[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ExperimentVariant {
+  id                   String                 @id @default(uuid())
+  experimentId         String
+  key                  String
+  name                 String
+  description          String?
+  allocationPercentage Int
+  isControl            Boolean                @default(false)
+  config               Json?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  experiment           Experiment             @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  assignments          ExperimentAssignment[]
+  events               ExperimentEvent[]
+
+  @@unique([experimentId, key])
+  @@index([experimentId])
+}
+
+model ExperimentAssignment {
+  id           String            @id @default(uuid())
+  experimentId String
+  variantId    String
+  subjectId    String
+  userId       String?
+  visitorId    String?
+  assignedAt   DateTime          @default(now())
+  experiment   Experiment        @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  variant      ExperimentVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([experimentId, subjectId])
+  @@index([experimentId, variantId])
+  @@index([userId])
+}
+
+model ExperimentEvent {
+  id             String            @id @default(uuid())
+  experimentId   String
+  variantId      String
+  assignmentId   String
+  subjectId      String
+  userId         String?
+  eventName      String
+  orderId        String?
+  revenuePaise   Int               @default(0)
+  idempotencyKey String?           @unique
+  metadata       Json?
+  createdAt      DateTime          @default(now())
+  experiment     Experiment        @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  variant        ExperimentVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@index([experimentId, variantId, eventName])
+  @@index([assignmentId])
+}
+
+model ExperimentAuditLog {
+  id             String     @id @default(uuid())
+  experimentId   String
+  adminUserId    String?
+  action         String
+  previousStatus String?
+  newStatus      String?
+  details        Json?
+  createdAt      DateTime   @default(now())
+  experiment     Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+
+  @@index([experimentId, createdAt])
+}
+

@@ -1,22 +1,37 @@
-// src/app.ts
+// backend/src/app.ts
 import express, { Request, Response } from 'express';
 import prisma from './lib/prisma.js';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env.js';
+import { requestIdMiddleware } from './middleware/requestId.middleware.js';
+import { requestLoggerMiddleware } from './middleware/requestLogger.middleware.js';
+import { healthService } from './services/health.service.js';
 import authRoutes from './routes/auth.routes.js';
 import productRoutes from './routes/product.routes.js';
 import cartRoutes from './routes/cart.routes.js';
 import orderRoutes from './routes/order.routes.js';
 import addressRoutes from './routes/address.routes.js';
+import { paymentObservabilityMiddleware } from './middleware/paymentObservability.middleware.js';
 import paymentRoutes from './routes/payment.routes.js';
+import couponRoutes from './routes/coupon.routes.js';
 import adminRoutes from './routes/admin.routes.js';
+import retentionRoutes from './routes/retention.routes.js';
+import growthRoutes from './routes/growth.routes.js';
+import { noStoreCacheMiddleware, publicCatalogCacheMiddleware } from './middleware/cacheControl.middleware.js';
 import { errorHandler } from './middleware/error.middleware.js';
+import { notificationService } from './services/notification/notification.service.js';
 
 const app = express();
 
-// Basic middlewares
+// 1. Request correlation ID middleware (must be first)
+app.use(requestIdMiddleware);
+
+// 2. Request performance & structured logging middleware
+app.use(requestLoggerMiddleware);
+
+// 3. Body parser with rawBody preservation for Razorpay webhook verification
 app.use(
   express.json({
     verify: (req: any, _res, buf) => {
@@ -24,7 +39,11 @@ app.use(
     },
   })
 );
+
+// 4. Security headers
 app.use(helmet());
+
+// 5. CORS policy
 const prodOrigin = env.FRONTEND_URL.replace(/\/+$/, '');
 const allowedOrigins = [prodOrigin];
 if (prodOrigin === 'https://nutyaelite.com') {
@@ -49,7 +68,7 @@ app.use(
   })
 );
 
-// Global rate limiter (e.g., 100 req per 15 min in prod, higher in dev)
+// 6. Global rate limiter
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: env.NODE_ENV === 'production' ? 100 : 10000,
@@ -59,32 +78,87 @@ const globalLimiter = rateLimit({
 });
 app.use(globalLimiter);
 
-// Health check endpoints (supports both root /health and /api/health)
-const healthHandler = async (_req: Request, res: Response) => {
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    res.json({ success: true, message: 'NYUTA ELITE API is running', env: env.NODE_ENV });
-  } catch (_e) {
-    res.status(500).json({ success: false, message: 'Database connection error', error: { code: 'DB_ERROR' } });
-  }
+// 7. Health & Observability endpoints
+const basicHealthHandler = (_req: Request, res: Response) => {
+  res.json({
+    success: true,
+    status: 'ok',
+    service: 'nyuta-elite-api',
+    version: env.APP_VERSION,
+    environment: env.NODE_ENV,
+  });
 };
-app.get('/health', healthHandler);
-app.get('/api/health', healthHandler);
 
-// API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/cart', cartRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/addresses', addressRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/admin', adminRoutes);
-// 404 handler
-app.use((_req: Request, res: Response) => {
-  res.status(404).json({ success: false, message: 'Not Found', error: { code: 'NOT_FOUND' } });
+app.get('/health', basicHealthHandler);
+app.get('/api/health', basicHealthHandler);
+
+// Liveness probe: verifies process is alive (does NOT touch DB)
+app.get('/api/health/live', (_req: Request, res: Response) => {
+  res.json(healthService.getLiveness());
 });
 
-// Central error handler
+// Readiness probe: verifies DB connectivity and configuration (returns 503 if DB fails)
+app.get('/api/health/ready', async (_req: Request, res: Response) => {
+  const readiness = await healthService.getReadiness();
+  res.status(readiness.statusCode).json(readiness.payload);
+});
+
+// 8. API routes
+app.use('/api/auth', noStoreCacheMiddleware, authRoutes);
+app.use('/api/products', publicCatalogCacheMiddleware, productRoutes);
+app.use('/api/cart', noStoreCacheMiddleware, cartRoutes);
+app.use('/api/orders', noStoreCacheMiddleware, orderRoutes);
+app.use('/api/addresses', noStoreCacheMiddleware, addressRoutes);
+
+// Payment notification reconciliation hook
+app.use('/api/payments', (req: Request, res: Response, next) => {
+  res.on('finish', () => {
+    if (req.method === 'POST' && res.statusCode >= 200 && res.statusCode < 300) {
+      Promise.resolve()
+        .then(async () => {
+          const directOrderId = typeof req.body?.orderId === 'string' ? req.body.orderId : null;
+          if (directOrderId) {
+            await notificationService.reconcilePaymentNotificationsForOrder(directOrderId);
+            return;
+          }
+          const rzpOrderId =
+            req.body?.razorpay_order_id ||
+            req.body?.payload?.payment?.entity?.order_id ||
+            req.body?.payload?.order?.entity?.id ||
+            null;
+          if (typeof rzpOrderId === 'string' && rzpOrderId) {
+            const matchedOrder = await prisma.order.findFirst({
+              where: { razorpayOrderId: rzpOrderId },
+              select: { id: true },
+            });
+            if (matchedOrder) {
+              await notificationService.reconcilePaymentNotificationsForOrder(matchedOrder.id);
+            }
+          }
+        })
+        .catch(() => {});
+    }
+  });
+  next();
+});
+app.use('/api/payments', paymentObservabilityMiddleware);
+app.use('/api/payments', noStoreCacheMiddleware, paymentRoutes);
+app.use('/api/coupons', noStoreCacheMiddleware, couponRoutes);
+app.use('/api/admin', noStoreCacheMiddleware, adminRoutes);
+app.use('/api', noStoreCacheMiddleware, retentionRoutes);
+app.use('/api', noStoreCacheMiddleware, growthRoutes);
+
+// 9. 404 handler with requestId
+app.use((req: Request, res: Response) => {
+  res.status(404).json({
+    success: false,
+    message: 'Not Found',
+    error: { code: 'NOT_FOUND' },
+    requestId: req.requestId,
+  });
+});
+
+// 10. Central error handler
 app.use(errorHandler);
 
 export default app;

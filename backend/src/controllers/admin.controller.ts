@@ -1,6 +1,8 @@
 // backend/src/controllers/admin.controller.ts
 import { Request, Response, NextFunction } from 'express';
 import { AdminService } from '../services/admin.service.js';
+import { analyticsService } from '../services/analytics.service.js';
+import { healthService } from '../services/health.service.js';
 
 const adminService = new AdminService();
 
@@ -176,3 +178,238 @@ export const getPaymentById = async (req: Request, res: Response, next: NextFunc
     next(err);
   }
 };
+
+export const refundOrder = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { amount, reason } = req.body;
+    const adminUserId = (req as any).user?.id;
+    const data = await adminService.refundOrder(id, { amount, reason, adminUserId });
+    res.status(200).json({
+      success: true,
+      message: 'Refund initiated successfully.',
+      data,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getCoupons = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { page, limit, search, isActive, discountType, type, validity } = req.query as any;
+    const data = await adminService.getCoupons({
+      page,
+      limit,
+      search,
+      isActive,
+      discountType,
+      type,
+      validity,
+    });
+    res.status(200).json({
+      success: true,
+      message: 'Coupons retrieved successfully',
+      data: data.coupons,
+      summary: data.summary,
+      pagination: data.pagination,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getCouponById = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const data = await adminService.getCouponById(id);
+    res.status(200).json({
+      success: true,
+      message: 'Coupon details retrieved',
+      data,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const createCoupon = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = await adminService.createCoupon(req.body);
+    res.status(201).json({
+      success: true,
+      message: 'Coupon created successfully',
+      data,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateCoupon = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const data = await adminService.updateCoupon(id, req.body);
+    res.status(200).json({
+      success: true,
+      message: 'Coupon updated successfully',
+      data,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getNotifications = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { page, limit, status, channel, type, orderId, search, startDate, endDate } = req.query as any;
+    const data = await adminService.getNotifications({
+      page,
+      limit,
+      status,
+      channel,
+      type,
+      orderId,
+      search,
+      startDate,
+      endDate,
+    });
+    res.status(200).json({
+      success: true,
+      message: 'Notifications retrieved successfully',
+      data: data.notifications,
+      summary: data.summary,
+      pagination: data.pagination,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getNotificationById = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const data = await adminService.getNotificationById(id);
+    res.status(200).json({
+      success: true,
+      message: 'Notification details retrieved',
+      data,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAnalyticsSummary = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = await analyticsService.getSummary(req.query as any);
+    res.status(200).json({
+      success: true,
+      message: 'Analytics summary retrieved',
+      data,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAnalyticsRevenue = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = await analyticsService.getRevenueAnalytics(req.query as any);
+    res.status(200).json({
+      success: true,
+      message: 'Revenue analytics retrieved',
+      data,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAnalyticsOrders = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = await analyticsService.getOrderAnalytics(req.query as any);
+    res.status(200).json({
+      success: true,
+      message: 'Order analytics retrieved',
+      data,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAnalyticsPayments = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = await analyticsService.getPaymentAnalytics(req.query as any);
+    res.status(200).json({
+      success: true,
+      message: 'Payment analytics retrieved',
+      data,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAnalyticsRefunds = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = await analyticsService.getRefundAnalytics(req.query as any);
+    res.status(200).json({
+      success: true,
+      message: 'Refund analytics retrieved',
+      data,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAnalyticsProducts = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = await analyticsService.getProductAnalytics(req.query as any);
+    res.status(200).json({
+      success: true,
+      message: 'Product analytics retrieved',
+      data,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAnalyticsCustomers = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = await analyticsService.getCustomerAnalytics(req.query as any);
+    res.status(200).json({
+      success: true,
+      message: 'Customer analytics retrieved',
+      data,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAnalyticsCoupons = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = await analyticsService.getCouponAnalytics(req.query as any);
+    res.status(200).json({
+      success: true,
+      message: 'Coupon analytics retrieved',
+      data,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getSystemHealth = async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = await healthService.getSystemHealth();
+    res.status(200).json(data);
+  } catch (err) {
+    next(err);
+  }
+};
+

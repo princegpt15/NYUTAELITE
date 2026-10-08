@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, ShoppingBag, Search, User as UserIcon } from 'lucide-react';
+import { Menu, X, ShoppingBag, Search, User as UserIcon, Heart } from 'lucide-react';
 import { cartService } from '../services/cart';
 import { authService } from '../services/auth';
 import { CartDrawer } from './CartDrawer';
@@ -115,11 +115,22 @@ export const Header: React.FC = () => {
                 <Search className="w-5 h-5" />
               </button>
 
+              {/* Wishlist Link */}
+              <Link
+                to="/wishlist"
+                className="p-2 text-[#1C1C1C] hover:text-rose-600 rounded-full hover:bg-[#F7F1E5] transition-colors cursor-pointer"
+                aria-label="Wishlist"
+                title="Saved Wishlist"
+              >
+                <Heart className="w-5 h-5" />
+              </Link>
+
               {/* Account Link */}
               {currentUser ? (
                 <Link
-                  to="/orders"
+                  to="/account"
                   className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-[#123B2A] bg-[#F7F1E5] px-3 py-1.5 rounded-full hover:bg-[#E8DECB] transition-colors"
+                  title="My Account"
                 >
                   <UserIcon className="w-4 h-4 text-[#C6A15B]" />
                   <span className="max-w-[100px] truncate">
@@ -179,13 +190,23 @@ export const Header: React.FC = () => {
 
               <div className="pt-4 border-t border-[#E8DECB] flex flex-col gap-2.5">
                 {currentUser ? (
-                  <div className="flex items-center justify-between px-3 py-2 bg-[#F7F1E5] rounded-lg">
+                  <div className="flex flex-col gap-2 p-2.5 bg-[#F7F1E5] rounded-xl border border-[#E8DECB]">
                     <span className="text-xs font-bold text-[#123B2A]">
                       Hi, {currentUser.fullName || (currentUser as any).name || 'User'}
                     </span>
-                    <Link to="/orders" onClick={() => setMobileMenuOpen(false)} className="text-xs text-[#C6A15B] font-bold">
-                      Orders
-                    </Link>
+                    <div className="flex items-center gap-3 pt-1 border-t border-[#E8DECB]/60">
+                      <Link to="/account" onClick={() => setMobileMenuOpen(false)} className="text-xs text-[#123B2A] font-bold hover:underline">
+                        My Account
+                      </Link>
+                      <span className="text-xs text-[#68756E]">•</span>
+                      <Link to="/wishlist" onClick={() => setMobileMenuOpen(false)} className="text-xs text-[#123B2A] font-bold hover:underline">
+                        Wishlist
+                      </Link>
+                      <span className="text-xs text-[#68756E]">•</span>
+                      <Link to="/orders" onClick={() => setMobileMenuOpen(false)} className="text-xs text-[#C6A15B] font-bold hover:underline">
+                        Orders
+                      </Link>
+                    </div>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-2">

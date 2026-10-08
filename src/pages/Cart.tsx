@@ -1,15 +1,38 @@
 // src/pages/Cart.tsx
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Minus, Plus, ShieldCheck, Trash2, ArrowLeft, ArrowRight, ShoppingBag, Truck } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Minus, Plus, ShieldCheck, Trash2, ArrowLeft, ArrowRight, ShoppingBag, Truck, Sparkles } from 'lucide-react';
 import { cartService } from '../services/cart';
+import { trackViewCart } from '../services/analytics';
+import { growthApi } from '../services/growth';
 import type { CartItem } from '../types';
 
 export const Cart: React.FC = () => {
   const [items, setItems] = useState<CartItem[]>(cartService.getItems());
+  const [searchParams] = useSearchParams();
+  const recoveryToken = searchParams.get('recovery');
+  const [recoveryFeedback, setRecoveryFeedback] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => cartService.subscribe(setItems), []);
+
+  useEffect(() => {
+    if (recoveryToken) {
+      growthApi.restoreRecoveredCart(recoveryToken).then((res) => {
+        if (res.notice) {
+          setRecoveryFeedback(res.notice);
+        } else {
+          setRecoveryFeedback('Welcome back! Your cart items have been restored and verified with live stock and catalog prices.');
+        }
+      }).catch(() => {});
+    }
+  }, [recoveryToken]);
+
+  useEffect(() => {
+    if (items.length > 0) {
+      trackViewCart(items, 'page');
+    }
+  }, [items]);
 
   const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const totalMrp = items.reduce((acc, item) => acc + item.mrp * item.quantity, 0);
@@ -48,6 +71,21 @@ export const Cart: React.FC = () => {
         >
           <ArrowLeft className="h-4 w-4" /> Continue Shopping
         </Link>
+
+        {recoveryFeedback && (
+          <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-xl text-xs flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-700 flex-shrink-0" />
+              <span>{recoveryFeedback}</span>
+            </div>
+            <button
+              onClick={() => setRecoveryFeedback(null)}
+              className="text-amber-700 font-bold ml-2 hover:underline text-xs"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
 
         <div className="grid gap-10 lg:grid-cols-12 items-start">
           {/* Left: Cart Items */}

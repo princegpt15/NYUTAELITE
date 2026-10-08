@@ -16,7 +16,9 @@ export class ProductService {
     category?: string;
     search?: string;
   }) {
-    const { page, limit, category, search } = params;
+    const page = Math.max(1, Number(params.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(params.limit) || 12));
+    const { category, search } = params;
     const skip = (page - 1) * limit;
 
     const where: any = { isActive: true };
