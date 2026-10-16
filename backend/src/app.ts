@@ -24,6 +24,7 @@ import { errorHandler } from './middleware/error.middleware.js';
 import { notificationService } from './services/notification/notification.service.js';
 
 const app = express();
+app.set('trust proxy', 1); // Trust Railway edge proxy (single hop)
 
 // 1. Request correlation ID middleware (must be first)
 app.use(requestIdMiddleware);
