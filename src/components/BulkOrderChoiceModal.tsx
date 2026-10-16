@@ -17,9 +17,7 @@ export const BulkOrderChoiceModal: React.FC<BulkOrderChoiceModalProps> = ({
 
   // Business WhatsApp Number resolution:
   // Reads VITE_WHATSAPP_NUMBER if configured, otherwise falls back to the official number (+91 6201426357)
-  const rawNumber = (
-    (import.meta as any).env?.VITE_WHATSAPP_NUMBER || '6201426357'
-  )
+  const rawNumber = (import.meta.env.VITE_WHATSAPP_NUMBER || '6201426357')
     .toString()
     .replace(/[^\d]/g, '');
 
@@ -203,7 +201,7 @@ export const BulkOrderChoiceModal: React.FC<BulkOrderChoiceModalProps> = ({
           {/* Footer Assistance Note */}
           <div className="pt-2 text-center text-[11px] text-[#68756E] border-t border-[#E8DECB]/60">
             <span>
-              Helpline: <strong>+91 98765 43210</strong> (Mon – Sat, 9:00 AM – 7:00 PM IST) • Pan-India Freight
+              Helpline: <strong>+91 62014 26357</strong> (Mon – Sat, 9:00 AM – 7:00 PM IST) • Pan-India Freight
             </span>
           </div>
         </div>
