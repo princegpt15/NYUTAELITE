@@ -13,8 +13,11 @@ const AUTH_USER_KEY = 'nyutaelite_user';
 
 // Helper to get base URL without trailing slash
 function getBaseUrl(): string {
-  // 1. If running in browser on production domain nutyaelite.com, enforce production backend
-  if (typeof window !== 'undefined' && window.location.hostname.includes('nutyaelite.com')) {
+  // 1. If running in browser on production domain (nutyaelite.com or nyutaelite.com), enforce production backend
+  if (
+    typeof window !== 'undefined' &&
+    (window.location.hostname.includes('nutyaelite.com') || window.location.hostname.includes('nyutaelite.com'))
+  ) {
     const rawEnv = import.meta.env.VITE_API_URL;
     if (rawEnv && typeof rawEnv === 'string' && !rawEnv.includes('localhost') && !rawEnv.includes('127.0.0.1')) {
       return rawEnv.replace(/\/+$/g, '');

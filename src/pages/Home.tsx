@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   ArrowUpRight,
-  ShoppingBag,
   Check,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Sparkles,
   ShieldCheck,
   Truck,
@@ -20,16 +21,122 @@ import {
 } from 'lucide-react';
 import { type MakhanaQuality, type PantryProduct } from '../types';
 import { fetchProducts } from '../services/products';
+import { PANTRY_PRODUCTS } from '../data/product';
+import { ProductCard } from '../components/ProductCard';
 import { FAQS } from '../data/faqs';
 import { TESTIMONIALS } from '../data/testimonials';
-import { cartService } from '../services/cart';
-import { trackViewItemList, trackSelectItem } from '../services/analytics';
+import { trackViewItemList } from '../services/analytics';
 import { Toast } from '../components/Toast';
+import { BulkOrderChoiceModal } from '../components/BulkOrderChoiceModal';
 
 import heroImage from '../assets/images/brand/makhana-hero.png';
 import macroImage from '../assets/images/brand/makhana-macro.png';
 import lotusImage from '../assets/images/lotus-source.png';
 import featuredImage from '../assets/images/product-featured.png';
+import packImage from '../assets/images/thumb-1.png';
+import logoImage from '../assets/images/brand-emblem.png';
+
+// Packaging Verified Benefit Icons
+function BenefitLeafIcon() {
+  return (
+    <svg
+      className="w-6 h-6 sm:w-7 sm:h-7 text-[#123B2A]"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
+      <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
+    </svg>
+  );
+}
+
+function BenefitNoPreservativesIcon() {
+  return (
+    <svg
+      className="w-6 h-6 sm:w-7 sm:h-7 text-[#123B2A]"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M10 2v6.5a4 4 0 0 1-.8 2.3L4.2 17.2A2.5 2.5 0 0 0 6.3 21h11.4a2.5 2.5 0 0 0 2.1-3.8L14.8 10.8A4 4 0 0 1 14 8.5V2" />
+      <path d="M8.5 2h7" />
+      <path d="M7 16h10" />
+      <line x1="3" y1="3" x2="21" y2="21" stroke="#C6A15B" strokeWidth="2.5" />
+    </svg>
+  );
+}
+
+function BenefitProteinIcon() {
+  return (
+    <svg
+      className="w-6 h-6 sm:w-7 sm:h-7 text-[#123B2A]"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M5.5 14.5C5.5 11 8 9 11 9c1.6 0 3.2.9 4 2.3.8 1.4 2.1 2.2 3.6 2.2H20a2 2 0 0 1 2 2v.8a3.5 3.5 0 0 1-3.5 3.5h-7a5.5 5.5 0 0 1-6-5.3Z" />
+      <path d="M9.5 9V7a2.5 2.5 0 0 1 5 0v2" />
+      <circle cx="12" cy="7" r="1.2" fill="#C6A15B" stroke="none" />
+    </svg>
+  );
+}
+
+function BenefitFiberIcon() {
+  return (
+    <svg
+      className="w-6 h-6 sm:w-7 sm:h-7 text-[#123B2A]"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 21V9" />
+      <path d="M12 9C12 5 9.5 3 6 4c0 4 2.5 6 6 5Z" />
+      <path d="M12 9C12 5 14.5 3 18 4c0 4-2.5 6-6 5Z" />
+      <path d="M12 14.5c-2.5-1-4.5 0-5.5 1.8 2.2 1.2 4.5.3 5.5-1.8Z" />
+      <path d="M12 14.5c2.5-1 4.5 0 5.5 1.8-2.2 1.2-4.5.3-5.5-1.8Z" />
+    </svg>
+  );
+}
+
+const benefitItems = [
+  {
+    id: 'premium-quality',
+    label: 'Premium Quality Makhana',
+    icon: BenefitLeafIcon,
+  },
+  {
+    id: 'no-preservatives',
+    label: 'No Added Preservatives',
+    icon: BenefitNoPreservativesIcon,
+  },
+  {
+    id: 'high-protein',
+    label: 'High Protein',
+    icon: BenefitProteinIcon,
+  },
+  {
+    id: 'high-fiber',
+    label: 'High Fiber',
+    icon: BenefitFiberIcon,
+  },
+];
 
 // Trust Ribbon items
 const trustRibbonItems = [
@@ -57,7 +164,7 @@ const sourceTimeline = [
     step: '03',
     title: 'PACK',
     description: 'Hygienically puffed and sealed in air-tight food-grade pouches for lasting crunch.',
-    image: featuredImage,
+    image: packImage,
   },
   {
     step: '04',
@@ -95,216 +202,136 @@ const lifestyleMoments = [
 // Product Skeleton Loader
 function ProductCardSkeleton() {
   return (
-    <div className="rounded-2xl bg-white p-4 border border-[#E8DECB] shadow-xs animate-pulse space-y-4">
-      <div className="aspect-[4/3] rounded-xl bg-[#F7F1E5]" />
-      <div className="space-y-2 pt-2">
-        <div className="h-4 bg-[#F7F1E5] rounded w-1/3" />
-        <div className="h-6 bg-[#F7F1E5] rounded w-3/4" />
-        <div className="h-3 bg-[#F7F1E5] rounded w-full" />
+    <div className="rounded-2xl bg-[#F1F0D9] p-3 border border-[#D8D9C2] shadow-xs animate-pulse space-y-3">
+      <div className="aspect-square rounded-xl bg-[#D8D9C2]/60" />
+      <div className="space-y-2 pt-1">
+        <div className="h-3 bg-[#D8D9C2]/60 rounded w-1/3" />
+        <div className="h-4 bg-[#D8D9C2]/60 rounded w-3/4" />
+        <div className="h-3 bg-[#D8D9C2]/60 rounded w-1/2" />
       </div>
-      <div className="pt-4 border-t border-[#E8DECB] flex items-center justify-between">
-        <div className="h-6 bg-[#F7F1E5] rounded w-1/4" />
-        <div className="h-10 bg-[#F7F1E5] rounded w-1/2" />
+      <div className="pt-2 border-t border-[#D8D9C2] flex items-center justify-between">
+        <div className="h-4 bg-[#D8D9C2]/60 rounded w-1/4" />
+        <div className="h-8 bg-[#123D2D]/30 rounded-xl w-full" />
       </div>
     </div>
   );
 }
 
 // Single Product Card Component
-function ProductCardItem({
-  product,
-  onAdded,
-}: {
-  product: PantryProduct;
-  onAdded: (message: string) => void;
-}) {
-  const navigate = useNavigate();
-  const [selectedQuantity, setSelectedQuantity] = useState(1);
-  const [adding, setAdding] = useState(false);
-
-  const discountPercentage = Math.round(((product.mrp - product.price) / product.mrp) * 100);
-  const isOutOfStock = product.stock <= 0;
-  const isLowStock = product.stock > 0 && product.stock <= 20;
-
-  const handleAddToCart = async (e: React.MouseEvent, goToCheckout = false) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (isOutOfStock) return;
-
-    setAdding(true);
-    cartService.addItem({
-      productId: product.id,
-      productName: product.name,
-      quality: product.quality,
-      weightGrams: product.weightGrams,
-      price: product.price,
-      mrp: product.mrp,
-      quantity: selectedQuantity,
-      image: product.image,
-    });
-
-    onAdded(`Added ${selectedQuantity} × ${product.weightGrams}g ${product.name} to cart.`);
-    setAdding(false);
-
-    if (goToCheckout) {
-      navigate('/cart');
-    }
-  };
+function FlavouredMakhanaGrid({ products, onAdded }: { products: PantryProduct[]; onAdded: (msg: string) => void }) {
+  const flavours = [
+    {
+      name: 'Peri Peri Makhana',
+      image: '/images/flavoured-makhana/peri-peri.png',
+      sku: 'peri-peri-100g',
+      description: 'Roasted makhana lightly dusted with fiery peri-peri and paprika spice.',
+      tag: 'Spicy & Tangy',
+    },
+    {
+      name: 'Pudina (Mint) Makhana',
+      image: '/images/flavoured-makhana/pudina.png',
+      sku: 'pudina-100g',
+      description: 'Crispy popped makhana coated in fragrant garden mint and delicate spices.',
+      tag: 'Fresh & Herbal',
+    },
+    {
+      name: 'Cream & Onion Makhana',
+      image: '/images/flavoured-makhana/cream-onion.png',
+      sku: 'cream-onion-100g',
+      description: 'Savory roasted crunch infused with rich sour cream and spring onion herbs.',
+      tag: 'Savory Crunch',
+    },
+    {
+      name: 'Himalayan Pink Salt Makhana',
+      image: '/images/flavoured-makhana/pink-salt.png',
+      sku: 'pink-salt-100g',
+      description: 'Pure roasted crunch seasoned with natural coarse pink rock salt crystals.',
+      tag: 'Classic Mineral',
+    },
+    {
+      name: 'Cheese Makhana',
+      image: '/images/flavoured-makhana/cheese.png',
+      sku: 'cheese-100g',
+      description: 'Golden roasted makhana coated in delectable yellow cheddar cheese seasoning.',
+      tag: 'Rich & Cheesy',
+    },
+    {
+      name: 'Achari Masala Makhana',
+      image: '/images/flavoured-makhana/achari.png',
+      sku: 'achari-100g',
+      description: 'Tangy Indian pickle spices, fragrant mustard seeds, and punchy aromatics.',
+      tag: 'Pickle Spiced',
+    },
+  ];
 
   return (
-    <article className="group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-white p-4 sm:p-5 shadow-xs border border-[#E8DECB] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:border-[#123B2A]">
-      <div>
-        {/* Product Image Container */}
-        <Link
-          to={`/products/makhana?sku=${product.id}`}
-          onClick={() =>
-            trackSelectItem({
-              listId: 'home_pantry_collection',
-              listName: 'Home Pantry Collection',
-              product,
-            })
-          }
-          className="block relative aspect-[4/3] overflow-hidden rounded-xl bg-[#F7F1E5]"
-        >
-          <img
-            src={product.image}
-            alt={`${product.weightGrams}g ${product.name}`}
-            className="h-full w-full object-contain p-5 transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-          />
-
-          {/* Quality Badge */}
-          <span
-            className={`absolute left-3 top-3 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.16em] rounded-md ${
-              product.quality === 'Premium'
-                ? 'bg-[#123B2A] text-[#FCFAF5] shadow-xs border border-[#C6A15B]/40'
-                : 'bg-[#E8DECB] text-[#123B2A]'
-            }`}
+    <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 pt-1 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-[#617653] scrollbar-track-transparent xl:grid xl:grid-cols-6 xl:overflow-visible">
+      {flavours.map((flavour) => {
+        const product = products.find(
+          (p) => p.name.toLowerCase().includes(flavour.name.toLowerCase()) || p.sku === flavour.sku
+        );
+        if (product && product.active) {
+          return (
+            <div key={flavour.sku} className="w-[220px] sm:w-[240px] xl:w-auto shrink-0 snap-start">
+              <ProductCard product={product} onAdded={onAdded} />
+            </div>
+          );
+        }
+        // Placeholder for coming soon
+        return (
+          <article
+            key={flavour.sku}
+            className="group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-[#F1F0D9] p-3.5 sm:p-4 shadow-xs border border-[#D8D9C2] w-[220px] sm:w-[240px] xl:w-auto shrink-0 snap-start transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-[#123D2D]"
           >
-            {product.quality}
-          </span>
+            <div>
+              {/* Product Image Container */}
+              <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-white border border-[#D8D9C2]">
+                <img
+                  src={flavour.image}
+                  alt={flavour.name}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy"
+                />
+                {/* Coming Soon Badge */}
+                <span className="absolute right-2.5 top-2.5 bg-[#C9A65B] text-[#183B2D] text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-xs">
+                  Coming Soon
+                </span>
+              </div>
 
-          {/* Discount Badge */}
-          {discountPercentage > 0 && (
-            <span className="absolute right-3 top-3 bg-[#C6A15B] text-[#092218] text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-xs">
-              {discountPercentage}% OFF
-            </span>
-          )}
+              {/* Product Details */}
+              <div className="pt-3 px-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.16em] text-[#C9A65B]">
+                    {flavour.tag}
+                  </span>
+                  <span className="text-[11px] sm:text-xs font-extrabold text-[#183B2D] bg-[#D8D9C2] px-2 py-0.5 rounded-md border border-[#C6C7B0]">
+                    100g
+                  </span>
+                </div>
+                <h3 className="font-serif mt-1.5 text-base sm:text-lg font-bold text-[#183B2D] leading-snug">
+                  {flavour.name}
+                </h3>
+                <p className="mt-1.5 text-xs text-[#617653] line-clamp-2 leading-relaxed">
+                  {flavour.description}
+                </p>
+              </div>
+            </div>
 
-          {/* Out of Stock Overlay */}
-          {isOutOfStock && (
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-2xs flex items-center justify-center">
-              <span className="bg-red-600 text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded">
-                Out of Stock
+            {/* Availability State */}
+            <div className="mt-4 pt-3 border-t border-[#D8D9C2] flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-[#617653] italic">Crafting batch</span>
+              <span className="bg-[#123D2D] text-white text-xs font-extrabold px-2.5 py-1 rounded-md">
+                Coming Soon
               </span>
             </div>
-          )}
-        </Link>
-
-        {/* Product Details */}
-        <div className="pt-4 px-1">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#68756E]">
-              {product.quality} Grade
-            </span>
-            <span className="text-xs font-extrabold text-[#123B2A] bg-[#F7F1E5] px-2.5 py-0.5 rounded-md border border-[#E8DECB]">
-              {product.weightGrams}g Pouch
-            </span>
-          </div>
-
-          <Link
-            to={`/products/makhana?sku=${product.id}`}
-            onClick={() =>
-              trackSelectItem({
-                listId: 'home_pantry_collection',
-                listName: 'Home Pantry Collection',
-                product,
-              })
-            }
-          >
-            <h3 className="font-serif mt-1 text-xl font-bold text-[#1C1C1C] group-hover:text-[#123B2A] transition-colors">
-              {product.name}
-            </h3>
-          </Link>
-
-          <p className="mt-1 text-xs text-[#68756E] line-clamp-2 leading-relaxed">
-            {product.description}
-          </p>
-
-          {/* Stock state indicator */}
-          <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-semibold">
-            {isOutOfStock ? (
-              <span className="text-red-600 flex items-center gap-1">
-                <AlertCircle className="w-3.5 h-3.5" /> Out of stock
-              </span>
-            ) : isLowStock ? (
-              <span className="text-amber-700 flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-[#C6A15B]" /> Only {product.stock} left in stock!
-              </span>
-            ) : (
-              <span className="text-[#123B2A] flex items-center gap-1">
-                <Check className="w-3.5 h-3.5 text-[#C6A15B]" /> In Stock ({product.stock} available)
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Pricing & Controls */}
-      <div className="mt-5 pt-3 border-t border-[#E8DECB]">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <span className="text-xl font-extrabold text-[#123B2A]">₹{product.price}</span>
-            {product.mrp > product.price && (
-              <span className="text-xs text-[#68756E] line-through ml-2">₹{product.mrp}</span>
-            )}
-          </div>
-
-          {/* Quantity Selector */}
-          {!isOutOfStock && (
-            <div className="flex items-center gap-1.5">
-              <label htmlFor={`qty-${product.id}`} className="text-[11px] font-bold text-[#68756E]">
-                Qty:
-              </label>
-              <select
-                id={`qty-${product.id}`}
-                value={selectedQuantity}
-                onChange={(e) => setSelectedQuantity(Number(e.target.value))}
-                className="bg-white border border-[#E8DECB] text-xs font-bold text-[#1C1C1C] px-2 py-1 rounded-md focus:outline-none focus:border-[#123B2A] cursor-pointer"
-              >
-                {[1, 2, 3, 4, 5, 10].map((qty) => (
-                  <option key={qty} value={qty}>
-                    {qty}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-        </div>
-
-        {/* Buttons */}
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            disabled={isOutOfStock || adding}
-            onClick={(e) => handleAddToCart(e, false)}
-            className="inline-flex min-h-11 items-center justify-center gap-1.5 border border-[#123B2A] text-xs font-extrabold uppercase tracking-wider text-[#123B2A] bg-white rounded-lg transition-colors hover:bg-[#F7F1E5] active:bg-[#E8DECB] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-          >
-            <ShoppingBag className="h-3.5 w-3.5" /> ADD TO CART
-          </button>
-          <button
-            type="button"
-            disabled={isOutOfStock || adding}
-            onClick={(e) => handleAddToCart(e, true)}
-            className="min-h-11 bg-[#123B2A] hover:bg-[#092218] active:bg-black text-xs font-extrabold uppercase tracking-wider text-white rounded-lg transition-colors cursor-pointer shadow-xs disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            BUY NOW
-          </button>
-        </div>
-      </div>
-    </article>
+          </article>
+        );
+      })}
+    </div>
   );
 }
+
+
 
 // Main Home Page
 export const Home: React.FC = () => {
@@ -316,13 +343,43 @@ export const Home: React.FC = () => {
   const [products, setProducts] = useState<PantryProduct[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isBulkModalOpen, setBulkModalOpen] = useState(false);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScrollState = () => {
+    if (carouselRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+      setCanScrollLeft(scrollLeft > 10);
+      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
+    }
+  };
+
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (carouselRef.current) {
+      const amount = carouselRef.current.clientWidth * 0.75;
+      carouselRef.current.scrollBy({
+        left: direction === 'left' ? -amount : amount,
+        behavior: 'smooth',
+      });
+    }
+  };
 
   const loadCatalog = () => {
     setLoading(true);
     setError(null);
     fetchProducts()
-      .then((data) => setProducts(data))
-      .catch((err) => setError(err?.message || 'Failed to load pantry products. Please try again.'))
+      .then((data) => {
+        if (data && data.length > 0) {
+          setProducts(data);
+        } else {
+          setProducts(PANTRY_PRODUCTS);
+        }
+      })
+      .catch(() => {
+        setProducts(PANTRY_PRODUCTS);
+      })
       .finally(() => setLoading(false));
   };
 
@@ -361,6 +418,12 @@ export const Home: React.FC = () => {
     }
   }, [loading, error, filteredProducts, qualityFilter, weightFilter]);
 
+  useEffect(() => {
+    checkScrollState();
+    window.addEventListener('resize', checkScrollState);
+    return () => window.removeEventListener('resize', checkScrollState);
+  }, [filteredProducts]);
+
   return (
     <div className="bg-[#FCFAF5] text-[#1C1C1C]">
       {/* 1. HERO SECTION (EDITORIAL 2-COLUMN SPLIT) */}
@@ -369,8 +432,9 @@ export const Home: React.FC = () => {
           <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
             {/* Left Editorial Copy Column */}
             <div className="lg:col-span-6 space-y-6">
-              <div className="inline-flex items-center gap-2 bg-[#123B2A]/10 border border-[#123B2A]/20 px-3.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#123B2A]">
-                <Sparkles className="w-3.5 h-3.5 text-[#C6A15B]" /> PRESTIGE INDIAN MAKHANA
+              <img src={logoImage} alt="NYUTA ELITE MAKHANA logo" className="mx-auto mb-4 w-[110px] sm:w-[130px] md:w-[150px] lg:w-[170px] rounded-full object-contain" />
+              <div className="flex items-center text-[#123D2D] uppercase tracking-[0.15em] font-extrabold text-sm my-2">
+                <div className="flex-1 h-px bg-[#C9A65B] mr-2"></div> PRESTIGE INDIAN MAKHANA <div className="flex-1 h-px bg-[#C9A65B] ml-2"></div>
               </div>
 
               <h1 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold leading-[1.04] text-[#092218] tracking-tight">
@@ -394,6 +458,13 @@ export const Home: React.FC = () => {
                 >
                   EXPLORE OUR QUALITY <ArrowUpRight className="h-4 w-4" />
                 </a>
+                <button
+                  type="button"
+                  onClick={() => setBulkModalOpen(true)}
+                  className="inline-flex min-h-12 items-center gap-2.5 bg-[#123B2A] hover:bg-[#092218] active:bg-black px-7 text-xs sm:text-sm font-extrabold uppercase tracking-widest text-white rounded-xl transition-all shadow-md cursor-pointer"
+                >
+                  ORDER IN BULK <ArrowRight className="h-4 w-4 text-[#C6A15B]" />
+                </button>
               </div>
             </div>
 
@@ -409,6 +480,7 @@ export const Home: React.FC = () => {
                   width={800}
                   height={600}
                 />
+                 <img src={logoImage} alt="NYUTA ELITE MAKHANA logo" className="mx-auto mb-4 w-[120px] sm:w-[180px]" />
                 {/* Floating Badge */}
                 <div className="absolute bottom-4 left-4 bg-[#123B2A]/90 backdrop-blur-md text-white p-3.5 rounded-xl border border-[#C6A15B]/40 shadow-lg max-w-xs">
                   <p className="text-[10px] font-extrabold uppercase tracking-widest text-[#C6A15B]">
@@ -423,10 +495,35 @@ export const Home: React.FC = () => {
           </div>
         </div>
       </section>
+{isBulkModalOpen && <BulkOrderChoiceModal isOpen={isBulkModalOpen} onClose={() => setBulkModalOpen(false)} />}
 
-      {/* TRUST RIBBON */}
-      <section className="bg-[#123B2A] text-white py-4 border-b border-[#092218]">
-        <div className="mx-auto max-w-[1280px] px-5 sm:px-8 lg:px-12">
+      {/* 4 HOMEPAGE BENEFIT ICONS & TRUST RIBBON */}
+      <section className="bg-[#123B2A] text-white py-8 sm:py-10 border-b border-[#092218]">
+        <div className="mx-auto max-w-[1280px] px-5 sm:px-8 lg:px-12 space-y-8 sm:space-y-10">
+          {/* Four Packaging Benefit Items */}
+          <div className="grid grid-cols-4 gap-4 sm:gap-6 text-center">
+            {benefitItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.label}
+                  className="flex flex-col items-center justify-start text-center group"
+                >
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white border-2 border-[#123B2A] ring-2 ring-[#C6A15B]/70 flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-105">
+                    <Icon />
+                  </div>
+                  <span className="mt-3 text-xs sm:text-sm font-bold text-white text-center leading-snug max-w-[140px]">
+                    {item.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-[#C6A15B]/20" />
+
+          {/* Trust Ribbon */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             {trustRibbonItems.map((item) => {
               const Icon = item.icon;
@@ -445,61 +542,88 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 2. THE PANTRY COLLECTION CATALOG */}
-      <section id="pantry" className="py-16 sm:py-24 bg-[#FCFAF5] border-b border-[#E8DECB]">
-        <div className="mx-auto max-w-[1280px] px-5 sm:px-8 lg:px-12">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+      <section id="pantry" className="py-12 sm:py-16 md:py-20 bg-[#879778] border-b border-[#617653]">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 sm:mb-10">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#C6A15B]">
+              <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#F4F1DE]">
                 THE PANTRY COLLECTION
               </span>
-              <h2 className="font-serif text-3xl sm:text-5xl font-bold text-[#092218] mt-1">
+              <h2 className="font-serif text-3xl sm:text-5xl font-bold text-white mt-1">
                 GOOD THINGS FOR YOUR PANTRY
               </h2>
-              <p className="mt-2 text-sm sm:text-base text-[#68756E]">
+              <p className="mt-2 text-sm sm:text-base text-[#F4F1DE]/90">
                 Choose the makhana that fits your everyday snacking.
               </p>
             </div>
 
-            {/* Quality Summary Tag */}
-            <div className="inline-flex items-center gap-2 bg-[#F7F1E5] border border-[#E8DECB] px-4 py-2 rounded-xl text-xs font-bold text-[#123B2A] shrink-0">
-              <ShieldCheck className="w-4 h-4 text-[#C6A15B]" /> Exactly 6 Verified Packs (100g, 200g, 250g)
+            {/* Quality Summary Tag & Carousel Navigation */}
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="inline-flex items-center gap-2 bg-[#617653] border border-[#617653] px-3.5 py-1.5 rounded-xl text-xs font-bold text-[#F4F1DE] shrink-0">
+                <ShieldCheck className="w-4 h-4 text-[#C9A65B]" /> Exactly 6 Verified Packs (100g, 200g, 250g)
+              </div>
+
+              {/* Navigation Scroll Arrows */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => scrollCarousel('left')}
+                  disabled={!canScrollLeft}
+                  aria-label="Scroll left to view previous products"
+                  className="w-8 h-8 rounded-xl border border-[#D8D9C2] bg-[#F4F1DE] text-[#183B2D] flex items-center justify-center hover:bg-white active:scale-95 transition-all shadow-2xs disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C9A65B]"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollCarousel('right')}
+                  disabled={!canScrollRight}
+                  aria-label="Scroll right to view more products"
+                  className="w-8 h-8 rounded-xl border border-[#D8D9C2] bg-[#F4F1DE] text-[#183B2D] flex items-center justify-center hover:bg-white active:scale-95 transition-all shadow-2xs disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C9A65B]"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
 
           {/* INSTANT FILTER BAR */}
-          <div className="bg-white border border-[#E8DECB] p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-xs mb-8">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-[#123B2A] mr-2">
-                <SlidersHorizontal className="w-4 h-4 text-[#C6A15B]" /> Filter Packs:
+          <div className="bg-[#617653] p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl flex flex-wrap items-center justify-between gap-4 shadow-sm mb-6">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#F4F1DE] mr-1 sm:mr-2">
+                <SlidersHorizontal className="w-4 h-4 text-[#C9A65B]" /> Filter Packs:
               </div>
 
               {/* Quality Filter Buttons */}
-              <div className="flex items-center bg-[#F7F1E5] p-1 rounded-xl border border-[#E8DECB]">
+              <div className="flex flex-wrap items-center gap-1.5">
                 {(['All', 'Premium', 'Normal'] as const).map((quality) => (
                   <button
                     key={quality}
                     onClick={() => setQualityFilter(quality)}
-                    className={`px-3.5 py-1.5 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+                    className={`px-3.5 py-1.5 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer ${
                       qualityFilter === quality
-                        ? 'bg-[#123B2A] text-white shadow-xs'
-                        : 'text-[#68756E] hover:text-[#123B2A]'
+                        ? 'bg-[#123D2D] text-white shadow-xs'
+                        : 'bg-[#F4F1DE] text-[#183B2D] hover:bg-white'
                     }`}
                   >
-                    {quality === 'All' ? 'All Qualities' : quality}
+                    {quality === 'All' ? 'All Qualities' : quality === 'Normal' ? 'Regular' : quality}
                   </button>
                 ))}
               </div>
 
+              {/* Vertical divider */}
+              <div className="hidden lg:block h-6 w-px bg-white/20 mx-1" />
+
               {/* Weight Filter Buttons */}
-              <div className="flex items-center bg-[#F7F1E5] p-1 rounded-xl border border-[#E8DECB]">
+              <div className="flex flex-wrap items-center gap-1.5">
                 {([0, 100, 200, 250] as const).map((weight) => (
                   <button
                     key={weight}
                     onClick={() => setWeightFilter(weight)}
-                    className={`px-3.5 py-1.5 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+                    className={`px-3.5 py-1.5 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer ${
                       weightFilter === weight
-                        ? 'bg-[#123B2A] text-white shadow-xs'
-                        : 'text-[#68756E] hover:text-[#123B2A]'
+                        ? 'bg-[#123D2D] text-white shadow-xs'
+                        : 'bg-[#F4F1DE] text-[#183B2D] hover:bg-white'
                     }`}
                   >
                     {weight === 0 ? 'All Weights' : `${weight}g`}
@@ -510,14 +634,15 @@ export const Home: React.FC = () => {
 
             {/* Sort Dropdown */}
             <div className="flex items-center gap-2">
-              <label htmlFor="sort-by" className="text-xs font-bold text-[#68756E]">
+              <div className="hidden lg:block h-6 w-px bg-white/20 mr-2" />
+              <label htmlFor="sort-by" className="text-xs sm:text-sm font-bold text-white">
                 Sort by:
               </label>
               <select
                 id="sort-by"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                className="bg-[#F7F1E5] border border-[#E8DECB] text-xs font-bold text-[#123B2A] px-3.5 py-2 rounded-xl focus:outline-none cursor-pointer"
+                className="bg-[#F4F1DE] text-[#183B2D] text-xs sm:text-sm font-bold px-3.5 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C9A65B] cursor-pointer"
               >
                 <option value="popular">Most Popular</option>
                 <option value="price-asc">Price: Low → High</option>
@@ -526,49 +651,86 @@ export const Home: React.FC = () => {
             </div>
           </div>
 
-          {/* Product Grid / Loading / Error */}
-          {loading ? (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {[...Array(6)].map((_, i) => (
-                <ProductCardSkeleton key={i} />
-              ))}
-            </div>
-          ) : error ? (
-            <div className="p-8 bg-white border border-red-200 rounded-2xl text-center space-y-3 max-w-md mx-auto">
-              <AlertCircle className="w-10 h-10 text-red-500 mx-auto" />
-              <h3 className="font-bold text-[#1C1C1C] text-base">Unable to Load Products</h3>
-              <p className="text-xs text-[#68756E]">{error}</p>
-              <button
-                type="button"
-                onClick={loadCatalog}
-                className="inline-flex items-center gap-1.5 bg-[#123B2A] text-white text-xs font-bold px-4 py-2.5 rounded-lg hover:bg-[#092218] transition-colors cursor-pointer"
+          {/* INNER PRODUCT GRID CONTAINER */}
+          <div className="bg-[#617653] p-3.5 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl shadow-sm">
+            {loading ? (
+              <div className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-2 lg:grid lg:grid-cols-6 lg:overflow-visible lg:pb-0">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="w-[185px] sm:w-[210px] lg:w-auto shrink-0">
+                    <ProductCardSkeleton />
+                  </div>
+                ))}
+              </div>
+            ) : error ? (
+              <div className="p-8 bg-[#F1F0D9] border border-red-200 rounded-2xl text-center space-y-3 max-w-md mx-auto shadow-xs">
+                <AlertCircle className="w-10 h-10 text-red-600 mx-auto" />
+                <h3 className="font-bold text-[#183B2D] text-base">Unable to Load Products</h3>
+                <p className="text-xs text-[#617653]">{error}</p>
+                <button
+                  type="button"
+                  onClick={loadCatalog}
+                  className="inline-flex items-center gap-1.5 bg-[#123D2D] text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-[#0a231a] transition-colors cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" /> Try Again
+                </button>
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="p-12 bg-[#F1F0D9] border border-[#D8D9C2] rounded-2xl text-center space-y-3 shadow-xs">
+                <Package className="w-10 h-10 text-[#617653]/40 mx-auto" />
+                <h3 className="font-bold text-[#183B2D] text-base">No Matching Packs Found</h3>
+                <p className="text-xs text-[#617653]">Try changing your quality or weight filter.</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQualityFilter('All');
+                    setWeightFilter(0);
+                  }}
+                  className="inline-flex items-center gap-1.5 bg-[#123D2D] text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-[#0a231a] transition-colors cursor-pointer"
+                >
+                  Reset Filters
+                </button>
+              </div>
+            ) : (
+              <div
+                ref={carouselRef}
+                onScroll={checkScrollState}
+                className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-[#879778] scrollbar-track-transparent lg:grid lg:grid-cols-6 lg:gap-2.5 xl:gap-3 lg:overflow-visible lg:pb-0"
               >
-                <RefreshCw className="w-3.5 h-3.5" /> Try Again
-              </button>
+                {filteredProducts.map((product) => (
+                  <div key={product.id} className="w-[185px] sm:w-[210px] lg:w-auto shrink-0 snap-start flex flex-col h-full">
+                    <ProductCard
+                      product={product}
+                      onAdded={setToastMsg}
+                      listId="home_pantry_collection"
+                      listName="Home Pantry Collection"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* FLAVOURED MAKHANA SECTION (Directly below Regular Makhana) */}
+          <div className="mt-16 sm:mt-20 pt-12 sm:pt-16 border-t border-[#617653]">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 sm:mb-10">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#F4F1DE]">
+                  EXPLORE FLAVOURS
+                </span>
+                <h2 className="font-serif text-3xl sm:text-5xl font-bold text-white mt-1">
+                  Explore Flavoured Makhana
+                </h2>
+                <p className="mt-2 text-sm sm:text-base text-[#F4F1DE]/90">
+                  Discover exciting flavours for your everyday snacking.
+                </p>
+              </div>
+              <div className="inline-flex items-center gap-2 bg-[#617653] border border-[#617653] px-4 py-2 rounded-xl text-xs font-bold text-[#F4F1DE] shrink-0 self-start md:self-auto">
+                <Sparkles className="w-4 h-4 text-[#C9A65B]" /> 6 Handcrafted Flavours
+              </div>
             </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="p-12 bg-white border border-[#E8DECB] rounded-2xl text-center space-y-3">
-              <Package className="w-10 h-10 text-[#68756E]/40 mx-auto" />
-              <h3 className="font-bold text-[#1C1C1C] text-base">No Matching Packs Found</h3>
-              <p className="text-xs text-[#68756E]">Try changing your quality or weight filter.</p>
-              <button
-                type="button"
-                onClick={() => {
-                  setQualityFilter('All');
-                  setWeightFilter(0);
-                }}
-                className="inline-flex items-center gap-1.5 bg-[#123B2A] text-white text-xs font-bold px-4 py-2.5 rounded-lg hover:bg-[#092218] transition-colors cursor-pointer"
-              >
-                Reset Filters
-              </button>
-            </div>
-          ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredProducts.map((product) => (
-                <ProductCardItem key={product.id} product={product} onAdded={setToastMsg} />
-              ))}
-            </div>
-          )}
+
+            <FlavouredMakhanaGrid products={products} onAdded={setToastMsg} />
+          </div>
         </div>
       </section>
 
@@ -765,32 +927,32 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 5. FROM SOURCE TO PANTRY TIMELINE */}
-      <section className="bg-[#092218] text-white py-16 sm:py-24">
-        <div className="mx-auto max-w-[1280px] px-5 sm:px-8 lg:px-12">
-          <div className="text-center max-w-2xl mx-auto mb-16">
+      <section className="bg-[#092218] text-white py-12 sm:py-16 md:py-24">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-8 lg:px-12">
+          <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14 md:mb-16">
             <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#C6A15B]">
               OUR PROCESS
             </span>
-            <h2 className="font-serif text-3xl sm:text-5xl font-bold text-white mt-1">
+            <h2 className="font-serif text-2xl sm:text-4xl md:text-5xl font-bold text-white mt-1">
               FROM SOURCE TO PANTRY
             </h2>
-            <p className="mt-3 text-sm sm:text-base text-[#D5DED6]">
+            <p className="mt-2 sm:mt-3 text-xs sm:text-sm md:text-base text-[#D5DED6]">
               Four deliberate steps ensuring uncompromising quality from Mithila ponds to your home.
             </p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             {sourceTimeline.map((item) => (
               <div
                 key={item.step}
-                className="bg-[#123B2A] p-6 rounded-2xl border border-[#C6A15B]/20 flex flex-col justify-between group hover:border-[#C6A15B] transition-colors"
+                className="bg-[#123B2A] p-3.5 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl border border-[#C6A15B]/20 flex flex-col justify-between group hover:border-[#C6A15B] transition-colors min-w-0"
               >
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="font-serif text-3xl font-extrabold text-[#C6A15B]">{item.step}</span>
-                    <span className="text-xs font-bold uppercase tracking-widest text-[#D5DED6]">{item.title}</span>
+                  <div className="flex items-center justify-between mb-2.5 sm:mb-3 md:mb-4">
+                    <span className="font-serif text-xl sm:text-2xl md:text-3xl font-extrabold text-[#C6A15B]">{item.step}</span>
+                    <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#D5DED6]">{item.title}</span>
                   </div>
-                  <div className="aspect-[4/3] overflow-hidden rounded-xl bg-[#092218] mb-4">
+                  <div className="aspect-[4/3] overflow-hidden rounded-lg sm:rounded-xl bg-[#092218] mb-2.5 sm:mb-3 md:mb-4">
                     <img
                       src={item.image}
                       alt={item.title}
@@ -801,7 +963,7 @@ export const Home: React.FC = () => {
                       height={300}
                     />
                   </div>
-                  <p className="text-xs text-[#D5DED6] leading-relaxed">{item.description}</p>
+                  <p className="text-[11px] sm:text-xs text-[#D5DED6] leading-snug sm:leading-relaxed">{item.description}</p>
                 </div>
               </div>
             ))}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Heart, Check, Sparkles, AlertCircle, Plus, Minus, RefreshCw } from 'lucide-react';
+import { Heart, Sparkles, AlertCircle, Plus, Minus, RefreshCw, Leaf } from 'lucide-react';
 import type { PantryProduct } from '../types';
 import { cartService } from '../services/cart';
 import { retentionService } from '../services/retention';
@@ -160,12 +160,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <article
-      className="group relative flex flex-col justify-between h-full bg-[#F7FAF4] rounded-2xl border border-[#D4E2D1] shadow-xs hover:shadow-md hover:border-[#123B2A] transition-all duration-300 p-2.5 sm:p-3 select-none"
+      className="group relative flex flex-col justify-between h-full bg-[#F1F0D9] rounded-2xl border border-[#D8D9C2] shadow-xs hover:shadow-md hover:border-[#123D2D] transition-all duration-300 p-2.5 sm:p-3 select-none"
       aria-label={`${badgeQuality} Makhana ${displayWeight}`}
     >
       <div>
         {/* Top Product Image Container */}
-        <div className="relative w-full aspect-square overflow-hidden rounded-xl bg-white border border-[#E2ECE0] flex items-center justify-center shadow-2xs">
+        <div className="relative w-full aspect-square overflow-hidden rounded-xl bg-white border border-[#D8D9C2] flex items-center justify-center shadow-2xs">
           <Link
             to={productUrl}
             onClick={() => trackSelectItem({ listId, listName, product })}
@@ -187,8 +187,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <span
               className={`px-2 py-0.5 text-[9px] sm:text-[10px] font-black uppercase tracking-wider rounded-md shadow-2xs ${
                 product.quality === 'Premium'
-                  ? 'bg-[#123B2A] text-[#FCFAF5] border border-[#C6A15B]/60'
-                  : 'bg-[#E5EFE2] text-[#123B2A] border border-[#CFDFCC]'
+                  ? 'bg-[#123D2D] text-white border border-[#C9A65B]/60'
+                  : 'bg-[#D8D9C2] text-[#183B2D] border border-[#C6C7B0]'
               }`}
             >
               {badgeQuality}
@@ -209,14 +209,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               className={`p-1.5 rounded-full backdrop-blur-md transition-all cursor-pointer shadow-2xs min-h-[28px] min-w-[28px] flex items-center justify-center ${
                 isWishlisted
                   ? 'bg-rose-50 text-rose-600 border border-rose-200'
-                  : 'bg-[#F7FAF4]/95 text-[#4E6257] hover:text-rose-600 hover:bg-white border border-[#D4E2D1]'
+                  : 'bg-[#F1F0D9]/95 text-[#183B2D] hover:text-rose-600 hover:bg-white border border-[#D8D9C2]'
               }`}
             >
               <Heart className={`w-3.5 h-3.5 ${isWishlisted ? 'fill-rose-600' : ''}`} />
             </button>
 
             {discountPercent > 0 && (
-              <span className="bg-[#C6A15B] text-[#092218] text-[9px] font-black px-1.5 py-0.5 rounded-md shadow-2xs uppercase tracking-wider">
+              <span className="bg-[#C9A65B] text-[#183B2D] text-[9px] font-black px-1.5 py-0.5 rounded-md shadow-2xs uppercase tracking-wider">
                 {discountPercent}% OFF
               </span>
             )}
@@ -235,7 +235,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {/* Product Information */}
         <div className="pt-2 sm:pt-2.5 flex flex-col">
           {/* Net weight tag */}
-          <span className="text-[11px] font-black text-[#566A5E] tracking-tight">
+          <span className="text-[11px] font-black text-[#617653] tracking-tight">
             {displayWeight}
           </span>
 
@@ -243,9 +243,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <Link
             to={productUrl}
             onClick={() => trackSelectItem({ listId, listName, product })}
-            className="block mt-0.5 group-hover:text-[#123B2A] transition-colors"
+            className="block mt-0.5 group-hover:text-[#123D2D] transition-colors"
           >
-            <h3 className="font-serif text-xs sm:text-sm font-bold text-[#1C1C1C] leading-snug line-clamp-1">
+            <h3 className="font-serif text-xs sm:text-sm font-bold text-[#183B2D] leading-snug line-clamp-1">
               {displayName}
             </h3>
           </Link>
@@ -258,27 +258,27 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               </span>
             ) : isLowStock ? (
               <span className="text-amber-700 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-[#C6A15B] shrink-0" /> Only {product.stock} left
+                <Sparkles className="w-3 h-3 text-[#C9A65B] shrink-0" /> Only {product.stock} left
               </span>
             ) : (
-              <span className="text-[#123B2A] flex items-center gap-1">
-                <Check className="w-3 h-3 text-[#C6A15B] shrink-0" /> Fresh stock
+              <span className="text-[#183B2D] flex items-center gap-1">
+                <Leaf className="w-3 h-3 text-[#617653] shrink-0 fill-[#617653]" /> Fresh stock
               </span>
             )}
           </div>
 
           {/* Pricing & Savings */}
           <div className="mt-1.5 flex items-baseline gap-1.5 flex-wrap">
-            <span className="text-sm sm:text-base font-black text-[#123B2A]">
+            <span className="text-sm sm:text-base font-black text-[#183B2D]">
               ₹{product.price}
             </span>
             {product.mrp > product.price && (
-              <span className="text-[10px] sm:text-[11px] text-[#6E7B74] line-through">
+              <span className="text-[10px] sm:text-[11px] text-[#617653] line-through">
                 ₹{product.mrp}
               </span>
             )}
             {discountSavings > 0 && (
-              <span className="text-[9px] font-extrabold text-[#0D442E] bg-[#E1EFE0] px-1.5 py-0.5 rounded border border-[#C2DEC0]">
+              <span className="text-[9px] font-extrabold text-[#183B2D] bg-[#D8D9C2] px-1.5 py-0.5 rounded border border-[#C6C7B0]">
                 SAVE ₹{discountSavings}
               </span>
             )}
@@ -287,17 +287,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       </div>
 
       {/* Card Footer: Blinkit-style prominent Add / Stepper button */}
-      <div className="mt-2.5 pt-2 border-t border-[#D4E2D1]">
+      <div className="mt-2.5 pt-2 border-t border-[#D8D9C2]">
         {isOutOfStock ? (
           <button
             type="button"
             disabled
-            className="w-full py-1.5 bg-neutral-100 text-neutral-400 text-[11px] font-black uppercase tracking-wider rounded-xl cursor-not-allowed border border-neutral-200"
+            className="w-full py-1.5 bg-[#D8D9C2]/60 text-[#617653] text-[11px] font-black uppercase tracking-wider rounded-xl cursor-not-allowed border border-[#D8D9C2]"
           >
             OUT OF STOCK
           </button>
         ) : quantity > 0 ? (
-          <div className="flex items-center justify-between bg-[#123B2A] text-white rounded-xl p-0.5 sm:p-1 shadow-xs border border-[#123B2A]">
+          <div className="flex items-center justify-between bg-[#123D2D] text-white rounded-xl p-0.5 sm:p-1 shadow-xs border border-[#123D2D]">
             <button
               type="button"
               disabled={adding}
@@ -308,7 +308,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               <Minus className="w-3.5 h-3.5" />
             </button>
             <span
-              className="font-black text-xs sm:text-sm text-[#FCFAF5] px-2 select-none"
+              className="font-black text-xs sm:text-sm text-white px-2 select-none"
               aria-live="polite"
             >
               {adding ? <RefreshCw className="w-3 h-3 animate-spin inline" /> : quantity}
@@ -329,13 +329,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             disabled={adding}
             onClick={handleAddToCart}
             aria-label={`Add 1 pack of ${displayName} to cart`}
-            className="w-full py-1.5 sm:py-2 bg-[#123B2A] hover:bg-[#092218] active:scale-[0.98] text-[#FCFAF5] text-xs font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50 border border-[#123B2A]"
+            className="w-full py-1.5 sm:py-2 bg-[#123D2D] hover:bg-[#0a231a] active:scale-[0.98] text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50 border border-[#123D2D]"
           >
             {adding ? (
-              <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#C6A15B]" />
+              <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#C9A65B]" />
             ) : (
               <>
-                <Plus className="w-3.5 h-3.5 text-[#C6A15B] stroke-[3]" />
+                <Plus className="w-3.5 h-3.5 text-[#C9A65B] stroke-[3]" />
                 <span>ADD</span>
               </>
             )}

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   CheckCircle2,
   Building2,
@@ -10,6 +10,7 @@ import {
   Mail,
   MapPin,
   ArrowRight,
+  ArrowLeft,
   Clock,
   Sparkles,
   ChevronDown,
@@ -17,6 +18,7 @@ import {
   MessageSquare,
   Package,
 } from 'lucide-react';
+import { api, ApiError } from '../services/api';
 
 interface BulkEnquiryFormData {
   name: string;
@@ -35,33 +37,26 @@ interface FormErrors {
   email?: string;
   quantity?: string;
   productGrade?: string;
+  city?: string;
 }
 
-const QUANTITY_OPTIONS = [
-  '10 kg – 25 kg (Trial / Sample Wholesale)',
-  '25 kg – 50 kg (Standard Retail Wholesale)',
-  '50 kg – 100 kg (Supermarket / Department Store)',
-  '100 kg – 250 kg (Distributor / Re-packager)',
-  '250 kg – 500 kg (Bulk Commercial / Catering)',
-  '500 kg+ (Institutional / Export Order)',
+const AVAILABLE_GRADES = [
+  '4 Sutta Makhana',
+  '5 Sutta Makhana',
+  '5.5 Sutta Makhana',
+  '6 Sutta Makhana',
 ];
 
-const PRODUCT_GRADE_OPTIONS = [
-  'Premium Quality Jumbo 6-Suta (100g, 200g, 250g Retail Pouches)',
-  'Normal Quality Everyday Grade (100g, 200g, 250g Retail Pouches)',
-  'Mixed Grade Assortment (Curated Retail Pouch Mix)',
-  'Unbranded Master Sacks — Jumbo 6-Suta (10kg / 20kg Food-Grade Sacks)',
-  'Unbranded Master Sacks — Normal Grade (10kg / 20kg Food-Grade Sacks)',
-];
+const QUANTITY_PRESETS = ['25', '50', '100', '250', '500', '1000'];
 
 const BULK_FAQS = [
   {
     q: 'What is the Minimum Order Quantity (MOQ) for wholesale pricing?',
-    a: 'Our wholesale tier begins at 10 kg across any mix of sizes or grades. For larger commercial orders exceeding 100 kg, tiered slab discounts apply automatically.',
+    a: 'Our wholesale tier begins at 10 kg across any grade. For larger commercial orders exceeding 100 kg, tiered slab discounts apply automatically.',
   },
   {
     q: 'Do you provide sample testing packs before placing a large order?',
-    a: 'Yes. We can dispatch a verified sample tasting kit containing our Premium Jumbo and Normal everyday grades directly to your business address.',
+    a: 'Yes. We can dispatch a verified sample tasting kit containing our grades directly to your business address.',
   },
   {
     q: 'Can we get private labeling or custom customized packaging?',
@@ -78,27 +73,53 @@ const BULK_FAQS = [
 ];
 
 export const BulkOrder: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Initialize product grade from navigation state or sessionStorage
+  const navGrade = (location.state as { grade?: string })?.grade;
+  const initialGrade = navGrade || (() => {
+    try {
+      return sessionStorage.getItem('nyuta_selected_grade') || AVAILABLE_GRADES[0];
+    } catch {
+      return AVAILABLE_GRADES[0];
+    }
+  })();
+
   const [formData, setFormData] = useState<BulkEnquiryFormData>({
     name: '',
     businessName: '',
     phone: '',
     email: '',
     quantity: '',
-    productGrade: '',
+    productGrade: initialGrade,
     city: '',
     message: '',
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittedRef, setSubmittedRef] = useState<string | null>(null);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+
+  // Sync if location.state changes
+  useEffect(() => {
+    if (navGrade) {
+      setFormData((prev) => ({ ...prev, productGrade: navGrade }));
+      try {
+        sessionStorage.setItem('nyuta_selected_grade', navGrade);
+      } catch {
+        // ignore
+      }
+    }
+  }, [navGrade]);
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
 
     if (!formData.name.trim() || formData.name.trim().length < 2) {
-      newErrors.name = 'Please provide your full name.';
+      newErrors.name = 'Please provide your full name (at least 2 characters).';
     }
 
     const cleanPhone = formData.phone.replace(/[\s\-+]/g, '');
@@ -113,43 +134,69 @@ export const BulkOrder: React.FC = () => {
       }
     }
 
-    if (!formData.quantity) {
-      newErrors.quantity = 'Please select your required quantity range.';
+    const numQty = Number(formData.quantity);
+    if (!formData.quantity.trim() || isNaN(numQty) || numQty <= 0) {
+      newErrors.quantity = 'Please enter a valid positive quantity in kilograms (e.g. 25, 50, 100).';
     }
 
-    if (!formData.productGrade) {
-      newErrors.productGrade = 'Please select product quality or pack format.';
+    if (!formData.productGrade.trim()) {
+      newErrors.productGrade = 'Please select a makhana quality grade.';
+    }
+
+    if (!formData.city.trim()) {
+      newErrors.city = 'Please provide your destination city and state.';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
     setIsSubmitting(true);
+    setSubmitError(null);
 
     try {
-      // Generate unique human-readable enquiry reference ID
-      const refId = `NE-BULK-${Date.now().toString().slice(-6)}`;
+      const response = await api.post<{
+        success: boolean;
+        enquiryId: string;
+        message: string;
+      }>('/bulk-enquiry', {
+        name: formData.name.trim(),
+        businessName: formData.businessName.trim(),
+        phone: formData.phone.trim(),
+        email: formData.email.trim(),
+        quantity: Number(formData.quantity),
+        productGrade: formData.productGrade.trim(),
+        city: formData.city.trim(),
+        message: formData.message.trim(),
+      });
 
-      // Save enquiry locally to ensure no customer submission is lost
-      const existing = JSON.parse(localStorage.getItem('nyuta_bulk_enquiries') || '[]');
-      const newEnquiry = {
-        id: refId,
-        timestamp: new Date().toISOString(),
-        ...formData,
-        status: 'RECEIVED',
-      };
-      existing.unshift(newEnquiry);
-      localStorage.setItem('nyuta_bulk_enquiries', JSON.stringify(existing));
+      if (response && response.success) {
+        const refId = response.enquiryId || `NE-BULK-${Date.now().toString().slice(-6)}`;
+        setSubmittedRef(refId);
 
-      setSubmittedRef(refId);
-    } catch {
-      // In case localStorage is blocked, still provide positive feedback
-      setSubmittedRef(`NE-BULK-${Math.floor(100000 + Math.random() * 900000)}`);
+        // Store client-side copy for user history
+        try {
+          const existing = JSON.parse(localStorage.getItem('nyuta_bulk_enquiries') || '[]');
+          existing.unshift({
+            id: refId,
+            timestamp: new Date().toISOString(),
+            ...formData,
+            status: 'RECEIVED',
+          });
+          localStorage.setItem('nyuta_bulk_enquiries', JSON.stringify(existing));
+        } catch {
+          // ignore
+        }
+      } else {
+        setSubmitError(response?.message || 'Unable to submit enquiry. Please try again.');
+      }
+    } catch (err: any) {
+      const errMsg = err instanceof ApiError ? err.message : err?.message || 'Failed to submit enquiry. Please check your connection and try again.';
+      setSubmitError(errMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -162,17 +209,34 @@ export const BulkOrder: React.FC = () => {
       phone: '',
       email: '',
       quantity: '',
-      productGrade: '',
+      productGrade: initialGrade,
       city: '',
       message: '',
     });
     setErrors({});
+    setSubmitError(null);
     setSubmittedRef(null);
+  };
+
+  // WhatsApp Pre-filled message generator
+  const getWhatsAppEnquiryUrl = () => {
+    const lines = [
+      'Hi NYUTA ELITE MAKHANA, I would like to enquire about a bulk order:',
+      `- Selected Grade: ${formData.productGrade || 'Makhana'}`,
+      formData.quantity ? `- Required Quantity: ${formData.quantity} kg` : null,
+      formData.name ? `- Customer Name: ${formData.name}` : null,
+      formData.businessName ? `- Business Name: ${formData.businessName}` : null,
+      formData.city ? `- Delivery Location: ${formData.city}` : null,
+      formData.message ? `- Requirements: ${formData.message}` : null,
+      'Please share pricing and availability.',
+    ].filter(Boolean);
+
+    return `https://wa.me/916201426357?text=${encodeURIComponent(lines.join('\n'))}`;
   };
 
   return (
     <div className="bg-[#FCFAF5] min-h-screen text-[#1C1C1C] py-8 sm:py-12 lg:py-16">
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-12">
         {/* Breadcrumb Navigation */}
         <nav aria-label="Breadcrumb" className="text-xs font-bold uppercase tracking-wider text-[#68756E]">
           <ol className="flex items-center gap-2">
@@ -182,18 +246,24 @@ export const BulkOrder: React.FC = () => {
               </Link>
             </li>
             <li>/</li>
+            <li>
+              <Link to="/bulk-order/qualities" className="hover:text-[#123B2A] transition-colors">
+                Bulk Order
+              </Link>
+            </li>
+            <li>/</li>
             <li className="text-[#123B2A] font-extrabold" aria-current="page">
-              Bulk &amp; Wholesale Orders
+              Bulk Enquiry
             </li>
           </ol>
         </nav>
 
         {/* HERO BANNER */}
         <section className="relative overflow-hidden rounded-3xl bg-[#123B2A] text-white p-8 sm:p-12 lg:p-16 border border-[#092218] shadow-xl">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#C6A15B]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[#C9A65B]/10 rounded-full blur-3xl pointer-events-none" />
           <div className="relative z-10 max-w-3xl space-y-4">
-            <div className="inline-flex items-center gap-2 bg-[#092218]/80 border border-[#C6A15B]/60 px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-[#C6A15B]">
-              <Sparkles className="w-3.5 h-3.5 text-[#C6A15B]" />
+            <div className="inline-flex items-center gap-2 bg-[#092218]/80 border border-[#C9A65B]/60 px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-[#C9A65B]">
+              <Sparkles className="w-3.5 h-3.5 text-[#C9A65B]" />
               <span>B2B WHOLESALE &amp; INSTITUTIONAL SUPPLY</span>
             </div>
             <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#FCFAF5] leading-tight">
@@ -209,7 +279,7 @@ export const BulkOrder: React.FC = () => {
         {/* 4 VALUE PILLARS */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <div className="bg-white p-6 rounded-2xl border border-[#E8DECB] shadow-xs space-y-3">
-            <div className="w-12 h-12 rounded-xl bg-[#F7F1E5] text-[#123B2A] flex items-center justify-center border border-[#C6A15B]/40">
+            <div className="w-12 h-12 rounded-xl bg-[#F7F1E5] text-[#123B2A] flex items-center justify-center border border-[#C9A65B]/40">
               <Package className="w-6 h-6 text-[#123B2A]" />
             </div>
             <h3 className="font-serif text-lg font-bold text-[#123B2A]">Direct Bihar Sourcing</h3>
@@ -219,7 +289,7 @@ export const BulkOrder: React.FC = () => {
           </div>
 
           <div className="bg-white p-6 rounded-2xl border border-[#E8DECB] shadow-xs space-y-3">
-            <div className="w-12 h-12 rounded-xl bg-[#F7F1E5] text-[#123B2A] flex items-center justify-center border border-[#C6A15B]/40">
+            <div className="w-12 h-12 rounded-xl bg-[#F7F1E5] text-[#123B2A] flex items-center justify-center border border-[#C9A65B]/40">
               <ShieldCheck className="w-6 h-6 text-[#123B2A]" />
             </div>
             <h3 className="font-serif text-lg font-bold text-[#123B2A]">Jumbo 6-Suta Quality</h3>
@@ -229,7 +299,7 @@ export const BulkOrder: React.FC = () => {
           </div>
 
           <div className="bg-white p-6 rounded-2xl border border-[#E8DECB] shadow-xs space-y-3">
-            <div className="w-12 h-12 rounded-xl bg-[#F7F1E5] text-[#123B2A] flex items-center justify-center border border-[#C6A15B]/40">
+            <div className="w-12 h-12 rounded-xl bg-[#F7F1E5] text-[#123B2A] flex items-center justify-center border border-[#C9A65B]/40">
               <FileText className="w-6 h-6 text-[#123B2A]" />
             </div>
             <h3 className="font-serif text-lg font-bold text-[#123B2A]">GST Input Credit</h3>
@@ -239,7 +309,7 @@ export const BulkOrder: React.FC = () => {
           </div>
 
           <div className="bg-white p-6 rounded-2xl border border-[#E8DECB] shadow-xs space-y-3">
-            <div className="w-12 h-12 rounded-xl bg-[#F7F1E5] text-[#123B2A] flex items-center justify-center border border-[#C6A15B]/40">
+            <div className="w-12 h-12 rounded-xl bg-[#F7F1E5] text-[#123B2A] flex items-center justify-center border border-[#C9A65B]/40">
               <Truck className="w-6 h-6 text-[#123B2A]" />
             </div>
             <h3 className="font-serif text-lg font-bold text-[#123B2A]">Pan-India Logistics</h3>
@@ -260,28 +330,32 @@ export const BulkOrder: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-[#C6A15B]">
-                    ENQUIRY LOGGED SUCCESSFULLY
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-[#C9A65B]">
+                    ENQUIRY CONFIRMED
                   </span>
                   <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#123B2A]">
-                    Thank You, {formData.name}!
+                    Thank you for your enquiry!
                   </h3>
-                  <div className="inline-block bg-[#F7F1E5] border border-[#C6A15B]/50 px-4 py-1.5 rounded-full text-xs font-mono font-bold text-[#123B2A]">
+                  <p className="text-sm sm:text-base font-semibold text-[#123B2A]">
+                    Our team will contact you with bulk pricing and availability.
+                  </p>
+                  <div className="inline-block bg-[#F7F1E5] border border-[#C9A65B]/50 px-4 py-1.5 rounded-full text-xs font-mono font-bold text-[#123B2A]">
                     Ref ID: {submittedRef}
                   </div>
                 </div>
 
-                <p className="text-xs sm:text-sm text-[#68756E] max-w-md mx-auto leading-relaxed">
-                  Your bulk requirement for <strong>{formData.quantity}</strong> of{' '}
-                  <strong>{formData.productGrade}</strong> has been received by our B2B trade desk. Our wholesale specialist will connect with you via phone ({formData.phone}) within 4–6 business hours with customized slab pricing and sample availability.
-                </p>
+                <div className="bg-[#FCFAF5] p-4 rounded-xl border border-[#E8DECB] text-xs text-[#4A5D53] space-y-1 max-w-md mx-auto text-left">
+                  <p><strong>Customer:</strong> {formData.name}</p>
+                  {formData.businessName && <p><strong>Business:</strong> {formData.businessName}</p>}
+                  <p><strong>Grade:</strong> {formData.productGrade}</p>
+                  <p><strong>Quantity:</strong> {formData.quantity} kg</p>
+                  <p><strong>Destination:</strong> {formData.city}</p>
+                </div>
 
                 {/* Instant Connect Buttons */}
                 <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
                   <a
-                    href={`https://wa.me/919876543210?text=${encodeURIComponent(
-                      `Hi NYUTA ELITE, I have submitted wholesale enquiry (${submittedRef}) for ${formData.quantity} of ${formData.productGrade}. Name: ${formData.name}, Business: ${formData.businessName || 'Individual'}.`
-                    )}`}
+                    href={getWhatsAppEnquiryUrl()}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1EBE5D] text-white px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shadow-sm cursor-pointer"
@@ -300,221 +374,310 @@ export const BulkOrder: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} noValidate className="space-y-5">
-                <div>
-                  <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#C6A15B] block mb-1">
-                    REQUEST WHOLESALE QUOTE
-                  </span>
-                  <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#123B2A]">
-                    Bulk Order Enquiry Form
-                  </h2>
-                  <p className="text-xs text-[#68756E] mt-1">
-                    Fill out your requirements below to receive formal slab pricing and delivery timelines.
+              <div className="space-y-6">
+                {/* Navigation Back & Grade Indicator Banner */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 bg-[#F7F4E8] rounded-2xl border border-[#C9A65B]/50">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-[#123D2D] text-[#C9A65B] flex items-center justify-center text-xs font-bold">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-[#68756E] block">
+                        Selected Makhana Grade
+                      </span>
+                      <strong className="text-xs sm:text-sm font-serif font-bold text-[#123D2D]">
+                        {formData.productGrade || 'No Grade Selected'}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate('/bulk-order/qualities', { state: { grade: formData.productGrade } })}
+                    className="inline-flex items-center gap-1.5 text-xs font-extrabold text-[#123D2D] hover:text-[#092218] border border-[#123D2D] px-3 py-1.5 rounded-lg hover:bg-white transition-colors cursor-pointer"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>BACK TO QUALITIES</span>
+                  </button>
+                </div>
+
+                {submitError && (
+                  <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                    <span>{submitError}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} noValidate className="space-y-5">
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#C9A65B] block mb-1">
+                      REQUEST WHOLESALE QUOTE
+                    </span>
+                    <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#123B2A]">
+                      Bulk Order Enquiry Form
+                    </h2>
+                    <p className="text-xs text-[#68756E] mt-1">
+                      Fill out your requirements below to receive formal slab pricing and delivery timelines.
+                    </p>
+                  </div>
+
+                  {/* Full Name & Business Name */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="name" className="block text-xs font-bold uppercase tracking-wider text-[#1C1C1C] mb-1">
+                        Full Name <span className="text-rose-600">*</span>
+                      </label>
+                      <input
+                        id="name"
+                        type="text"
+                        placeholder="e.g. Ramesh Kumar"
+                        value={formData.name}
+                        onChange={(e) => {
+                          setFormData({ ...formData, name: e.target.value });
+                          if (errors.name) setErrors({ ...errors, name: undefined });
+                        }}
+                        className={`w-full min-h-11 px-3.5 rounded-xl border text-xs text-[#1C1C1C] focus:outline-none transition-colors ${
+                          errors.name ? 'border-rose-500 bg-rose-50/30' : 'border-[#E8DECB] focus:border-[#123B2A]'
+                        }`}
+                      />
+                      {errors.name && (
+                        <p className="mt-1 text-[11px] text-rose-600 flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{errors.name}</span>
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label htmlFor="businessName" className="block text-xs font-bold uppercase tracking-wider text-[#1C1C1C] mb-1">
+                        Business / Store Name <span className="text-[#68756E] text-[10px] font-normal lowercase">(optional)</span>
+                      </label>
+                      <input
+                        id="businessName"
+                        type="text"
+                        placeholder="e.g. Mithila Organic Stores"
+                        value={formData.businessName}
+                        onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
+                        className="w-full min-h-11 px-3.5 rounded-xl border border-[#E8DECB] text-xs text-[#1C1C1C] focus:outline-none focus:border-[#123B2A]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Phone & Email */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="phone" className="block text-xs font-bold uppercase tracking-wider text-[#1C1C1C] mb-1">
+                        Mobile Number <span className="text-rose-600">*</span>
+                      </label>
+                      <input
+                        id="phone"
+                        type="tel"
+                        placeholder="e.g. 9876543210"
+                        value={formData.phone}
+                        onChange={(e) => {
+                          setFormData({ ...formData, phone: e.target.value });
+                          if (errors.phone) setErrors({ ...errors, phone: undefined });
+                        }}
+                        className={`w-full min-h-11 px-3.5 rounded-xl border text-xs text-[#1C1C1C] focus:outline-none transition-colors ${
+                          errors.phone ? 'border-rose-500 bg-rose-50/30' : 'border-[#E8DECB] focus:border-[#123B2A]'
+                        }`}
+                      />
+                      {errors.phone && (
+                        <p className="mt-1 text-[11px] text-rose-600 flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{errors.phone}</span>
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-[#1C1C1C] mb-1">
+                        Email Address <span className="text-[#68756E] text-[10px] font-normal lowercase">(optional)</span>
+                      </label>
+                      <input
+                        id="email"
+                        type="email"
+                        placeholder="name@business.com"
+                        value={formData.email}
+                        onChange={(e) => {
+                          setFormData({ ...formData, email: e.target.value });
+                          if (errors.email) setErrors({ ...errors, email: undefined });
+                        }}
+                        className={`w-full min-h-11 px-3.5 rounded-xl border text-xs text-[#1C1C1C] focus:outline-none transition-colors ${
+                          errors.email ? 'border-rose-500 bg-rose-50/30' : 'border-[#E8DECB] focus:border-[#123B2A]'
+                        }`}
+                      />
+                      {errors.email && (
+                        <p className="mt-1 text-[11px] text-rose-600 flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{errors.email}</span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Selected Makhana Grade & Required Quantity in kg */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="productGrade" className="block text-xs font-bold uppercase tracking-wider text-[#1C1C1C] mb-1">
+                        Selected Makhana Grade <span className="text-rose-600">*</span>
+                      </label>
+                      <select
+                        id="productGrade"
+                        value={formData.productGrade}
+                        onChange={(e) => {
+                          setFormData({ ...formData, productGrade: e.target.value });
+                          if (errors.productGrade) setErrors({ ...errors, productGrade: undefined });
+                        }}
+                        className={`w-full min-h-11 px-3.5 rounded-xl border text-xs text-[#1C1C1C] bg-white focus:outline-none transition-colors ${
+                          errors.productGrade ? 'border-rose-500 bg-rose-50/30' : 'border-[#E8DECB] focus:border-[#123B2A]'
+                        }`}
+                      >
+                        {AVAILABLE_GRADES.map((grade) => (
+                          <option key={grade} value={grade}>
+                            {grade}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.productGrade && (
+                        <p className="mt-1 text-[11px] text-rose-600 flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{errors.productGrade}</span>
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label htmlFor="quantity" className="block text-xs font-bold uppercase tracking-wider text-[#1C1C1C] mb-1">
+                        Required Quantity (in Kilograms) <span className="text-rose-600">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          id="quantity"
+                          type="number"
+                          min="1"
+                          step="1"
+                          placeholder="e.g. 50"
+                          value={formData.quantity}
+                          onChange={(e) => {
+                            setFormData({ ...formData, quantity: e.target.value });
+                            if (errors.quantity) setErrors({ ...errors, quantity: undefined });
+                          }}
+                          className={`w-full min-h-11 px-3.5 pr-10 rounded-xl border text-xs text-[#1C1C1C] focus:outline-none transition-colors ${
+                            errors.quantity ? 'border-rose-500 bg-rose-50/30' : 'border-[#E8DECB] focus:border-[#123B2A]'
+                          }`}
+                        />
+                        <span className="absolute right-3.5 top-3 text-xs text-[#68756E] font-bold">
+                          kg
+                        </span>
+                      </div>
+                      {errors.quantity && (
+                        <p className="mt-1 text-[11px] text-rose-600 flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{errors.quantity}</span>
+                        </p>
+                      )}
+                      {/* Quick preset chips */}
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                        <span className="text-[10px] text-[#68756E] font-semibold">Quick presets:</span>
+                        {QUANTITY_PRESETS.map((preset) => (
+                          <button
+                            key={preset}
+                            type="button"
+                            onClick={() => {
+                              setFormData({ ...formData, quantity: preset });
+                              if (errors.quantity) setErrors({ ...errors, quantity: undefined });
+                            }}
+                            className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition-colors cursor-pointer ${
+                              formData.quantity === preset
+                                ? 'bg-[#123B2A] text-[#C9A65B] border-[#123B2A]'
+                                : 'bg-[#F7F1E5] text-[#123B2A] border-[#E8DECB] hover:border-[#123B2A]'
+                            }`}
+                          >
+                            {preset} kg
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Destination City & State */}
+                  <div>
+                    <label htmlFor="city" className="block text-xs font-bold uppercase tracking-wider text-[#1C1C1C] mb-1">
+                      Delivery City &amp; State <span className="text-rose-600">*</span>
+                    </label>
+                    <input
+                      id="city"
+                      type="text"
+                      placeholder="e.g. Mumbai, Maharashtra (Pincode 400001)"
+                      value={formData.city}
+                      onChange={(e) => {
+                        setFormData({ ...formData, city: e.target.value });
+                        if (errors.city) setErrors({ ...errors, city: undefined });
+                      }}
+                      className={`w-full min-h-11 px-3.5 rounded-xl border text-xs text-[#1C1C1C] focus:outline-none transition-colors ${
+                        errors.city ? 'border-rose-500 bg-rose-50/30' : 'border-[#E8DECB] focus:border-[#123B2A]'
+                      }`}
+                    />
+                    {errors.city && (
+                      <p className="mt-1 text-[11px] text-rose-600 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.city}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Additional Requirements */}
+                  <div>
+                    <label htmlFor="message" className="block text-xs font-bold uppercase tracking-wider text-[#1C1C1C] mb-1">
+                      Additional Requirements or Custom Specifications <span className="text-[#68756E] text-[10px] font-normal lowercase">(optional)</span>
+                    </label>
+                    <textarea
+                      id="message"
+                      rows={3}
+                      placeholder="Mention any custom packaging preferences, expected delivery schedule, or sample requirements..."
+                      value={formData.message}
+                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8DECB] text-xs text-[#1C1C1C] focus:outline-none focus:border-[#123B2A]"
+                    />
+                  </div>
+
+                  {/* Primary Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full min-h-12 bg-[#123B2A] hover:bg-[#092218] active:bg-black text-[#FCFAF5] rounded-xl text-xs sm:text-sm font-extrabold uppercase tracking-widest transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    <span>{isSubmitting ? 'Submitting Enquiry...' : 'SUBMIT ENQUIRY'}</span>
+                    <ArrowRight className="w-4 h-4 text-[#C9A65B]" />
+                  </button>
+
+                  {/* WhatsApp Secondary Enquiry Option */}
+                  <div className="pt-2">
+                    <div className="relative flex py-2 items-center">
+                      <div className="flex-grow border-t border-[#E8DECB]" />
+                      <span className="flex-shrink mx-3 text-[11px] font-bold text-[#68756E] uppercase tracking-wider">
+                        Or Enquire Directly
+                      </span>
+                      <div className="flex-grow border-t border-[#E8DECB]" />
+                    </div>
+
+                    <a
+                      href={getWhatsAppEnquiryUrl()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full min-h-11 bg-[#25D366] hover:bg-[#1EBE5D] text-white rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      <span>ENQUIRE VIA WHATSAPP (+91 6201426357)</span>
+                    </a>
+                  </div>
+
+                  <p className="text-[11px] text-[#68756E] text-center pt-2">
+                    🔒 We protect your commercial data. Your requirements are kept confidential.
                   </p>
-                </div>
-
-                {/* Full Name & Business Name */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="name" className="block text-xs font-bold uppercase tracking-wider text-[#1C1C1C] mb-1">
-                      Full Name <span className="text-rose-600">*</span>
-                    </label>
-                    <input
-                      id="name"
-                      type="text"
-                      placeholder="e.g. Ramesh Kumar"
-                      value={formData.name}
-                      onChange={(e) => {
-                        setFormData({ ...formData, name: e.target.value });
-                        if (errors.name) setErrors({ ...errors, name: undefined });
-                      }}
-                      className={`w-full min-h-11 px-3.5 rounded-xl border text-xs text-[#1C1C1C] focus:outline-none transition-colors ${
-                        errors.name ? 'border-rose-500 bg-rose-50/30' : 'border-[#E8DECB] focus:border-[#123B2A]'
-                      }`}
-                    />
-                    {errors.name && (
-                      <p className="mt-1 text-[11px] text-rose-600 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        <span>{errors.name}</span>
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label htmlFor="businessName" className="block text-xs font-bold uppercase tracking-wider text-[#1C1C1C] mb-1">
-                      Business / Store Name <span className="text-[#68756E] text-[10px] font-normal lowercase">(optional)</span>
-                    </label>
-                    <input
-                      id="businessName"
-                      type="text"
-                      placeholder="e.g. Mithila Organic Stores"
-                      value={formData.businessName}
-                      onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
-                      className="w-full min-h-11 px-3.5 rounded-xl border border-[#E8DECB] text-xs text-[#1C1C1C] focus:outline-none focus:border-[#123B2A]"
-                    />
-                  </div>
-                </div>
-
-                {/* Phone & Email */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="phone" className="block text-xs font-bold uppercase tracking-wider text-[#1C1C1C] mb-1">
-                      Phone Number <span className="text-rose-600">*</span>
-                    </label>
-                    <input
-                      id="phone"
-                      type="tel"
-                      placeholder="e.g. 9876543210"
-                      value={formData.phone}
-                      onChange={(e) => {
-                        setFormData({ ...formData, phone: e.target.value });
-                        if (errors.phone) setErrors({ ...errors, phone: undefined });
-                      }}
-                      className={`w-full min-h-11 px-3.5 rounded-xl border text-xs text-[#1C1C1C] focus:outline-none transition-colors ${
-                        errors.phone ? 'border-rose-500 bg-rose-50/30' : 'border-[#E8DECB] focus:border-[#123B2A]'
-                      }`}
-                    />
-                    {errors.phone && (
-                      <p className="mt-1 text-[11px] text-rose-600 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        <span>{errors.phone}</span>
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-[#1C1C1C] mb-1">
-                      Email Address <span className="text-[#68756E] text-[10px] font-normal lowercase">(optional)</span>
-                    </label>
-                    <input
-                      id="email"
-                      type="email"
-                      placeholder="name@business.com"
-                      value={formData.email}
-                      onChange={(e) => {
-                        setFormData({ ...formData, email: e.target.value });
-                        if (errors.email) setErrors({ ...errors, email: undefined });
-                      }}
-                      className={`w-full min-h-11 px-3.5 rounded-xl border text-xs text-[#1C1C1C] focus:outline-none transition-colors ${
-                        errors.email ? 'border-rose-500 bg-rose-50/30' : 'border-[#E8DECB] focus:border-[#123B2A]'
-                      }`}
-                    />
-                    {errors.email && (
-                      <p className="mt-1 text-[11px] text-rose-600 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        <span>{errors.email}</span>
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Required Quantity & Product Grade */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="quantity" className="block text-xs font-bold uppercase tracking-wider text-[#1C1C1C] mb-1">
-                      Estimated Quantity <span className="text-rose-600">*</span>
-                    </label>
-                    <select
-                      id="quantity"
-                      value={formData.quantity}
-                      onChange={(e) => {
-                        setFormData({ ...formData, quantity: e.target.value });
-                        if (errors.quantity) setErrors({ ...errors, quantity: undefined });
-                      }}
-                      className={`w-full min-h-11 px-3.5 rounded-xl border text-xs text-[#1C1C1C] bg-white focus:outline-none transition-colors ${
-                        errors.quantity ? 'border-rose-500 bg-rose-50/30' : 'border-[#E8DECB] focus:border-[#123B2A]'
-                      }`}
-                    >
-                      <option value="">Select quantity range...</option>
-                      {QUANTITY_OPTIONS.map((opt) => (
-                        <option key={opt} value={opt}>
-                          {opt}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.quantity && (
-                      <p className="mt-1 text-[11px] text-rose-600 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        <span>{errors.quantity}</span>
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label htmlFor="productGrade" className="block text-xs font-bold uppercase tracking-wider text-[#1C1C1C] mb-1">
-                      Product Grade / Packaging <span className="text-rose-600">*</span>
-                    </label>
-                    <select
-                      id="productGrade"
-                      value={formData.productGrade}
-                      onChange={(e) => {
-                        setFormData({ ...formData, productGrade: e.target.value });
-                        if (errors.productGrade) setErrors({ ...errors, productGrade: undefined });
-                      }}
-                      className={`w-full min-h-11 px-3.5 rounded-xl border text-xs text-[#1C1C1C] bg-white focus:outline-none transition-colors ${
-                        errors.productGrade ? 'border-rose-500 bg-rose-50/30' : 'border-[#E8DECB] focus:border-[#123B2A]'
-                      }`}
-                    >
-                      <option value="">Select grade or packaging...</option>
-                      {PRODUCT_GRADE_OPTIONS.map((opt) => (
-                        <option key={opt} value={opt}>
-                          {opt}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.productGrade && (
-                      <p className="mt-1 text-[11px] text-rose-600 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        <span>{errors.productGrade}</span>
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Delivery City / State */}
-                <div>
-                  <label htmlFor="city" className="block text-xs font-bold uppercase tracking-wider text-[#1C1C1C] mb-1">
-                    Destination City / State <span className="text-[#68756E] text-[10px] font-normal lowercase">(optional)</span>
-                  </label>
-                  <input
-                    id="city"
-                    type="text"
-                    placeholder="e.g. Mumbai, Maharashtra (Pincode 400001)"
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    className="w-full min-h-11 px-3.5 rounded-xl border border-[#E8DECB] text-xs text-[#1C1C1C] focus:outline-none focus:border-[#123B2A]"
-                  />
-                </div>
-
-                {/* Message */}
-                <div>
-                  <label htmlFor="message" className="block text-xs font-bold uppercase tracking-wider text-[#1C1C1C] mb-1">
-                    Additional Message or Custom Specifications <span className="text-[#68756E] text-[10px] font-normal lowercase">(optional)</span>
-                  </label>
-                  <textarea
-                    id="message"
-                    rows={3}
-                    placeholder="Mention any custom label requirements, delivery schedule preferences, or sample requests..."
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8DECB] text-xs text-[#1C1C1C] focus:outline-none focus:border-[#123B2A]"
-                  />
-                </div>
-
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full min-h-12 bg-[#123B2A] hover:bg-[#092218] active:bg-black text-[#FCFAF5] rounded-xl text-xs sm:text-sm font-extrabold uppercase tracking-widest transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                >
-                  <span>{isSubmitting ? 'Submitting Enquiry...' : 'Submit Wholesale Enquiry'}</span>
-                  <ArrowRight className="w-4 h-4 text-[#C6A15B]" />
-                </button>
-
-                <p className="text-[11px] text-[#68756E] text-center">
-                  🔒 We protect your commercial data. Your requirements are kept confidential.
-                </p>
-              </form>
+                </form>
+              </div>
             )}
           </div>
 
@@ -522,7 +685,7 @@ export const BulkOrder: React.FC = () => {
           <div className="lg:col-span-5 space-y-6">
             {/* Wholesale Desk Box */}
             <div className="bg-[#123B2A] text-white p-6 sm:p-8 rounded-3xl border border-[#092218] shadow-md space-y-5">
-              <div className="flex items-center gap-2.5 text-[#C6A15B]">
+              <div className="flex items-center gap-2.5 text-[#C9A65B]">
                 <Building2 className="w-5 h-5" />
                 <h3 className="font-serif text-xl font-bold text-white">Wholesale Trade Desk</h3>
               </div>
@@ -532,27 +695,27 @@ export const BulkOrder: React.FC = () => {
 
               <div className="space-y-3 pt-2 text-xs">
                 <div className="flex items-start gap-3">
-                  <Phone className="w-4 h-4 text-[#C6A15B] shrink-0 mt-0.5" />
+                  <Phone className="w-4 h-4 text-[#C9A65B] shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-white block">Direct Wholesale Line</span>
-                    <a href="tel:+919876543210" className="text-[#D5DED6] hover:text-[#C6A15B] transition-colors">
-                      +91 98765 43210 (Mon – Sat, 9 AM – 7 PM IST)
+                    <span className="font-bold text-white block">Official WhatsApp &amp; Support Line</span>
+                    <a href="tel:+916201426357" className="text-[#D5DED6] hover:text-[#C9A65B] transition-colors">
+                      +91 62014 26357 (Mon – Sat, 9 AM – 7 PM IST)
                     </a>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <Mail className="w-4 h-4 text-[#C6A15B] shrink-0 mt-0.5" />
+                  <Mail className="w-4 h-4 text-[#C9A65B] shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold text-white block">Commercial Enquiries</span>
-                    <a href="mailto:wholesale@nyutaelite.com" className="text-[#D5DED6] hover:text-[#C6A15B] transition-colors">
+                    <a href="mailto:wholesale@nyutaelite.com" className="text-[#D5DED6] hover:text-[#C9A65B] transition-colors">
                       wholesale@nyutaelite.com
                     </a>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <MapPin className="w-4 h-4 text-[#C6A15B] shrink-0 mt-0.5" />
+                  <MapPin className="w-4 h-4 text-[#C9A65B] shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold text-white block">Processing &amp; Dispatch Facility</span>
                     <span className="text-[#D5DED6]">
@@ -562,7 +725,7 @@ export const BulkOrder: React.FC = () => {
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <Clock className="w-4 h-4 text-[#C6A15B] shrink-0 mt-0.5" />
+                  <Clock className="w-4 h-4 text-[#C9A65B] shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold text-white block">Turnaround Time</span>
                     <span className="text-[#D5DED6]">Quotes provided within 4–6 business hours</span>
@@ -580,7 +743,7 @@ export const BulkOrder: React.FC = () => {
                     <strong className="text-[#123B2A] block">10 kg – 50 kg</strong>
                     <span className="text-[#68756E] text-[11px]">Trial / Boutique Grocers</span>
                   </div>
-                  <span className="text-[11px] font-bold text-[#123B2A] bg-white px-2.5 py-1 rounded-lg border border-[#C6A15B]/40">
+                  <span className="text-[11px] font-bold text-[#123B2A] bg-white px-2.5 py-1 rounded-lg border border-[#C9A65B]/40">
                     Tier 1 Rates
                   </span>
                 </div>
@@ -590,7 +753,7 @@ export const BulkOrder: React.FC = () => {
                     <strong className="text-[#123B2A] block">50 kg – 200 kg</strong>
                     <span className="text-[#68756E] text-[11px]">Supermarkets &amp; Sweet Houses</span>
                   </div>
-                  <span className="text-[11px] font-bold text-[#123B2A] bg-white px-2.5 py-1 rounded-lg border border-[#C6A15B]/40">
+                  <span className="text-[11px] font-bold text-[#123B2A] bg-white px-2.5 py-1 rounded-lg border border-[#C9A65B]/40">
                     Tier 2 Rates
                   </span>
                 </div>
@@ -600,7 +763,7 @@ export const BulkOrder: React.FC = () => {
                     <strong className="text-[#123B2A] block">200 kg+</strong>
                     <span className="text-[#68756E] text-[11px]">Regional Distributors &amp; Exports</span>
                   </div>
-                  <span className="text-[11px] font-bold text-[#123B2A] bg-white px-2.5 py-1 rounded-lg border border-[#C6A15B]/40">
+                  <span className="text-[11px] font-bold text-[#123B2A] bg-white px-2.5 py-1 rounded-lg border border-[#C9A65B]/40">
                     Tier 3 Best Rates
                   </span>
                 </div>
@@ -612,7 +775,7 @@ export const BulkOrder: React.FC = () => {
         {/* WHOLESALE FAQS */}
         <section className="bg-white p-6 sm:p-10 rounded-3xl border border-[#E8DECB] shadow-xs space-y-6">
           <div className="text-center max-w-xl mx-auto">
-            <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#C6A15B]">
+            <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#C9A65B]">
               FREQUENTLY ASKED
             </span>
             <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#123B2A] mt-1">
@@ -632,7 +795,7 @@ export const BulkOrder: React.FC = () => {
                   >
                     <span>{faq.q}</span>
                     <ChevronDown
-                      className={`w-4 h-4 text-[#C6A15B] shrink-0 transition-transform duration-300 ${
+                      className={`w-4 h-4 text-[#C9A65B] shrink-0 transition-transform duration-300 ${
                         isOpen ? 'rotate-180' : ''
                       }`}
                     />

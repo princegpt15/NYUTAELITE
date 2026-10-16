@@ -58,10 +58,11 @@ export const BulkOrderChoiceModal: React.FC<BulkOrderChoiceModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleContinueOnWebsite = () => {
-    onClose();
-    navigate('/bulk-order');
-  };
+  // Updated to navigate to quality selection page
+const handleContinueOnWebsite = () => {
+  onClose();
+  navigate('/bulk-order/qualities');
+};
 
   return (
     <div
