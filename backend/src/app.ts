@@ -63,11 +63,19 @@ if (env.NODE_ENV !== 'production') {
   allowedOrigins.push('http://localhost:5173');
   allowedOrigins.push('http://localhost:3000');
 }
+
+// Allow Cloudflare Pages preview deployments (*.nyutaelite.pages.dev)
+// These are staging/preview builds — credentials are still scoped per-origin.
+const cfPagesPreviewPattern = /^https:\/\/[a-z0-9-]+\.nyutaelite\.pages\.dev$/;
+
 app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      if (cfPagesPreviewPattern.test(origin)) {
         return callback(null, true);
       }
       return callback(new Error('Not allowed by CORS'));
@@ -77,11 +85,21 @@ app.use(
 );
 
 // 6. Global rate limiter
+// Key generator: when behind Cloudflare Pages, the real client IP is in
+// X-Forwarded-For (Railway populates this from Cloudflare's CF-Connecting-IP).
+// Using req.ip after trust proxy correctly returns the real user IP.
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: env.NODE_ENV === 'production' ? 100 : 10000,
+  // 1000 requests per 15 minutes per real client IP.
+  // The previous value of 100 was far too low: authenticated page loads
+  // issue 5–10 API requests each, so a single user navigating the account
+  // and wishlist pages could exhaust the shared Cloudflare-IP quota in one session.
+  max: env.NODE_ENV === 'production' ? 1000 : 10000,
   standardHeaders: true,
   legacyHeaders: false,
+  // Use the real client IP. With trust proxy = 1, req.ip is the first
+  // X-Forwarded-For value, which Cloudflare sets to the actual visitor IP.
+  keyGenerator: (req) => req.ip ?? req.socket.remoteAddress ?? 'unknown',
   message: { success: false, message: 'Too many requests', error: { code: 'RATE_LIMITED' } },
 });
 app.use(globalLimiter);
