@@ -1,9 +1,10 @@
 // src/App.tsx
 import { useEffect, useState, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, useLocation, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Outlet, Navigate } from 'react-router-dom';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { MobileStickyCart } from './components/MobileStickyCart';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { Home } from './pages/Home';
 import { Product } from './pages/Product';
 import { Register } from './pages/Register';
@@ -26,6 +27,16 @@ const Checkout = lazy(() => import('./pages/Checkout').then((m) => ({ default: m
 const Orders = lazy(() => import('./pages/Orders').then((m) => ({ default: m.Orders })));
 const Account = lazy(() => import('./pages/Account').then((m) => ({ default: m.Account })));
 const Wishlist = lazy(() => import('./pages/Wishlist').then((m) => ({ default: m.Wishlist })));
+// Lazy load new qualities page
+const BulkOrderQualities = lazy(() => import('./pages/BulkOrderQualities').then(m => ({ default: m.BulkOrderQualities })));
+const BulkOrder = lazy(() => import('./pages/BulkOrder').then(m => ({ default: m.BulkOrder })));
+
+// Update routes
+// Add new route for qualities and enquiry path
+// Existing BulkOrder route changed to /bulk-order/enquiry
+
+const Categories = lazy(() => import('./pages/Categories').then((m) => ({ default: m.Categories })));
+const Play = lazy(() => import('./pages/Play').then((m) => ({ default: m.Play })));
 
 // Admin Portal Components (Lazy-loaded to keep customer bundle lean)
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin').then((m) => ({ default: m.AdminLogin })));
@@ -78,12 +89,13 @@ function StorefrontLayout() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 pb-16 lg:pb-0">
         <Suspense fallback={<RouteLoadingFallback />}>
           <Outlet />
         </Suspense>
       </main>
       <MobileStickyCart />
+      <MobileBottomNav />
       <AnalyticsConsentBanner />
       <Footer />
     </div>
@@ -169,6 +181,11 @@ export function App() {
             <Route path="/orders" element={<Orders />} />
             <Route path="/account" element={<Account />} />
             <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/bulk-order" element={<Navigate to="/bulk-order/qualities" replace />} />
+            <Route path="/bulk-order/qualities" element={<BulkOrderQualities />} />
+            <Route path="/bulk-order/enquiry" element={<BulkOrder />} />
+            <Route path="/categories" element={<Categories />} />
+            <Route path="/play" element={<Play />} />
             {/* Fallback route */}
             <Route path="*" element={<Home />} />
           </Route>

@@ -19,11 +19,13 @@ import couponRoutes from './routes/coupon.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import retentionRoutes from './routes/retention.routes.js';
 import growthRoutes from './routes/growth.routes.js';
+import bulkEnquiryRoutes from './routes/bulkEnquiry.routes.js';
 import { noStoreCacheMiddleware, publicCatalogCacheMiddleware } from './middleware/cacheControl.middleware.js';
 import { errorHandler } from './middleware/error.middleware.js';
 import { notificationService } from './services/notification/notification.service.js';
 
 const app = express();
+app.set('trust proxy', 1); // Trust Railway edge proxy (single hop)
 
 // 1. Request correlation ID middleware (must be first)
 app.use(requestIdMiddleware);
@@ -46,10 +48,16 @@ app.use(helmet());
 // 5. CORS policy
 const prodOrigin = env.FRONTEND_URL.replace(/\/+$/, '');
 const allowedOrigins = [prodOrigin];
-if (prodOrigin === 'https://nutyaelite.com') {
-  allowedOrigins.push('https://www.nutyaelite.com');
-} else if (prodOrigin === 'https://www.nutyaelite.com') {
-  allowedOrigins.push('https://nutyaelite.com');
+const standardOrigins = [
+  'https://nutyaelite.com',
+  'https://www.nutyaelite.com',
+  'https://nyutaelite.com',
+  'https://www.nyutaelite.com',
+];
+for (const origin of standardOrigins) {
+  if (!allowedOrigins.includes(origin)) {
+    allowedOrigins.push(origin);
+  }
 }
 if (env.NODE_ENV !== 'production') {
   allowedOrigins.push('http://localhost:5173');
@@ -147,6 +155,7 @@ app.use('/api/coupons', noStoreCacheMiddleware, couponRoutes);
 app.use('/api/admin', noStoreCacheMiddleware, adminRoutes);
 app.use('/api', noStoreCacheMiddleware, retentionRoutes);
 app.use('/api', noStoreCacheMiddleware, growthRoutes);
+app.use('/api/bulk-enquiry', noStoreCacheMiddleware, bulkEnquiryRoutes);
 
 // 9. 404 handler with requestId
 app.use((req: Request, res: Response) => {
