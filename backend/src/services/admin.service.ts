@@ -2068,4 +2068,21 @@ export class AdminService {
 
     return notification;
   }
+
+  /**
+   * Admin retry action for a failed notification.
+   * Guarantees duplicate delivery prevention (skips already SENT notifications).
+   */
+  async retryNotification(id: string) {
+    const existing = await prisma.notification.findUnique({ where: { id } });
+    if (!existing) {
+      const error: any = new Error('Notification record not found.');
+      error.statusCode = 404;
+      error.code = 'NOT_FOUND';
+      throw error;
+    }
+
+    const retried = await notificationService.retryFailedNotification(id);
+    return retried;
+  }
 }

@@ -78,8 +78,8 @@ function getHeaderCopy(
         subject: `Order Confirmed — ${orderNo} | NYUTA ELITE MAKHANA`,
         badge: 'ORDER CONFIRMED',
         headline: 'Thank you for your order from our Mithila Pantry.',
-        lead: `Hi ${ctx.customerName}, your order ${orderNo} has been confirmed and is being prepared for roasting and packing at our Bihar pantry.`,
-        statusNote: 'Order Status: CONFIRMED • Shipping Status: PENDING',
+        lead: `Hi ${ctx.customerName}, your order ${orderNo} has been confirmed. Our team in Bihar is carefully inspecting and preparing your fresh makhana for dispatch.`,
+        statusNote: 'Order Status: CONFIRMED • Est. Delivery: 1–2 days prep + 5–7 days transit (~6–9 business days total)',
       };
     case 'ORDER_PROCESSING':
       return {
@@ -94,8 +94,8 @@ function getHeaderCopy(
         subject: `Order Shipped — ${orderNo} | NYUTA ELITE MAKHANA`,
         badge: 'ORDER SHIPPED',
         headline: 'Your NYUTA ELITE makhana is on its way!',
-        lead: `Hi ${ctx.customerName}, great news — order ${orderNo} has been dispatched from our pantry and is in transit to your delivery address.`,
-        statusNote: 'Order Status: SHIPPED • Shipping Status: SHIPPED',
+        lead: `Hi ${ctx.customerName}, great news — order ${orderNo} has been dispatched from our pantry and handed over to our courier partner. Courier transit typically takes 5–7 business days (~6–9 business days overall from order placement).`,
+        statusNote: 'Order Status: SHIPPED • Courier Transit: 5–7 business days',
       };
     case 'ORDER_DELIVERED':
       return {
@@ -334,11 +334,16 @@ export function renderNotificationTemplate(
 
           <!-- Footer -->
           <tr>
-            <td style="background-color: #F7F1E5; padding: 18px 28px; border-top: 1px solid #E8DECB; font-size: 12px; color: #68756E; line-height: 1.5;">
-              Need help with your order? Contact NYUTA ELITE Support at
-              <a href="mailto:support@nutyaelite.com" style="color: #123B2A; font-weight: 700; text-decoration: none;">support@nutyaelite.com</a>
-              or visit <a href="https://nutyaelite.com/orders" style="color: #123B2A; font-weight: 700; text-decoration: none;">nutyaelite.com/orders</a>.<br/>
-              <span style="font-size: 11px;">This is a transactional notification regarding your NYUTA ELITE MAKHANA order.</span>
+            <td style="background-color: #F7F1E5; padding: 18px 28px; border-top: 1px solid #E8DECB; font-size: 12px; color: #68756E; line-height: 1.6;">
+              <strong>Need help with your order?</strong><br/>
+              Email: <a href="mailto:info@nutyaelite.com" style="color: #123B2A; font-weight: 700; text-decoration: none;">info@nutyaelite.com</a> &bull; Phone / WhatsApp: <a href="tel:+918102875852" style="color: #123B2A; font-weight: 700; text-decoration: none;">+91 81028 75852</a><br/>
+              Order Management: <a href="https://nutyaelite.com/orders" style="color: #123B2A; font-weight: 700; text-decoration: none;">nutyaelite.com/orders</a><br/>
+              <div style="margin-top: 8px; font-size: 11px; color: #7F7362; border-top: 1px dashed #D3C7B3; padding-top: 8px;">
+                <strong>NYUTA ELITE MAKHANA</strong> &bull; RAUSHAN KUMAR C/O NyutaElite<br/>
+                Registered Address: Krishna Vihar Lock No. 11, Bahiro Ara, Arrah Sadar, Bhojpur, Bihar 802301<br/>
+                FSSAI Registration No. 20426021000494 (Wholesaler, Distributor, Retailer &bull; Cat. 04)<br/>
+                Estimated Delivery: 1–2 business days processing + 5–7 business days courier transit (~6–9 business days overall).
+              </div>
             </td>
           </tr>
         </table>
@@ -385,7 +390,9 @@ export function renderNotificationTemplate(
     '',
     `Shipping Address: ${formatAddressText(ctx.shippingAddress)}`,
     '',
-    'Need assistance? Contact support@nutyaelite.com or visit https://nutyaelite.com/orders',
+    'Need assistance? Contact info@nutyaelite.com or call +91 81028 75852 | Visit https://nutyaelite.com/orders',
+    'NYUTA ELITE MAKHANA • FSSAI Reg. No. 20426021000494 • Krishna Vihar Lock No. 11, Bahiro Ara, Arrah, Bhojpur, Bihar 802301',
+    'Estimated Delivery: 1–2 days prep + 5–7 days courier transit (~6–9 business days total)',
   ]
     .filter((line) => line !== null && line !== undefined)
     .join('\n');

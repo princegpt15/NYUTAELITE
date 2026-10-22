@@ -4,6 +4,7 @@ import prisma from '../lib/prisma.js';
 import { razorpayService } from '../services/razorpay.service.js';
 import { env } from '../config/env.js';
 import { PaymentStatus, PaymentProvider, OrderStatus } from '@prisma/client';
+import { notificationService } from '../services/notification/notification.service.js';
 
 /**
  * Create a Razorpay order for an existing internal order.
@@ -175,6 +176,9 @@ export const verifyPayment = async (req: Request, res: Response, next: NextFunct
     const paymentRecord = await prisma.payment.findFirst({
       where: { providerPaymentId: razorpay_payment_id },
     });
+
+    // Asynchronously reconcile notifications for payment success (safe, idempotent, isolated)
+    notificationService.reconcilePaymentNotificationsForOrder(order.id).catch(() => {});
 
     return res.json({ success: true, data: paymentRecord });
   } catch (err) {

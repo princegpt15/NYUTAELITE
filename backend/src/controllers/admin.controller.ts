@@ -300,6 +300,20 @@ export const getNotificationById = async (req: Request, res: Response, next: Nex
   }
 };
 
+export const retryNotification = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const data = await adminService.retryNotification(id);
+    res.status(200).json({
+      success: true,
+      message: 'Notification retry processed',
+      data,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getAnalyticsSummary = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = await analyticsService.getSummary(req.query as any);

@@ -100,7 +100,7 @@ export class NotificationService {
       orderNumber: order.orderNumber,
       userId: order.user.id,
       customerName: order.user.name || addrObj?.fullName || 'Valued Customer',
-      customerEmail: order.user.email,
+      customerEmail: order.user.email || '',
       customerPhone,
       orderDate: order.createdAt,
       status: order.status,
@@ -138,13 +138,48 @@ export class NotificationService {
     ctx: OrderNotificationContext,
     type: NotificationType,
     channel: NotificationChannel,
-    idempotencySuffix?: string
+    idempotencySuffix?: string,
+    forceRetry = false
   ): Promise<Notification | null> {
     try {
       const provider = this.getProvider(channel);
 
       // If optional channel (e.g. WHATSAPP) is disabled, skip cleanly without polluting or failing
       if (channel === 'WHATSAPP' && !provider.isEnabled()) {
+        return null;
+      }
+
+      // 0. State Guard: Verify valid, persisted state changes before dispatching
+      if (type === 'PAYMENT_SUCCESS' && ctx.paymentStatus !== 'CAPTURED') {
+        logNotificationEvent('notification.skipped', {
+          orderId: ctx.orderId,
+          userId: ctx.userId,
+          type,
+          channel,
+          reason: `Invalid state: PAYMENT_SUCCESS requires CAPTURED paymentStatus (current: ${ctx.paymentStatus})`,
+        });
+        return null;
+      }
+
+      if (type === 'ORDER_SHIPPED' && ctx.shippingStatus !== 'SHIPPED' && ctx.status !== 'SHIPPED') {
+        logNotificationEvent('notification.skipped', {
+          orderId: ctx.orderId,
+          userId: ctx.userId,
+          type,
+          channel,
+          reason: `Invalid state: ORDER_SHIPPED requires SHIPPED status (current: order=${ctx.status}, shipping=${ctx.shippingStatus})`,
+        });
+        return null;
+      }
+
+      if (type === 'ORDER_DELIVERED' && ctx.shippingStatus !== 'DELIVERED' && ctx.status !== 'DELIVERED') {
+        logNotificationEvent('notification.skipped', {
+          orderId: ctx.orderId,
+          userId: ctx.userId,
+          type,
+          channel,
+          reason: `Invalid state: ORDER_DELIVERED requires DELIVERED status (current: order=${ctx.status}, shipping=${ctx.shippingStatus})`,
+        });
         return null;
       }
 
@@ -164,13 +199,8 @@ export class NotificationService {
       });
 
       if (existing) {
-        // Idempotent guard: never resend an already SENT or currently SENDING notification,
-        // or a notification that has already exhausted its retry budget.
-        if (
-          existing.status === 'SENT' ||
-          existing.status === 'SENDING' ||
-          existing.attemptCount >= 3
-        ) {
+        // Strict Idempotent Guard: NEVER duplicate an already SENT notification
+        if (existing.status === 'SENT') {
           logNotificationEvent('notification.skipped', {
             notificationId: existing.id,
             orderId: ctx.orderId,
@@ -182,7 +212,43 @@ export class NotificationService {
             recipient: existing.recipient,
             provider: existing.provider ?? provider.providerName,
             providerMessageId: existing.providerMessageId,
-            reason: 'Idempotent duplicate event skipped',
+            reason: 'Idempotent duplicate event skipped: notification already successfully SENT',
+          });
+          return existing;
+        }
+
+        // Never intervene if another thread is currently SENDING
+        if (existing.status === 'SENDING') {
+          logNotificationEvent('notification.skipped', {
+            notificationId: existing.id,
+            orderId: ctx.orderId,
+            userId: ctx.userId,
+            type,
+            channel,
+            status: existing.status,
+            attempt: existing.attemptCount,
+            recipient: existing.recipient,
+            provider: existing.provider ?? provider.providerName,
+            providerMessageId: existing.providerMessageId,
+            reason: 'Notification dispatch currently in progress (SENDING)',
+          });
+          return existing;
+        }
+
+        // If notification FAILED and retry budget exhausted without explicit forceRetry:
+        if (existing.status === 'FAILED' && existing.attemptCount >= 3 && !forceRetry) {
+          logNotificationEvent('notification.skipped', {
+            notificationId: existing.id,
+            orderId: ctx.orderId,
+            userId: ctx.userId,
+            type,
+            channel,
+            status: existing.status,
+            attempt: existing.attemptCount,
+            recipient: existing.recipient,
+            provider: existing.provider ?? provider.providerName,
+            providerMessageId: existing.providerMessageId,
+            reason: 'Retry budget exhausted on FAILED notification. Use explicit retry to re-dispatch.',
           });
           return existing;
         }
@@ -193,7 +259,18 @@ export class NotificationService {
       // 2. Atomically create or fetch the Notification record in PostgreSQL
       let notificationRecord: Notification;
       if (existing) {
-        notificationRecord = existing;
+        if (forceRetry && existing.status === 'FAILED') {
+          notificationRecord = await prisma.notification.update({
+            where: { id: existing.id },
+            data: {
+              status: 'PENDING',
+              attemptCount: 0,
+              errorMessage: null,
+            },
+          });
+        } else {
+          notificationRecord = existing;
+        }
       } else {
         try {
           notificationRecord = await prisma.notification.create({
@@ -288,7 +365,8 @@ export class NotificationService {
           ctx,
           options.type,
           channel,
-          options.idempotencySuffix
+          options.idempotencySuffix,
+          options.forceRetry
         );
         if (record) {
           results.push(record);
@@ -359,6 +437,93 @@ export class NotificationService {
       }
     } catch {
       // Isolated: never throw
+    }
+  }
+
+  /**
+   * Explicitly retry a failed notification record.
+   * Guarantees:
+   * 1. Never resends if status === 'SENT' (strict duplicate delivery prevention).
+   * 2. Skips if status === 'SENDING' (prevents concurrent duplicate sends).
+   * 3. For FAILED notifications, resets attempt budget and executes delivery.
+   */
+  public async retryFailedNotification(notificationId: string): Promise<Notification | null> {
+    try {
+      const existing = await prisma.notification.findUnique({
+        where: { id: notificationId },
+      });
+
+      if (!existing) {
+        return null;
+      }
+
+      if (existing.status === 'SENT') {
+        logNotificationEvent('notification.skipped', {
+          notificationId: existing.id,
+          orderId: existing.orderId,
+          userId: existing.userId,
+          type: existing.type,
+          channel: existing.channel,
+          status: existing.status,
+          attempt: existing.attemptCount,
+          recipient: existing.recipient,
+          reason: 'Cannot retry notification: already successfully SENT',
+        });
+        return existing;
+      }
+
+      if (existing.status === 'SENDING') {
+        return existing;
+      }
+
+      const ctx = await this.loadOrderContext({
+        orderId: existing.orderId,
+        type: existing.type,
+      });
+
+      if (!ctx) {
+        return null;
+      }
+
+      // Reset record attempt budget and status to PENDING
+      const resetRecord = await prisma.notification.update({
+        where: { id: existing.id },
+        data: {
+          status: 'PENDING',
+          attemptCount: 0,
+          errorMessage: null,
+        },
+      });
+
+      const provider = this.getProvider(existing.channel);
+      const rendered = renderNotificationTemplate(existing.type, ctx);
+
+      return await executeWithRetry({
+        notification: resetRecord,
+        userId: ctx.userId,
+        provider,
+        request: {
+          notificationId: resetRecord.id,
+          orderId: ctx.orderId,
+          orderNumber: ctx.orderNumber,
+          type: existing.type,
+          channel: existing.channel,
+          recipient: existing.recipient,
+          subject: existing.channel === 'EMAIL' ? rendered.subject : (undefined as any),
+          html: existing.channel === 'EMAIL' ? rendered.html : undefined,
+          text: existing.channel === 'WHATSAPP' ? rendered.whatsappText : rendered.text,
+        },
+      });
+    } catch (err: any) {
+      console.error(
+        JSON.stringify({
+          timestamp: new Date().toISOString(),
+          event: 'notification.retry_error',
+          notificationId,
+          error: err?.message ? String(err.message).slice(0, 200) : 'Unexpected error retrying notification',
+        })
+      );
+      return null;
     }
   }
 

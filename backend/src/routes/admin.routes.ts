@@ -41,6 +41,7 @@ import {
   updateCoupon,
   getNotifications,
   getNotificationById,
+  retryNotification,
   getAnalyticsSummary,
   getAnalyticsRevenue,
   getAnalyticsOrders,
@@ -103,9 +104,10 @@ router.patch(
   updateCoupon
 );
 
-// Notifications (Read-Only Admin Visibility)
+// Notifications (Admin Visibility & Controlled Retries)
 router.get('/notifications', validate(adminNotificationsQuerySchema, 'query'), getNotifications);
 router.get('/notifications/:id', validate(notificationIdParamSchema, 'params'), getNotificationById);
+router.post('/notifications/:id/retry', validate(notificationIdParamSchema, 'params'), retryNotification);
 
 // Analytics & Business Intelligence (Strictly Read-Only)
 router.get('/analytics/summary', validate(analyticsQuerySchema, 'query'), getAnalyticsSummary);

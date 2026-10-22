@@ -93,6 +93,7 @@ export interface TriggerNotificationOptions {
   type: NotificationType;
   channels?: NotificationChannel[];
   idempotencySuffix?: string;
+  forceRetry?: boolean;
   refundAmount?: number;
   refundReference?: string;
   refundReason?: string;

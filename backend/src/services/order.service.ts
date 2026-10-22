@@ -293,6 +293,13 @@ export class OrderService {
       });
     });
 
+    if (createdOrder) {
+      notificationService.dispatchOrderEventAsync({
+        orderId: createdOrder.id,
+        type: 'ORDER_CONFIRMED',
+      });
+    }
+
     return formatCustomerOrder(createdOrder);
   }
 
