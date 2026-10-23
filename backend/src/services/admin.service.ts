@@ -476,9 +476,11 @@ export class AdminService {
           throw error;
         }
 
+        // Guard: CONFIRMED, PROCESSING, SHIPPED, and DELIVERED all require a captured payment.
+        // This prevents admins from confirming orders whose payment has not been verified.
         if (
           existing.paymentStatus !== 'CAPTURED' &&
-          ['PROCESSING', 'SHIPPED', 'DELIVERED'].includes(data.orderStatus)
+          ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'].includes(data.orderStatus)
         ) {
           const error: any = new Error(
             `Cannot move order to ${data.orderStatus} while payment status is ${existing.paymentStatus}. Payment must be CAPTURED first.`
