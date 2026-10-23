@@ -13,8 +13,11 @@ export type EmailTestSimulator = (
   attemptNumber: number
 ) => ProviderDeliveryResult | null;
 
+export type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+
 let testSimulator: EmailTestSimulator | null = null;
 let customSmtpTransporter: Transporter | null = null;
+let customFetch: FetchLike | null = null;
 const attemptCounterByNotificationId = new Map<string, number>();
 
 /**
@@ -30,6 +33,13 @@ export function setEmailProviderTestSimulator(simulator: EmailTestSimulator | nu
  */
 export function setCustomSmtpTransporter(transporter: Transporter | null): void {
   customSmtpTransporter = transporter;
+}
+
+/**
+ * Inject a custom HTTP fetch client for hermetic testing of HTTPS providers (Resend, SendGrid).
+ */
+export function setCustomEmailFetch(fetchFn: FetchLike | null): void {
+  customFetch = fetchFn;
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -127,8 +137,8 @@ export class EmailNotificationProvider implements NotificationProvider {
               user: env.SMTP_USER,
               pass: env.SMTP_PASS,
             },
-            connectionTimeout: 10000,
-            greetingTimeout: 5000,
+            connectionTimeout: 15000,
+            greetingTimeout: 15000,
             socketTimeout: 15000,
           });
 
@@ -195,7 +205,8 @@ export class EmailNotificationProvider implements NotificationProvider {
       }
     }
 
-    if (!env.EMAIL_API_KEY) {
+    const apiKey = (env.EMAIL_API_KEY || '').trim();
+    if (!apiKey) {
       return {
         success: false,
         retryable: false,
@@ -207,17 +218,20 @@ export class EmailNotificationProvider implements NotificationProvider {
     }
 
     try {
+      const fetchFn = customFetch || globalThis.fetch;
+
       if (provider === 'resend') {
         const endpoint = env.EMAIL_API_URL || 'https://api.resend.com/emails';
-        const response = await fetch(endpoint, {
+        const response = await fetchFn(endpoint, {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${env.EMAIL_API_KEY}`,
+            Authorization: `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             from: env.EMAIL_FROM || 'NYUTA ELITE MAKHANA <info@nutyaelite.com>',
             to: [effectiveRecipient],
+            reply_to: env.EMAIL_FROM_ADDRESS || 'info@nutyaelite.com',
             subject: effectiveSubject,
             html: request.html || request.text,
             text: request.text,
@@ -255,10 +269,10 @@ export class EmailNotificationProvider implements NotificationProvider {
 
       if (provider === 'sendgrid') {
         const endpoint = env.EMAIL_API_URL || 'https://api.sendgrid.com/v3/mail/send';
-        const response = await fetch(endpoint, {
+        const response = await fetchFn(endpoint, {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${env.EMAIL_API_KEY}`,
+            Authorization: `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
@@ -310,13 +324,18 @@ export class EmailNotificationProvider implements NotificationProvider {
         message: `Unsupported email provider: ${provider}`,
       };
     } catch (err: any) {
+      const rawMsg = err?.message ? String(err.message) : 'Transient network error contacting email provider';
+      const sanitizedMsg = rawMsg
+        .replace(/(bearer|key|token|password|pass|secret)\s*[:=]\s*\S+/gi, '$1=***')
+        .slice(0, 240);
+
       return {
         success: false,
         retryable: true,
         provider,
         providerMessageId: null,
         errorCode: 'NETWORK_ERROR',
-        message: err?.message ? String(err.message).slice(0, 200) : 'Transient network error contacting email provider',
+        message: sanitizedMsg,
       };
     }
   }
