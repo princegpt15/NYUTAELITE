@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Mail } from 'lucide-react';
 import { FormInput } from '../components/FormInput';
+import { GoogleSignInButton } from '../components/GoogleSignInButton';
 import { authService } from '../services/auth';
 import { ApiError } from '../services/api';
 import { trackSignUp } from '../services/analytics';
@@ -89,7 +90,7 @@ export const Register: React.FC = () => {
         if (err instanceof ApiError) {
           setError(err.message || 'Registration failed');
         } else {
-          setError('Registration failed');
+          setError('Registration failed. Please try again.');
         }
       } finally {
         setLoading(false);
@@ -123,6 +124,30 @@ export const Register: React.FC = () => {
                 Enjoy fast checkout and order tracking for your makhana purchases
               </p>
             </div>
+
+            {/* Google Sign Up — primary option */}
+            <GoogleSignInButton
+              mode="register"
+              onSuccess={() => {
+                setSuccess(true);
+                setTimeout(() => navigate('/'), 1200);
+              }}
+              onError={(msg) => setError(msg)}
+            />
+
+            {/* Divider */}
+            <div className="relative my-6 text-center">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[#E8DECB]" />
+              </div>
+              <div className="relative flex justify-center text-[11px] uppercase">
+                <span className="bg-white px-3 text-[#8C7E6A] font-semibold tracking-wider">
+                  Or register with email
+                </span>
+              </div>
+            </div>
+
+            {/* Email + Password Registration Form */}
             {error && (
               <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-600 text-xs font-semibold border border-red-200">
                 {error}
@@ -210,20 +235,30 @@ export const Register: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 rounded-lg bg-[#123B2A] hover:bg-[#092218] text-white text-xs font-extrabold uppercase tracking-widest transition-colors shadow-xs cursor-pointer disabled:opacity-50 mt-2"
+                className="w-full py-3.5 rounded-lg bg-[#123B2A] hover:bg-[#092218] text-white text-xs font-extrabold uppercase tracking-widest transition-colors shadow-xs cursor-pointer disabled:opacity-50 mt-2 flex items-center justify-center gap-2"
               >
-                {loading ? 'Creating Account...' : 'Create Account'}
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Creating Account...</span>
+                  </>
+                ) : (
+                  <>
+                    <Mail className="w-4 h-4" />
+                    <span>Create Account</span>
+                  </>
+                )}
               </button>
-
-              <div className="text-center pt-2">
-                <p className="text-xs text-[#68756E]">
-                  Already have an account?{' '}
-                  <Link to="/login" className="text-[#123B2A] font-bold hover:underline">
-                    Log in
-                  </Link>
-                </p>
-              </div>
             </form>
+
+            <div className="text-center pt-6 mt-6 border-t border-[#E8DECB]">
+              <p className="text-xs text-[#68756E]">
+                Already have an account?{' '}
+                <Link to="/login" className="text-[#123B2A] font-bold hover:underline">
+                  Log in
+                </Link>
+              </p>
+            </div>
           </>
         )}
       </div>
