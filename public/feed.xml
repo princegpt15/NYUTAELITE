@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Google Merchant Center Product Feed — NYUTAELITE MAKHANA -->
+<!-- Generated: 2026-10-24 | Country: IN | Currency: INR | Language: en -->
+<!-- Feed URL: https://nyutaelite.com/feed.xml -->
+<!-- Scheduled Fetch: Daily -->
+<!-- GTIN Exemption: identifier_exists=no (private-label, no manufacturer barcode) -->
+
+<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
+  <channel>
+    <title>NYUTAELITE Makhana Products</title>
+    <link>https://nyutaelite.com</link>
+    <description>NYUTAELITE MAKHANA — Premium and Everyday Bihar Fox Nuts, India</description>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- PRODUCT 1: Premium Makhana 100g                        -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <item>
+      <g:id>NYM-PREM-100</g:id>
+      <g:title>NYUTAELITE Premium Makhana – 100g Jumbo Fox Nuts</g:title>
+      <g:description>NYUTAELITE Premium Makhana 100g — Handpicked jumbo-grade Bihar fox nuts (Euryale ferox). Uniform size, crisp air-popped crunch, minimal shell residue. Sealed in air-tight food-grade pouch. Pan-India delivery. SKU: NYM-PREM-100.</g:description>
+      <g:link>https://nyutaelite.com/products/makhana?sku=premium-100g</g:link>
+      <g:image_link>https://nyutaelite.com/images/products/premium-makhana-100g.png</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>160.00 INR</g:price>
+      <g:sale_price>160.00 INR</g:sale_price>
+      <g:brand>NYUTAELITE</g:brand>
+      <g:mpn>NYM-PREM-100</g:mpn>
+      <g:identifier_exists>no</g:identifier_exists>
+      <g:condition>new</g:condition>
+      <g:google_product_category>5765</g:google_product_category>
+      <!-- 5765 = Food, Beverages & Tobacco > Food Items > Nuts & Seeds -->
+      <g:product_type>Makhana &gt; Premium Makhana &gt; 100g</g:product_type>
+      <g:item_group_id>NYM-PREM</g:item_group_id>
+      <g:weight>100 g</g:weight>
+      <g:unit_pricing_measure>100 g</g:unit_pricing_measure>
+      <g:shipping>
+        <g:country>IN</g:country>
+        <g:service>Standard Shipping</g:service>
+        <g:price>0 INR</g:price>
+      </g:shipping>
+      <g:target_country>IN</g:target_country>
+      <g:content_language>en</g:content_language>
+      <g:adult>no</g:adult>
+      <g:age_group>adult</g:age_group>
+    </item>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- PRODUCT 2: Premium Makhana 200g                        -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <item>
+      <g:id>NYM-PREM-200</g:id>
+      <g:title>NYUTAELITE Premium Makhana – 200g Jumbo Fox Nuts</g:title>
+      <g:description>NYUTAELITE Premium Makhana 200g — Jumbo-grade Bihar fox nuts for daily mindful snacking. Handpicked, air-tight food-grade 200g family pouch. Pan-India delivery. SKU: NYM-PREM-200.</g:description>
+      <g:link>https://nyutaelite.com/products/makhana?sku=premium-200g</g:link>
+      <g:image_link>https://nyutaelite.com/images/products/premium-makhana-200g.png</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>310.00 INR</g:price>
+      <g:sale_price>310.00 INR</g:sale_price>
+      <g:brand>NYUTAELITE</g:brand>
+      <g:mpn>NYM-PREM-200</g:mpn>
+      <g:identifier_exists>no</g:identifier_exists>
+      <g:condition>new</g:condition>
+      <g:google_product_category>5765</g:google_product_category>
+      <g:product_type>Makhana &gt; Premium Makhana &gt; 200g</g:product_type>
+      <g:item_group_id>NYM-PREM</g:item_group_id>
+      <g:weight>200 g</g:weight>
+      <g:unit_pricing_measure>200 g</g:unit_pricing_measure>
+      <g:shipping>
+        <g:country>IN</g:country>
+        <g:service>Standard Shipping</g:service>
+        <g:price>0 INR</g:price>
+      </g:shipping>
+      <g:target_country>IN</g:target_country>
+      <g:content_language>en</g:content_language>
+      <g:adult>no</g:adult>
+      <g:age_group>adult</g:age_group>
+    </item>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- PRODUCT 3: Premium Makhana 250g                        -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <item>
+      <g:id>NYM-PREM-250</g:id>
+      <g:title>NYUTAELITE Premium Makhana – 250g Jumbo Fox Nuts</g:title>
+      <g:description>NYUTAELITE Premium Makhana 250g — Highest-grade Bihar fox nuts in a generous 250g pantry pack. Exceptional uniform size, superior crisp crunch. Air-tight food-grade pouch. Pan-India delivery. SKU: NYM-PREM-250.</g:description>
+      <g:link>https://nyutaelite.com/products/makhana?sku=premium-250g</g:link>
+      <g:image_link>https://nyutaelite.com/images/products/premium-makhana-250g.png</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>380.00 INR</g:price>
+      <g:sale_price>380.00 INR</g:sale_price>
+      <g:brand>NYUTAELITE</g:brand>
+      <g:mpn>NYM-PREM-250</g:mpn>
+      <g:identifier_exists>no</g:identifier_exists>
+      <g:condition>new</g:condition>
+      <g:google_product_category>5765</g:google_product_category>
+      <g:product_type>Makhana &gt; Premium Makhana &gt; 250g</g:product_type>
+      <g:item_group_id>NYM-PREM</g:item_group_id>
+      <g:weight>250 g</g:weight>
+      <g:unit_pricing_measure>250 g</g:unit_pricing_measure>
+      <g:shipping>
+        <g:country>IN</g:country>
+        <g:service>Standard Shipping</g:service>
+        <g:price>0 INR</g:price>
+      </g:shipping>
+      <g:target_country>IN</g:target_country>
+      <g:content_language>en</g:content_language>
+      <g:adult>no</g:adult>
+      <g:age_group>adult</g:age_group>
+    </item>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- PRODUCT 4: Normal Makhana 100g                         -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <item>
+      <g:id>NYM-NORM-100</g:id>
+      <g:title>NYUTAELITE Makhana – 100g Everyday Fox Nuts</g:title>
+      <g:description>NYUTAELITE Makhana 100g — Everyday Bihar fox nuts for dry roasting, seasoning, trail mixes, and traditional cooking. Air-tight 100g food-grade pouch. Pan-India delivery. SKU: NYM-NORM-100.</g:description>
+      <g:link>https://nyutaelite.com/products/makhana?sku=normal-100g</g:link>
+      <g:image_link>https://nyutaelite.com/images/products/normal-makhana-100g.png</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>120.00 INR</g:price>
+      <g:sale_price>120.00 INR</g:sale_price>
+      <g:brand>NYUTAELITE</g:brand>
+      <g:mpn>NYM-NORM-100</g:mpn>
+      <g:identifier_exists>no</g:identifier_exists>
+      <g:condition>new</g:condition>
+      <g:google_product_category>5765</g:google_product_category>
+      <g:product_type>Makhana &gt; Everyday Makhana &gt; 100g</g:product_type>
+      <g:item_group_id>NYM-NORM</g:item_group_id>
+      <g:weight>100 g</g:weight>
+      <g:unit_pricing_measure>100 g</g:unit_pricing_measure>
+      <g:shipping>
+        <g:country>IN</g:country>
+        <g:service>Standard Shipping</g:service>
+        <g:price>0 INR</g:price>
+      </g:shipping>
+      <g:target_country>IN</g:target_country>
+      <g:content_language>en</g:content_language>
+      <g:adult>no</g:adult>
+      <g:age_group>adult</g:age_group>
+    </item>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- PRODUCT 5: Normal Makhana 200g                         -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <item>
+      <g:id>NYM-NORM-200</g:id>
+      <g:title>NYUTAELITE Makhana – 200g Everyday Fox Nuts</g:title>
+      <g:description>NYUTAELITE Makhana 200g — Everyday Bihar fox nuts in a 200g pantry pouch. Perfect for daily roasting and home-spiced snacks. Air-tight food-grade packaging. Pan-India delivery. SKU: NYM-NORM-200.</g:description>
+      <g:link>https://nyutaelite.com/products/makhana?sku=normal-200g</g:link>
+      <g:image_link>https://nyutaelite.com/images/products/normal-makhana-200g.png</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>230.00 INR</g:price>
+      <g:sale_price>230.00 INR</g:sale_price>
+      <g:brand>NYUTAELITE</g:brand>
+      <g:mpn>NYM-NORM-200</g:mpn>
+      <g:identifier_exists>no</g:identifier_exists>
+      <g:condition>new</g:condition>
+      <g:google_product_category>5765</g:google_product_category>
+      <g:product_type>Makhana &gt; Everyday Makhana &gt; 200g</g:product_type>
+      <g:item_group_id>NYM-NORM</g:item_group_id>
+      <g:weight>200 g</g:weight>
+      <g:unit_pricing_measure>200 g</g:unit_pricing_measure>
+      <g:shipping>
+        <g:country>IN</g:country>
+        <g:service>Standard Shipping</g:service>
+        <g:price>0 INR</g:price>
+      </g:shipping>
+      <g:target_country>IN</g:target_country>
+      <g:content_language>en</g:content_language>
+      <g:adult>no</g:adult>
+      <g:age_group>adult</g:age_group>
+    </item>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- PRODUCT 6: Normal Makhana 250g                         -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <item>
+      <g:id>NYM-NORM-250</g:id>
+      <g:title>NYUTAELITE Makhana – 250g Everyday Fox Nuts</g:title>
+      <g:description>NYUTAELITE Makhana 250g — Everyday Bihar fox nuts in a 250g pantry size. Great value for regular home roasting and cooking. Air-tight food-grade pouch. Pan-India delivery. SKU: NYM-NORM-250.</g:description>
+      <g:link>https://nyutaelite.com/products/makhana?sku=normal-250g</g:link>
+      <g:image_link>https://nyutaelite.com/images/products/normal-makhana-250g.png</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>280.00 INR</g:price>
+      <g:sale_price>280.00 INR</g:sale_price>
+      <g:brand>NYUTAELITE</g:brand>
+      <g:mpn>NYM-NORM-250</g:mpn>
+      <g:identifier_exists>no</g:identifier_exists>
+      <g:condition>new</g:condition>
+      <g:google_product_category>5765</g:google_product_category>
+      <g:product_type>Makhana &gt; Everyday Makhana &gt; 250g</g:product_type>
+      <g:item_group_id>NYM-NORM</g:item_group_id>
+      <g:weight>250 g</g:weight>
+      <g:unit_pricing_measure>250 g</g:unit_pricing_measure>
+      <g:shipping>
+        <g:country>IN</g:country>
+        <g:service>Standard Shipping</g:service>
+        <g:price>0 INR</g:price>
+      </g:shipping>
+      <g:target_country>IN</g:target_country>
+      <g:content_language>en</g:content_language>
+      <g:adult>no</g:adult>
+      <g:age_group>adult</g:age_group>
+    </item>
+
+  </channel>
+</rss>

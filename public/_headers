@@ -28,3 +28,8 @@
 /robots.txt
   Cache-Control: public, max-age=86400
   Content-Type: text/plain; charset=utf-8
+
+# Google Merchant Center feed: cache for 1 day (daily scheduled fetch)
+/feed.xml
+  Cache-Control: public, max-age=86400
+  Content-Type: application/xml; charset=utf-8

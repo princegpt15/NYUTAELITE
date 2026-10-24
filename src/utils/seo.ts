@@ -1,95 +1,20 @@
 // src/utils/seo.ts
 import type { PantryProduct } from '../types';
 import { FAQS } from '../data/faqs';
+import { PANTRY_PRODUCTS } from '../data/product';
 
 export const PRODUCTION_ORIGIN = 'https://nyutaelite.com';
 export const DEFAULT_OG_IMAGE = `${PRODUCTION_ORIGIN}/nyuta-elite-logo.png`; // TODO: replace with /images/og-cover.jpg once created
-export const SITE_NAME = 'Nyuta Elite Makhana';
+// AUDIT FIX F8: Brand name aligned to NYUTAELITE for GMC consistency
+export const SITE_NAME = 'NYUTAELITE Makhana';
+export const BRAND_NAME = 'NYUTAELITE';
 
-export const SEO_PRODUCT_CATALOG: PantryProduct[] = [
-  {
-    id: 'premium-100g',
-    name: 'Premium Makhana',
-    quality: 'Premium',
-    weightGrams: 100,
-    price: 160,
-    mrp: 199,
-    image: DEFAULT_OG_IMAGE,
-    stock: 150,
-    sku: 'NYM-PREM-100',
-    description:
-      'Handpicked jumbo-grade makhana with uniform size, crisp crunch, and minimal shell residue.',
-    active: true,
-  },
-  {
-    id: 'premium-200g',
-    name: 'Premium Makhana',
-    quality: 'Premium',
-    weightGrams: 200,
-    price: 310,
-    mrp: 380,
-    image: DEFAULT_OG_IMAGE,
-    stock: 120,
-    sku: 'NYM-PREM-200',
-    description:
-      'Selected jumbo makhana in a 200g family pack, perfect for daily mindful snacking.',
-    active: true,
-  },
-  {
-    id: 'premium-250g',
-    name: 'Premium Makhana',
-    quality: 'Premium',
-    weightGrams: 250,
-    price: 380,
-    mrp: 460,
-    image: DEFAULT_OG_IMAGE,
-    stock: 100,
-    sku: 'NYM-PREM-250',
-    description:
-      'Generous 250g pack of our highest grade makhana. Exceptional size and uniform texture.',
-    active: true,
-  },
-  {
-    id: 'normal-100g',
-    name: 'Normal Makhana',
-    quality: 'Normal',
-    weightGrams: 100,
-    price: 120,
-    mrp: 150,
-    image: DEFAULT_OG_IMAGE,
-    stock: 200,
-    sku: 'NYM-NORM-100',
-    description:
-      'Standard everyday makhana. Great for roasting, seasoning, or adding to traditional dishes.',
-    active: true,
-  },
-  {
-    id: 'normal-200g',
-    name: 'Normal Makhana',
-    quality: 'Normal',
-    weightGrams: 200,
-    price: 230,
-    mrp: 290,
-    image: DEFAULT_OG_IMAGE,
-    stock: 180,
-    sku: 'NYM-NORM-200',
-    description: 'Everyday makhana in a convenient 200g pantry pouch.',
-    active: true,
-  },
-  {
-    id: 'normal-250g',
-    name: 'Normal Makhana',
-    quality: 'Normal',
-    weightGrams: 250,
-    price: 280,
-    mrp: 350,
-    image: DEFAULT_OG_IMAGE,
-    stock: 160,
-    sku: 'NYM-NORM-250',
-    description: 'Everyday makhana in a 250g pantry size for roasting and cooking.',
-    active: true,
-  },
-];
+/**
+ * Single authoritative product catalog for SEO — delegates to PANTRY_PRODUCTS
+ * to avoid data drift between two copies of the same data.
+ * AUDIT FIX F9: Removed the duplicate inline array; now a re-export alias.
+ */
+export const SEO_PRODUCT_CATALOG: PantryProduct[] = PANTRY_PRODUCTS;
 
 export interface RouteSeoMetadata {
   title: string;
@@ -169,8 +94,9 @@ export function buildOrganizationJsonLd(): Record<string, any> {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: SITE_NAME,
-    alternateName: 'NYUTAELITE',
+    // AUDIT FIX F8: Use BRAND_NAME constant for consistency
+    name: BRAND_NAME,
+    alternateName: 'NYUTAELITE MAKHANA',
     url: `${PRODUCTION_ORIGIN}/`,
     logo: {
       '@type': 'ImageObject',
@@ -179,7 +105,7 @@ export function buildOrganizationJsonLd(): Record<string, any> {
       height: 512,
     },
     description:
-      'Nyuta Elite Makhana is a premium Indian makhana brand offering handpicked fox nuts from Bihar. Available online in 100g, 200g, and 250g packs — Premium and Normal grade.',
+      'NYUTAELITE is a premium Indian makhana brand offering handpicked fox nuts from Bihar. Available online in 100g, 200g, and 250g packs — Premium and Normal grade.',
     areaServed: 'IN',
     sameAs: [],
   };
@@ -190,7 +116,7 @@ export function buildWebSiteJsonLd(): Record<string, any> {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: SITE_NAME,
-    alternateName: 'NYUTAELITE',
+    alternateName: BRAND_NAME,
     url: `${PRODUCTION_ORIGIN}/`,
     potentialAction: {
       '@type': 'SearchAction',
@@ -221,6 +147,13 @@ export function buildBreadcrumbJsonLd(
 /**
  * Build Schema.org Product JSON-LD strictly from authoritative product data.
  * Never fabricates reviews, star ratings, or unverified claims.
+ *
+ * AUDIT FIXES APPLIED:
+ *  F6  — OG image now uses actual product image, not logo
+ *  F7  — Product name in JSON-LD is concise (no keyword stuffing)
+ *  F8  — brand.name uses BRAND_NAME constant (NYUTAELITE)
+ *  F10 — seller added to Offer
+ *  F11 — shippingDetails added to Offer
  */
 export function buildProductJsonLd(
   product: PantryProduct,
@@ -233,7 +166,11 @@ export function buildProductJsonLd(
   const productUrl =
     canonicalUrl ||
     `${PRODUCTION_ORIGIN}/products/makhana?sku=${encodeURIComponent(canonicalSkuId)}`;
-  const fullProductName = `${product.name} ${product.weightGrams}g — ${product.quality} Grade Bihar Fox Nuts | ${SITE_NAME}`;
+
+  // AUDIT FIX F7: Concise, non-keyword-stuffed product name
+  const fullProductName = `${BRAND_NAME} ${product.name} ${product.weightGrams}g`;
+
+  // AUDIT FIX F6: Use actual product image URL, not the site logo
   const imageUrl = toAbsoluteCanonicalImageUrl(product.image);
 
   return {
@@ -242,12 +179,13 @@ export function buildProductJsonLd(
     name: fullProductName,
     description:
       product.description ||
-      `${product.weightGrams}g pouch of NYUTA ELITE ${product.quality} Grade Bihar makhana (fox nuts).`,
+      `${product.weightGrams}g pouch of ${BRAND_NAME} ${product.quality} Grade Bihar makhana (fox nuts).`,
     image: [imageUrl],
     sku: product.sku || canonicalSkuId,
+    // AUDIT FIX F8: Brand name is now NYUTAELITE
     brand: {
       '@type': 'Brand',
-      name: SITE_NAME,
+      name: BRAND_NAME,
     },
     category: `${product.quality} Grade Makhana`,
     weight: {
@@ -265,6 +203,40 @@ export function buildProductJsonLd(
           ? 'https://schema.org/InStock'
           : 'https://schema.org/OutOfStock',
       itemCondition: 'https://schema.org/NewCondition',
+      // AUDIT FIX F10: seller field added for Google Shopping eligibility
+      seller: {
+        '@type': 'Organization',
+        name: BRAND_NAME,
+        url: `${PRODUCTION_ORIGIN}/`,
+      },
+      // AUDIT FIX F11: shippingDetails helps Google Shopping show shipping info in SERPs
+      shippingDetails: {
+        '@type': 'OfferShippingDetails',
+        shippingRate: {
+          '@type': 'MonetaryAmount',
+          value: '0',
+          currency: 'INR',
+        },
+        shippingDestination: {
+          '@type': 'DefinedRegion',
+          addressCountry: 'IN',
+        },
+        deliveryTime: {
+          '@type': 'ShippingDeliveryTime',
+          handlingTime: {
+            '@type': 'QuantitativeValue',
+            minValue: 1,
+            maxValue: 2,
+            unitCode: 'DAY',
+          },
+          transitTime: {
+            '@type': 'QuantitativeValue',
+            minValue: 3,
+            maxValue: 7,
+            unitCode: 'DAY',
+          },
+        },
+      },
     },
   };
 }
@@ -342,7 +314,7 @@ export function resolveRouteSeo(
   // 1. Admin Routes (/admin, /admin/*) -> STRICT NOINDEX
   if (normalizedPath === '/admin' || normalizedPath.startsWith('/admin/')) {
     const title = `Admin Portal | ${SITE_NAME}`;
-    const description = 'Restricted administrative portal for NYUTA ELITE MAKHANA.';
+    const description = `Restricted administrative portal for ${BRAND_NAME} MAKHANA.`;
     const canonicalUrl = `${PRODUCTION_ORIGIN}/admin`;
     return {
       title,
@@ -371,27 +343,27 @@ export function resolveRouteSeo(
   > = {
     '/cart': {
       title: `Shopping Cart | ${SITE_NAME}`,
-      description: 'Review your selected NYUTA ELITE Bihar makhana packs before checkout.',
+      description: `Review your selected ${BRAND_NAME} Bihar makhana packs before checkout.`,
       canonicalPath: '/cart',
     },
     '/checkout': {
       title: `Secure Checkout | ${SITE_NAME}`,
-      description: 'Complete your NYUTA ELITE makhana order with secure Razorpay checkout.',
+      description: `Complete your ${BRAND_NAME} makhana order with secure Razorpay checkout.`,
       canonicalPath: '/checkout',
     },
     '/orders': {
       title: `Your Orders & Tracking | ${SITE_NAME}`,
-      description: 'View your NYUTA ELITE makhana order history, delivery status, and invoices.',
+      description: `View your ${BRAND_NAME} makhana order history, delivery status, and invoices.`,
       canonicalPath: '/orders',
     },
     '/login': {
       title: `Sign In | ${SITE_NAME}`,
-      description: 'Sign in to your NYUTA ELITE pantry account to manage orders and addresses.',
+      description: `Sign in to your ${BRAND_NAME} pantry account to manage orders and addresses.`,
       canonicalPath: '/login',
     },
     '/register': {
       title: `Create Account | ${SITE_NAME}`,
-      description: 'Create a NYUTA ELITE account for fast checkout and pan-India order tracking.',
+      description: `Create a ${BRAND_NAME} account for fast checkout and pan-India order tracking.`,
       canonicalPath: '/register',
     },
   };
@@ -434,8 +406,9 @@ export function resolveRouteSeo(
     if (matchedProduct) {
       const canonicalSku = `${matchedProduct.quality.toLowerCase()}-${matchedProduct.weightGrams}g`;
       const canonicalUrl = `${PRODUCTION_ORIGIN}/products/makhana?sku=${canonicalSku}`;
-      const title = `Buy ${matchedProduct.name} ${matchedProduct.weightGrams}g Online — ${matchedProduct.quality} Grade Bihar Fox Nuts | ${SITE_NAME}`;
-      const description = `${matchedProduct.description} Buy authentic ${matchedProduct.weightGrams}g ${matchedProduct.quality} Grade Bihar makhana (SKU: ${matchedProduct.sku}) at ₹${matchedProduct.price}. Freshly packed with pan-India delivery.`;
+      const title = `Buy ${matchedProduct.name} ${matchedProduct.weightGrams}g Online | ${matchedProduct.quality} Grade Bihar Fox Nuts | ${SITE_NAME}`;
+      const description = `${matchedProduct.description} Buy authentic ${matchedProduct.weightGrams}g ${matchedProduct.quality} Grade Bihar makhana (SKU: ${matchedProduct.sku}) at \u20b9${matchedProduct.price}. Freshly packed with pan-India delivery.`;
+      // AUDIT FIX F6: Use actual product image for OG, not the site logo
       const ogImage = toAbsoluteCanonicalImageUrl(matchedProduct.image);
 
       return {
@@ -473,7 +446,7 @@ export function resolveRouteSeo(
     const canonicalUrl = `${PRODUCTION_ORIGIN}/products/makhana`;
     const title = `Shop Premium & Normal Bihar Makhana Packs (100g, 200g, 250g) | ${SITE_NAME}`;
     const description =
-      'Explore NYUTA ELITE makhana packs in Premium jumbo-grade and Normal everyday-grade fox nuts. Available in 100g, 200g, and 250g air-tight pantry pouches.';
+      `Explore ${BRAND_NAME} makhana packs in Premium jumbo-grade and Normal everyday-grade fox nuts. Available in 100g, 200g, and 250g air-tight pantry pouches.`;
     return {
       title,
       description,
@@ -505,7 +478,7 @@ export function resolveRouteSeo(
     const canonicalUrl = `${PRODUCTION_ORIGIN}/about`;
     const title = `About Our Bihar Makhana Heritage & Quality Standards | ${SITE_NAME}`;
     const description =
-      'Learn how NYUTA ELITE sources 100% unbleached, naturally air-popped Euryale ferox (fox nuts) from traditional harvesting communities in Mithila, Bihar.';
+      `Learn how ${BRAND_NAME} sources 100% unbleached, naturally air-popped Euryale ferox (fox nuts) from traditional harvesting communities in Mithila, Bihar.`;
     return {
       title,
       description,
@@ -536,7 +509,7 @@ export function resolveRouteSeo(
     const canonicalUrl = `${PRODUCTION_ORIGIN}/faq`;
     const title = `Frequently Asked Questions — Makhana Grades, Pack Sizes & Shipping | ${SITE_NAME}`;
     const description =
-      'Answers to common questions about NYUTA ELITE Premium vs. Normal makhana grades, 100g/200g/250g pouch sizes, roasting tips, pan-India delivery, and returns.';
+      `Answers to common questions about ${BRAND_NAME} Premium vs. Normal makhana grades, 100g/200g/250g pouch sizes, roasting tips, pan-India delivery, and returns.`;
     return {
       title,
       description,
@@ -566,9 +539,9 @@ export function resolveRouteSeo(
 
   if (normalizedPath === '/contact') {
     const canonicalUrl = `${PRODUCTION_ORIGIN}/contact`;
-    const title = `Contact Customer Care — Bihar Registered Office | ${SITE_NAME}`;
+    const title = `Contact Customer Care - Bihar Registered Office | ${SITE_NAME}`;
     const description =
-      'Get in touch with the NYUTA ELITE MAKHANA customer support team for order tracking, product inquiries, bulk orders, or delivery assistance.';
+      `Get in touch with the ${BRAND_NAME} MAKHANA customer support team for order tracking, product inquiries, bulk orders, or delivery assistance.`;
     return {
       title,
       description,
@@ -599,7 +572,7 @@ export function resolveRouteSeo(
   const canonicalUrl = `${PRODUCTION_ORIGIN}/`;
   const title = `Buy Makhana Online | Premium Fox Nuts | ${SITE_NAME}`;
   const description =
-    'Buy premium makhana (fox nuts) online in India. Nyuta Elite offers handpicked Bihar makhana in 100g, 200g & 250g packs — Premium and Normal grade. Free delivery available.';
+    `Buy premium makhana (fox nuts) online in India. ${BRAND_NAME} offers handpicked Bihar makhana in 100g, 200g & 250g packs — Premium and Normal grade. Free delivery available.`;
   return {
     title,
     description,
