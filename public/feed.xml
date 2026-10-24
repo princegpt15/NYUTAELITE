@@ -22,7 +22,6 @@
       <g:image_link>https://nyutaelite.com/images/products/premium-makhana-100g.png</g:image_link>
       <g:availability>in_stock</g:availability>
       <g:price>160.00 INR</g:price>
-      <g:sale_price>160.00 INR</g:sale_price>
       <g:brand>NYUTAELITE</g:brand>
       <g:mpn>NYM-PREM-100</g:mpn>
       <g:identifier_exists>no</g:identifier_exists>
@@ -55,7 +54,6 @@
       <g:image_link>https://nyutaelite.com/images/products/premium-makhana-200g.png</g:image_link>
       <g:availability>in_stock</g:availability>
       <g:price>310.00 INR</g:price>
-      <g:sale_price>310.00 INR</g:sale_price>
       <g:brand>NYUTAELITE</g:brand>
       <g:mpn>NYM-PREM-200</g:mpn>
       <g:identifier_exists>no</g:identifier_exists>
@@ -87,7 +85,6 @@
       <g:image_link>https://nyutaelite.com/images/products/premium-makhana-250g.png</g:image_link>
       <g:availability>in_stock</g:availability>
       <g:price>380.00 INR</g:price>
-      <g:sale_price>380.00 INR</g:sale_price>
       <g:brand>NYUTAELITE</g:brand>
       <g:mpn>NYM-PREM-250</g:mpn>
       <g:identifier_exists>no</g:identifier_exists>
@@ -119,7 +116,6 @@
       <g:image_link>https://nyutaelite.com/images/products/normal-makhana-100g.png</g:image_link>
       <g:availability>in_stock</g:availability>
       <g:price>120.00 INR</g:price>
-      <g:sale_price>120.00 INR</g:sale_price>
       <g:brand>NYUTAELITE</g:brand>
       <g:mpn>NYM-NORM-100</g:mpn>
       <g:identifier_exists>no</g:identifier_exists>
@@ -151,7 +147,6 @@
       <g:image_link>https://nyutaelite.com/images/products/normal-makhana-200g.png</g:image_link>
       <g:availability>in_stock</g:availability>
       <g:price>230.00 INR</g:price>
-      <g:sale_price>230.00 INR</g:sale_price>
       <g:brand>NYUTAELITE</g:brand>
       <g:mpn>NYM-NORM-200</g:mpn>
       <g:identifier_exists>no</g:identifier_exists>
@@ -183,7 +178,6 @@
       <g:image_link>https://nyutaelite.com/images/products/normal-makhana-250g.png</g:image_link>
       <g:availability>in_stock</g:availability>
       <g:price>280.00 INR</g:price>
-      <g:sale_price>280.00 INR</g:sale_price>
       <g:brand>NYUTAELITE</g:brand>
       <g:mpn>NYM-NORM-250</g:mpn>
       <g:identifier_exists>no</g:identifier_exists>
