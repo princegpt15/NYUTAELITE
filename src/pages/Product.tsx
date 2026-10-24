@@ -12,6 +12,9 @@ import {
   Bell,
   MessageSquare,
   CheckCircle2,
+  Leaf,
+  Award,
+  Sparkles,
 } from 'lucide-react';
 import { type PantryProduct } from '../types';
 import { fetchProducts } from '../services/products';
@@ -22,6 +25,7 @@ import {
   type ReviewItem,
   type RecommendedProduct,
 } from '../services/retention';
+import { wishlistService } from '../services/wishlist';
 import {
   trackViewItem,
   trackAddToWishlist,
@@ -30,7 +34,9 @@ import {
 } from '../services/analytics';
 import { resolveRouteSeo, applySeoToDocument } from '../utils/seo';
 import { Toast } from '../components/Toast';
+import { Breadcrumb } from '../components/Breadcrumb';
 import { authService } from '../services/auth';
+import defaultProductImage from '../assets/images/product-main.png';
 
 export const Product: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -114,6 +120,16 @@ export const Product: React.FC = () => {
     }
   }, [product, location.pathname, location.search]);
 
+  // Synchronize wishlisted status with shared wishlistService
+  useEffect(() => {
+    if (!product) return;
+    setIsWishlisted(wishlistService.isWishlisted(product.id));
+    const unsub = wishlistService.subscribe(() => {
+      setIsWishlisted(wishlistService.isWishlisted(product.id));
+    });
+    return () => unsub();
+  }, [product?.id]);
+
   const loadRetentionData = async (productId: string) => {
     // 1. Rating Summary
     retentionService
@@ -182,23 +198,26 @@ export const Product: React.FC = () => {
 
   // Wishlist Toggle
   const handleToggleWishlist = async () => {
-    if (!currentUser) {
-      navigate(`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`);
-      return;
-    }
-    if (!product) return;
+    if (!product || togglingWishlist) return;
 
     setTogglingWishlist(true);
     try {
-      if (isWishlisted) {
-        await retentionService.removeFromWishlist(product.id);
-        setIsWishlisted(false);
-        setToastMessage(`Removed ${product.name} from wishlist.`);
-      } else {
-        await retentionService.addToWishlist(product.id);
-        setIsWishlisted(true);
+      const nowSaved = await wishlistService.toggleWishlist({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        mrp: product.mrp,
+        image: product.image,
+        weightGrams: product.weightGrams,
+        slug: product.sku || product.id,
+        stock: product.stock,
+      });
+      setIsWishlisted(nowSaved);
+      if (nowSaved) {
         trackAddToWishlist(product, quantity);
         setToastMessage(`Saved ${product.name} to your wishlist!`);
+      } else {
+        setToastMessage(`Removed ${product.name} from wishlist.`);
       }
     } catch (err: any) {
       setToastMessage(err?.message || 'Could not update wishlist');
@@ -308,6 +327,16 @@ export const Product: React.FC = () => {
     <div className="bg-[#FCFAF5] min-h-screen py-10 lg:py-16">
       <div className="max-w-[1100px] mx-auto px-5 sm:px-8 space-y-12">
         {/* Navigation Breadcrumb */}
+        <div className="space-y-1">
+          <Breadcrumb
+            items={[
+              { label: 'Home', to: '/' },
+              { label: 'Shop Makhana', to: '/categories' },
+              { label: `${product.name} (${product.weightGrams}g ${product.quality} Grade)` },
+            ]}
+          />
+        </div>
+
         <div className="flex items-center justify-between">
           <Link
             to="/#pantry"
@@ -339,13 +368,17 @@ export const Product: React.FC = () => {
         <div className="bg-white rounded-3xl p-6 sm:p-10 border border-[#E8DECB] shadow-xs">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Image Container */}
-            <div className="relative aspect-square w-full rounded-2xl bg-[#FCFAF5] overflow-hidden border border-[#E8DECB]/80 flex items-center justify-center p-6">
+            <div className="relative aspect-square w-full rounded-2xl bg-[#FAF7EF] overflow-hidden border border-[#E8DECB]/80 flex items-center justify-center p-3 sm:p-4">
               <img
-                src={product.image || '/assets/product-main.png'}
-                alt={product.name}
-                className="w-full h-full object-contain max-h-[420px] transition-transform duration-300 hover:scale-105"
+                src={product.image || defaultProductImage}
+                alt={`${product.name} ${product.weightGrams}g — ${product.quality} Grade Bihar Fox Nuts (Makhana) | Nyuta Elite`}
+                className="block w-full h-full object-contain object-center transition-transform duration-300 hover:scale-104"
+                loading="eager"
+                fetchPriority="high"
+                width={500}
+                height={500}
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/assets/product-main.png';
+                  (e.target as HTMLImageElement).src = defaultProductImage;
                 }}
               />
 
@@ -379,7 +412,7 @@ export const Product: React.FC = () => {
             <div className="flex flex-col justify-between">
               <div>
                 <span className="text-[11px] font-bold tracking-[0.2em] text-[#C6A15B] uppercase block mb-1">
-                  AUTHENTIC BIHAR HARVEST • GI-TAGGED
+                  AUTHENTIC BIHAR HARVEST • MITHILA REGION
                 </span>
                 <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#092218]">
                   {product.name}
@@ -420,16 +453,16 @@ export const Product: React.FC = () => {
                     ₹{product.price}
                   </span>
                   {product.mrp > product.price && (
-                    <span className="text-base text-[#68756E] line-through">
+                    <span className="text-base font-medium text-[#68756E] line-through">
                       ₹{product.mrp}
                     </span>
                   )}
-                  <span className="text-xs text-[#68756E]">
+                  <span className="text-xs font-medium text-[#68756E]">
                     (Inclusive of all taxes)
                   </span>
                 </div>
 
-                <p className="mt-4 text-xs sm:text-sm text-[#68756E] leading-relaxed">
+                <p className="mt-4 text-xs sm:text-sm font-medium text-[#68756E] leading-relaxed">
                   {product.description}
                 </p>
 
@@ -528,7 +561,7 @@ export const Product: React.FC = () => {
                       type="button"
                       disabled={isAdding}
                       onClick={() => handleAddToCart(false)}
-                      className="py-3 px-4 rounded-xl border border-[#123B2A] bg-white hover:bg-[#F7F1E5] text-xs font-extrabold uppercase tracking-wider text-[#123B2A] transition-colors flex items-center justify-center gap-2"
+                      className="min-h-[46px] py-3 px-4 rounded-xl border border-[#123B2A] bg-white hover:bg-[#F7F1E5] active:scale-[0.98] text-xs font-extrabold uppercase tracking-wider text-[#123B2A] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                     >
                       <ShoppingBag className="w-4 h-4" />
                       <span>Add to Cart</span>
@@ -537,7 +570,7 @@ export const Product: React.FC = () => {
                       type="button"
                       disabled={isAdding}
                       onClick={() => handleAddToCart(true)}
-                      className="py-3 px-4 rounded-xl bg-[#123B2A] hover:bg-[#092218] text-xs font-extrabold uppercase tracking-wider text-white transition-colors shadow-xs"
+                      className="min-h-[46px] py-3 px-4 rounded-xl bg-[#123B2A] hover:bg-[#092218] active:scale-[0.98] text-xs font-extrabold uppercase tracking-wider text-white transition-all shadow-xs flex items-center justify-center cursor-pointer disabled:opacity-50"
                     >
                       Buy Now
                     </button>
@@ -545,19 +578,179 @@ export const Product: React.FC = () => {
                 )}
 
                 {/* Features Pill */}
-                <div className="grid grid-cols-3 gap-2 pt-3 text-[10px] text-[#68756E] border-t border-[#E8DECB]/60">
+                <div className="grid grid-cols-3 gap-2 pt-3 text-[10px] font-medium text-[#68756E] border-t border-[#E8DECB]/60">
                   <div className="flex items-center gap-1">
                     <Truck className="w-3.5 h-3.5 text-[#123B2A] shrink-0" />
                     <span>Pan-India Courier</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <ShieldCheck className="w-3.5 h-3.5 text-[#123B2A] shrink-0" />
-                    <span>Mithila GI-Certified</span>
+                    <span>Mithila Harvest Origin</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <RefreshCw className="w-3.5 h-3.5 text-[#123B2A] shrink-0" />
                     <span>Freshness Seal</span>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Product Details & Nutrition Highlights */}
+        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-[#E8DECB] shadow-xs space-y-6">
+          <div className="border-b border-[#E8DECB] pb-4">
+            <span className="text-[11px] font-bold tracking-[0.2em] text-[#C6A15B] uppercase block">
+              TRANSPARENT HARVEST SPECIFICATIONS
+            </span>
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#092218] mt-1">
+              Nutrition, Origin &amp; Purity Standards
+            </h2>
+            <p className="text-xs text-[#68756E] mt-1">
+              Every pack of NYUTA ELITE is naturally popped, sun-dried, and rigorously hand-graded without chemical bleaching or artificial additives.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+            {/* 1. Nutritional Profile */}
+            <div className="bg-[#FAF7EF] rounded-2xl p-5 border border-[#E8DECB] space-y-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#C6A15B]" />
+                <h3 className="font-serif font-bold text-base text-[#123B2A]">
+                  Nutrition Facts (Per 100g)
+                </h3>
+              </div>
+              <div className="divide-y divide-[#E8DECB]/80 text-xs">
+                <div className="flex justify-between py-1.5 font-bold text-[#1C1C1C]">
+                  <span>Energy Value</span>
+                  <span className="text-[#123B2A]">~350 kcal</span>
+                </div>
+                <div className="flex justify-between py-1.5">
+                  <span className="text-[#68756E]">Plant Protein</span>
+                  <span className="font-bold text-[#123B2A]">9.7 g</span>
+                </div>
+                <div className="flex justify-between py-1.5">
+                  <span className="text-[#68756E]">Dietary Fiber</span>
+                  <span className="font-bold text-[#123B2A]">7.6 g</span>
+                </div>
+                <div className="flex justify-between py-1.5">
+                  <span className="text-[#68756E]">Calcium</span>
+                  <span className="font-bold text-[#123B2A]">60 mg</span>
+                </div>
+                <div className="flex justify-between py-1.5">
+                  <span className="text-[#68756E]">Total Fat</span>
+                  <span className="font-bold text-[#123B2A]">0.1 g</span>
+                </div>
+                <div className="flex justify-between py-1.5">
+                  <span className="text-[#68756E]">Trans Fat &amp; Cholesterol</span>
+                  <span className="font-bold text-[#123B2A]">0 g / 0 mg</span>
+                </div>
+              </div>
+              <p className="text-[10px] text-[#68756E] italic">
+                * Percent daily values based on a standard 2,000 calorie diet.
+              </p>
+            </div>
+
+            {/* 2. Ingredients & Quality */}
+            <div className="bg-[#FAF7EF] rounded-2xl p-5 border border-[#E8DECB] space-y-4">
+              <div className="flex items-center gap-2">
+                <Leaf className="w-4 h-4 text-[#123B2A]" />
+                <h3 className="font-serif font-bold text-base text-[#123B2A]">
+                  Ingredients &amp; Purity
+                </h3>
+              </div>
+              <div className="space-y-3 text-xs text-[#68756E]">
+                <div>
+                  <span className="font-bold text-[#1C1C1C] block text-[11px] uppercase tracking-wider">
+                    Single Ingredient
+                  </span>
+                  <p className="mt-0.5 text-[#1C1C1C] font-medium">
+                    100% Raw Popped Fox Nuts (Lotus Seeds / Gorgon Nuts).
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
+                  <span className="bg-white px-2.5 py-1.5 rounded-lg border border-[#E8DECB] font-bold text-[#123B2A]">
+                    ✓ No Added Oil
+                  </span>
+                  <span className="bg-white px-2.5 py-1.5 rounded-lg border border-[#E8DECB] font-bold text-[#123B2A]">
+                    ✓ No Preservatives
+                  </span>
+                  <span className="bg-white px-2.5 py-1.5 rounded-lg border border-[#E8DECB] font-bold text-[#123B2A]">
+                    ✓ Naturally Gluten-Free
+                  </span>
+                  <span className="bg-white px-2.5 py-1.5 rounded-lg border border-[#E8DECB] font-bold text-[#123B2A]">
+                    ✓ 100% Vegan &amp; Non-GMO
+                  </span>
+                </div>
+                <div className="pt-2 border-t border-[#E8DECB]">
+                  <span className="font-bold text-[#1C1C1C] block text-[11px] uppercase tracking-wider">
+                    Storage Guidelines
+                  </span>
+                  <p className="mt-0.5 text-[11px]">
+                    Seal pouch tightly or store in an airtight container in a cool, dry place. Best consumed within 12 months.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Origin, Shipping & Guarantee */}
+            <div className="bg-[#FAF7EF] rounded-2xl p-5 border border-[#E8DECB] space-y-4">
+              <div className="flex items-center gap-2">
+                <Award className="w-4 h-4 text-[#C6A15B]" />
+                <h3 className="font-serif font-bold text-base text-[#123B2A]">
+                  Bihar Origin &amp; Assurance
+                </h3>
+              </div>
+              <div className="space-y-3 text-xs text-[#68756E]">
+                <div>
+                  <span className="font-bold text-[#1C1C1C] block text-[11px] uppercase tracking-wider">
+                    Harvest Location
+                  </span>
+                  <p className="mt-0.5 text-[#1C1C1C] font-medium">
+                    Mithila Region, Bihar, India (Freshwater Lotus Wetland Harvest).
+                  </p>
+                </div>
+                <div>
+                  <span className="font-bold text-[#1C1C1C] block text-[11px] uppercase tracking-wider">
+                    Pan-India Express Dispatch &amp; Delivery
+                  </span>
+                  <p className="mt-0.5 text-[#1C1C1C] font-medium">
+                    Order processing: 1–2 business days. Estimated courier transit: 5–7 business days after courier dispatch (expected overall timeline: ~6–9 business days). Estimates only. Standard shipping ₹40 (FREE on orders ₹499+).
+                  </p>
+                </div>
+                <div className="p-3 bg-white rounded-xl border border-[#E8DECB] text-[11px] text-[#123B2A] font-semibold space-y-1">
+                  <div className="flex items-center gap-1.5 font-bold">
+                    <ShieldCheck className="w-4 h-4 text-[#C6A15B]" />
+                    <span>Food Safety &amp; Replacement Assurance</span>
+                  </div>
+                  <p className="text-[10px] text-[#68756E] font-normal">
+                    Damaged parcel, broken seal, or defective product? Please report within 48 hours of delivery to customer care via{' '}
+                    <a href="mailto:info@nyutaelite.com" className="font-semibold underline hover:text-[#C6A15B]">
+                      info@nyutaelite.com
+                    </a>{' '}
+                    or{' '}
+                    <a href="tel:+918102875852" className="font-semibold underline hover:text-[#C6A15B]">
+                      +91 81028 75852
+                    </a>{' '}
+                    with photos or unboxing video for prompt review and replacement/refund under our{' '}
+                    <Link to="/about#refund" className="font-bold underline text-[#123B2A]">
+                      Return Policy
+                    </Link>
+                    .
+                  </p>
+                </div>
+                <div className="pt-2 border-t border-[#E8DECB]">
+                  <span className="font-bold text-[#1C1C1C] block text-[11px] uppercase tracking-wider">
+                    FSSAI Food Business Registration
+                  </span>
+                  <p className="mt-0.5 text-[#1C1C1C] font-medium text-[11px]">
+                    Registration No.{' '}
+                    <strong className="text-[#123B2A] tracking-wider font-bold">20426021000494</strong>{' '}
+                    (Wholesaler, Distributor, Retailer · Cat. 04 Nuts &amp; Seeds).{' '}
+                    <Link to="/about#fssai" className="font-semibold text-[#C6A15B] underline hover:text-[#123B2A]">
+                      View Certificate
+                    </Link>
+                  </p>
                 </div>
               </div>
             </div>
@@ -831,7 +1024,7 @@ export const Product: React.FC = () => {
                 const recImage =
                   rec.images && rec.images.length > 0
                     ? rec.images[0]
-                    : '/assets/product-main.png';
+                    : defaultProductImage;
 
                 return (
                   <div
@@ -845,7 +1038,7 @@ export const Product: React.FC = () => {
                           alt={rec.name}
                           className="w-full h-full object-contain group-hover:scale-105 transition-transform"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/assets/product-main.png';
+                            (e.target as HTMLImageElement).src = defaultProductImage;
                           }}
                         />
                       </div>

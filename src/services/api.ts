@@ -13,7 +13,12 @@ const AUTH_USER_KEY = 'nyutaelite_user';
 
 // Helper to get base URL without trailing slash
 function getBaseUrl(): string {
-  // 1. If running in browser on production domain (nutyaelite.com or nyutaelite.com), enforce production backend
+  // 1. If running in browser on Cloudflare Pages preview (*.pages.dev), route through edge worker proxy
+  if (typeof window !== 'undefined' && window.location.hostname.endsWith('.pages.dev')) {
+    return '/api';
+  }
+
+  // 2. If running in browser on production domain (nutyaelite.com or nyutaelite.com), enforce production backend
   if (
     typeof window !== 'undefined' &&
     (window.location.hostname.includes('nutyaelite.com') || window.location.hostname.includes('nyutaelite.com'))
@@ -25,13 +30,23 @@ function getBaseUrl(): string {
     return 'https://api.nutyaelite.com/api';
   }
 
-  // 2. Read from VITE_API_URL environment variable if set
+  // 3. If accessed in browser from a local network IP (e.g. mobile device on Wi-Fi),
+  // always route through the relative '/api' proxy so requests reach this machine's backend
+  if (
+    typeof window !== 'undefined' &&
+    window.location.hostname !== 'localhost' &&
+    window.location.hostname !== '127.0.0.1'
+  ) {
+    return '/api';
+  }
+
+  // 4. Read from VITE_API_URL environment variable if set
   const raw = import.meta.env.VITE_API_URL;
   if (raw && typeof raw === 'string' && raw.trim() !== '') {
     return raw.replace(/\/+$/g, '');
   }
 
-  // 3. Fallback for local development
+  // 5. Fallback for localhost development
   return 'http://localhost:5000/api';
 }
 
@@ -130,10 +145,11 @@ async function request<T>(
 
   let token = getAccessToken();
 
-  // If token is missing but refresh token exists, proactively refresh before sending authenticated request
-  if (!token && !isAuthEndpoint && getRefreshToken()) {
-    token = await refreshAccessToken();
-  }
+  // We do NOT proactively refresh before every request.
+  // Doing so causes N concurrent /auth/refresh calls (one per parallel
+  // API request when the access token is missing), quickly exhausting
+  // the auth rate limit (20 req/min in production).
+  // Refresh happens reactively: only on an actual 401 response (below).
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;

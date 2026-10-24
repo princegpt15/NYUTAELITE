@@ -1,4 +1,3 @@
-import productImage from '../assets/images/product-main.png';
 import type { PantryProduct } from '../types';
 
 export type { MakhanaQuality, PantryProduct } from '../types';
@@ -11,7 +10,7 @@ export const PANTRY_PRODUCTS: PantryProduct[] = [
     weightGrams: 100,
     price: 160,
     mrp: 199,
-    image: productImage,
+    image: '/images/products/premium-makhana-100g.png',
     stock: 150,
     sku: 'NYM-PREM-100',
     description: 'Handpicked jumbo-grade makhana with uniform size, crisp crunch, and minimal shell residue.',
@@ -24,7 +23,7 @@ export const PANTRY_PRODUCTS: PantryProduct[] = [
     weightGrams: 200,
     price: 310,
     mrp: 380,
-    image: productImage,
+    image: '/images/products/premium-makhana-200g.png',
     stock: 120,
     sku: 'NYM-PREM-200',
     description: 'Selected jumbo makhana in a 200g family pack, perfect for daily mindful snacking.',
@@ -37,7 +36,7 @@ export const PANTRY_PRODUCTS: PantryProduct[] = [
     weightGrams: 250,
     price: 380,
     mrp: 460,
-    image: productImage,
+    image: '/images/products/premium-makhana-250g.png',
     stock: 100,
     sku: 'NYM-PREM-250',
     description: 'Generous 250g pack of our highest grade makhana. Exceptional size and uniform texture.',
@@ -50,7 +49,7 @@ export const PANTRY_PRODUCTS: PantryProduct[] = [
     weightGrams: 100,
     price: 120,
     mrp: 150,
-    image: productImage,
+    image: '/images/products/normal-makhana-100g.png',
     stock: 200,
     sku: 'NYM-NORM-100',
     description: 'Standard everyday makhana. Great for roasting, seasoning, or adding to traditional dishes.',
@@ -63,7 +62,7 @@ export const PANTRY_PRODUCTS: PantryProduct[] = [
     weightGrams: 200,
     price: 230,
     mrp: 290,
-    image: productImage,
+    image: '/images/products/normal-makhana-200g.png',
     stock: 180,
     sku: 'NYM-NORM-200',
     description: 'Everyday makhana in a convenient 200g pantry pouch.',
@@ -76,7 +75,7 @@ export const PANTRY_PRODUCTS: PantryProduct[] = [
     weightGrams: 250,
     price: 280,
     mrp: 350,
-    image: productImage,
+    image: '/images/products/normal-makhana-250g.png',
     stock: 160,
     sku: 'NYM-NORM-250',
     description: 'Everyday makhana in a 250g pantry size for roasting and cooking.',

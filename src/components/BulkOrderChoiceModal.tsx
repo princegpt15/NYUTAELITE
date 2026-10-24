@@ -119,17 +119,26 @@ const handleContinueOnWebsite = () => {
             {/* OPTION A: Continue Through Website */}
             <div className="bg-white rounded-2xl p-5 sm:p-6 border border-[#E8DECB] shadow-xs hover:border-[#123B2A] transition-all flex flex-col justify-between space-y-4 group">
               <div className="space-y-3">
-                <div className="w-12 h-12 rounded-xl bg-[#F7F1E5] text-[#123B2A] flex items-center justify-center border border-[#C6A15B]/40 group-hover:scale-105 transition-transform">
-                  <Globe className="w-6 h-6 text-[#123B2A]" />
+                <div className="aspect-[16/9] w-full rounded-xl overflow-hidden bg-[#F7F1E5] border border-[#E8DECB] shadow-2xs">
+                  <img
+                    src="/images/bulk/bulk-wholesale-hero.webp"
+                    alt="Wholesale Makhana packs arranged for bulk order"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    width={320}
+                    height={180}
+                  />
                 </div>
-                <div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#F7F1E5] text-[#123B2A] flex items-center justify-center border border-[#C6A15B]/40 shrink-0">
+                    <Globe className="w-4 h-4 text-[#123B2A]" />
+                  </div>
                   <h3 className="font-serif text-lg font-bold text-[#123B2A]">
                     Continue on Website
                   </h3>
-                  <p className="text-xs text-[#68756E] mt-1 leading-relaxed">
-                    Browse all 6 makhana variants online, explore pack options, or submit a formal quantity-based bulk enquiry.
-                  </p>
                 </div>
+                <p className="text-xs text-[#68756E] leading-relaxed">
+                  Browse all 6 makhana variants online, explore pack options, or submit a formal quantity-based bulk enquiry.
+                </p>
                 <ul className="space-y-1.5 text-[11px] text-[#1C1C1C] pt-1">
                   <li className="flex items-center gap-2">
                     <Check className="w-3.5 h-3.5 text-[#123B2A] shrink-0" />
@@ -159,17 +168,26 @@ const handleContinueOnWebsite = () => {
             {/* OPTION B: Order Through WhatsApp */}
             <div className="bg-white rounded-2xl p-5 sm:p-6 border border-[#E8DECB] shadow-xs hover:border-[#25D366] transition-all flex flex-col justify-between space-y-4 group">
               <div className="space-y-3">
-                <div className="w-12 h-12 rounded-xl bg-[#25D366]/10 text-[#25D366] flex items-center justify-center border border-[#25D366]/30 group-hover:scale-105 transition-transform">
-                  <MessageSquare className="w-6 h-6 text-[#25D366]" />
+                <div className="aspect-[16/9] w-full rounded-xl overflow-hidden bg-[#F7F1E5] border border-[#E8DECB] shadow-2xs">
+                  <img
+                    src="/images/bulk/whatsapp-order-makhana.webp"
+                    alt="NYUTA ELITE Makhana products packaged and ready for WhatsApp ordering"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    width={320}
+                    height={180}
+                  />
                 </div>
-                <div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#25D366]/10 text-[#25D366] flex items-center justify-center border border-[#25D366]/30 shrink-0">
+                    <MessageSquare className="w-4 h-4 text-[#25D366]" />
+                  </div>
                   <h3 className="font-serif text-lg font-bold text-[#123B2A]">
                     Order via WhatsApp
                   </h3>
-                  <p className="text-xs text-[#68756E] mt-1 leading-relaxed">
-                    Chat directly with the official NYUTA ELITE trade desk for custom rates, dispatch timelines, and MOQ details.
-                  </p>
                 </div>
+                <p className="text-xs text-[#68756E] leading-relaxed">
+                  Chat directly with the official NYUTA ELITE trade desk for custom rates, dispatch timelines, and MOQ details.
+                </p>
                 <ul className="space-y-1.5 text-[11px] text-[#1C1C1C] pt-1">
                   <li className="flex items-center gap-2">
                     <Check className="w-3.5 h-3.5 text-[#25D366] shrink-0" />

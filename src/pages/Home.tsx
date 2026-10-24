@@ -31,10 +31,148 @@ import { BulkOrderChoiceModal } from '../components/BulkOrderChoiceModal';
 
 import heroImage from '../assets/images/brand/makhana-hero.png';
 import macroImage from '../assets/images/brand/makhana-macro.png';
-import lotusImage from '../assets/images/lotus-source.png';
 import featuredImage from '../assets/images/product-featured.png';
-import packImage from '../assets/images/thumb-1.png';
 import logoImage from '../assets/images/brand-emblem.png';
+import CategoryCard from '../components/CategoryCard';
+
+// ── Botanical SVG background decoration for the hero ──────────────
+function HeroBotanicalPattern() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="absolute inset-0 w-full h-full pointer-events-none select-none"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 800 560"
+      preserveAspectRatio="xMidYMid slice"
+    >
+      <defs>
+        {/* Wide warm gold bloom behind left column / logo zone */}
+        <radialGradient id="hbg-gold" cx="30%" cy="44%" r="52%">
+          <stop offset="0%"   stopColor="#C6A15B" stopOpacity="0.12" />
+          <stop offset="60%"  stopColor="#E8DECB" stopOpacity="0.05" />
+          <stop offset="100%" stopColor="#F7F1E5" stopOpacity="0"    />
+        </radialGradient>
+        {/* Smaller intense spot directly behind logo */}
+        <radialGradient id="hbg-spot" cx="30%" cy="36%" r="22%">
+          <stop offset="0%"   stopColor="#D4B06A" stopOpacity="0.18" />
+          <stop offset="100%" stopColor="#C6A15B" stopOpacity="0"    />
+        </radialGradient>
+        {/* Subtle green tint in opposite corner */}
+        <radialGradient id="hbg-green" cx="85%" cy="80%" r="40%">
+          <stop offset="0%"   stopColor="#123B2A" stopOpacity="0.05" />
+          <stop offset="100%" stopColor="#F7F1E5" stopOpacity="0"    />
+        </radialGradient>
+      </defs>
+
+      {/* Background colour layers */}
+      <rect width="800" height="560" fill="url(#hbg-gold)"  />
+      <rect width="800" height="560" fill="url(#hbg-spot)"  />
+      <rect width="800" height="560" fill="url(#hbg-green)" />
+
+      {/* ── Concentric elliptic arcs (page-level framing) ─────────── */}
+      <ellipse cx="240" cy="200" rx="310" ry="210" fill="none"
+               stroke="#C6A15B" strokeWidth="0.8" opacity="0.08" />
+      <ellipse cx="240" cy="200" rx="255" ry="168" fill="none"
+               stroke="#123B2A" strokeWidth="0.6" opacity="0.06" />
+      <ellipse cx="240" cy="200" rx="196" ry="126" fill="none"
+               stroke="#C6A15B" strokeWidth="0.5" opacity="0.05" />
+
+      {/* ── Fine dot arc ring around the logo spot ─────────────────── */}
+      {Array.from({ length: 24 }, (_, i) => {
+        const angle = (i / 24) * 2 * Math.PI;
+        const rx = 108, ry = 108;
+        const cx = 240 + rx * Math.cos(angle);
+        const cy = 200 + ry * Math.sin(angle);
+        return <circle key={i} cx={cx} cy={cy} r="1.8" fill="#C6A15B" opacity="0.18" />;
+      })}
+      {/* Outer dot ring, sparser */}
+      {Array.from({ length: 16 }, (_, i) => {
+        const angle = (i / 16) * 2 * Math.PI + Math.PI / 16;
+        const rx = 148, ry = 148;
+        const cx = 240 + rx * Math.cos(angle);
+        const cy = 200 + ry * Math.sin(angle);
+        return <circle key={`o${i}`} cx={cx} cy={cy} r="1.2" fill="#C6A15B" opacity="0.10" />;
+      })}
+
+      {/* ── Botanical leaf silhouettes ─────────────────────────────── */}
+
+      {/* Top-right branch cluster */}
+      <g opacity="0.13" stroke="#123B2A" strokeWidth="1.1" fill="none"
+         className="hero-arc-drift" style={{ transformOrigin: '700px 68px' }}>
+        {/* Leaf 1 */}
+        <path d="M700 42 C724 62 740 84 700 114 C660 84 676 62 700 42Z" />
+        <line x1="700" y1="42" x2="700" y2="114" strokeWidth="0.9" />
+        <path d="M700 70 C712 73 722 79 726 92" strokeWidth="0.7" />
+        <path d="M700 70 C688 73 678 79 674 92" strokeWidth="0.7" />
+      </g>
+      {/* Leaf 2 — offset, gold */}
+      <g opacity="0.09" stroke="#C6A15B" strokeWidth="0.9" fill="none"
+         style={{ transform: 'rotate(-28deg)', transformOrigin: '752px 36px' }}>
+        <path d="M752 18 C771 36 784 56 752 82 C720 56 733 36 752 18Z" />
+        <line x1="752" y1="18" x2="752" y2="82" strokeWidth="0.8" />
+      </g>
+      {/* Leaf 3 — top-right, smaller */}
+      <g opacity="0.07" stroke="#123B2A" strokeWidth="0.8" fill="none">
+        <path d="M762 108 C775 120 782 134 762 150 C742 134 749 120 762 108Z" />
+        <line x1="762" y1="108" x2="762" y2="150" />
+      </g>
+      {/* Curving stem branch, top-right */}
+      <path d="M680 30 Q720 60 740 110 Q750 145 738 175"
+            stroke="#123B2A" strokeWidth="0.7" fill="none" opacity="0.08" />
+
+      {/* Bottom-left leaf cluster */}
+      <g opacity="0.12" stroke="#123B2A" strokeWidth="1.1" fill="none">
+        <path d="M55 435 C78 455 95 478 55 512 C15 478 32 455 55 435Z" />
+        <line x1="55" y1="435" x2="55" y2="512" strokeWidth="0.9" />
+        <path d="M55 460 C66 463 75 469 80 481" strokeWidth="0.7" />
+        <path d="M55 460 C44 463 35 469 30 481" strokeWidth="0.7" />
+      </g>
+      {/* Gold leaf, bottom-left offset */}
+      <g opacity="0.08" stroke="#C6A15B" strokeWidth="0.9" fill="none"
+         style={{ transform: 'rotate(22deg)', transformOrigin: '22px 498px' }}>
+        <path d="M22 476 C40 492 54 510 22 534 C-10 510 4 492 22 476Z" />
+        <line x1="22" y1="476" x2="22" y2="534" />
+      </g>
+      {/* Stem, bottom-left */}
+      <path d="M28 540 Q50 510 55 468 Q58 440 50 415"
+            stroke="#123B2A" strokeWidth="0.7" fill="none" opacity="0.07" />
+
+      {/* ── Corner micro-ornaments ─────────────────────────────────── */}
+      {/* Solid dots */}
+      {[
+        [20, 20], [780, 20], [20, 540], [780, 540],
+        [64, 62], [736, 62], [64, 498], [736, 498],
+      ].map(([x, y], i) => (
+        <circle key={`d${i}`} cx={x} cy={y} r="2.4" fill="#C6A15B" opacity="0.16" />
+      ))}
+      {/* Diamond accents at 4 page corners */}
+      {[
+        [20, 20], [780, 20], [20, 540], [780, 540],
+      ].map(([x, y], i) => (
+        <rect key={`dm${i}`}
+          x={x - 3} y={y - 3}
+          width="6" height="6"
+          transform={`rotate(45,${x},${y})`}
+          fill="none" stroke="#C6A15B" strokeWidth="0.6" opacity="0.20"
+        />
+      ))}
+
+      {/* ── Top & bottom hairline rules ────────────────────────────── */}
+      <line x1="0" y1="3"   x2="800" y2="3"   stroke="#C6A15B" strokeWidth="0.6" opacity="0.12" />
+      <line x1="0" y1="557" x2="800" y2="557" stroke="#C6A15B" strokeWidth="0.6" opacity="0.12" />
+
+      {/* ── Fine cross-hatch texture patch (top-right quadrant) ─────── */}
+      <g opacity="0.04" stroke="#123B2A" strokeWidth="0.5">
+        {[620,640,660,680,700,720,740,760].map(x => (
+          <line key={`h${x}`} x1={x} y1="0" x2={x} y2="180" />
+        ))}
+        {[20,40,60,80,100,120,140,160].map(y => (
+          <line key={`v${y}`} x1="600" y1={y} x2="800" y2={y} />
+        ))}
+      </g>
+    </svg>
+  );
+}
 
 // Packaging Verified Benefit Icons
 function BenefitLeafIcon() {
@@ -152,25 +290,25 @@ const sourceTimeline = [
     step: '01',
     title: 'SELECT',
     description: 'Carefully harvested Euryale ferox seeds from traditional freshwater ponds in Bihar.',
-    image: lotusImage,
+    image: '/images/process/01-harvest-pond.webp',
   },
   {
     step: '02',
     title: 'GRADE',
     description: 'Machine-screened and hand-sorted by nut diameter, texture density, and purity.',
-    image: macroImage,
+    image: '/images/process/02-hand-sorting.webp',
   },
   {
     step: '03',
     title: 'PACK',
     description: 'Hygienically puffed and sealed in air-tight food-grade pouches for lasting crunch.',
-    image: packImage,
+    image: '/images/process/03-clean-packing.webp',
   },
   {
     step: '04',
     title: 'DELIVER',
     description: 'Shipped direct to your home pantry with pan-India trackable express delivery.',
-    image: heroImage,
+    image: '/images/process/04-express-delivery.webp',
   },
 ];
 
@@ -180,22 +318,22 @@ const lifestyleMoments = [
     name: 'MORNING',
     tagline: 'Mindful Start',
     note: 'Lightly roasted with a drop of ghee & rock salt to power your morning routine.',
-    image: heroImage,
-    position: 'object-[75%_55%]',
+    image: '/images/lifestyle/morning-mindful-snack.webp',
+    position: 'object-center',
   },
   {
     name: 'WORK BREAK',
     tagline: 'Clean Focus Snack',
     note: 'Zero-guilt desktop crunch that keeps you energized without afternoon slumps.',
-    image: macroImage,
-    position: 'object-[70%_45%]',
+    image: '/images/lifestyle/work-break-snack.webp',
+    position: 'object-center',
   },
   {
     name: 'EVENING',
     tagline: 'Tea Time Companion',
     note: 'The perfect authentic pairing for your evening chai or family conversation.',
-    image: heroImage,
-    position: 'object-[88%_45%]',
+    image: '/images/lifestyle/evening-chai-snack.webp',
+    position: 'object-center',
   },
 ];
 
@@ -291,6 +429,15 @@ function FlavouredMakhanaGrid({ products, onAdded }: { products: PantryProduct[]
                   alt={flavour.name}
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   loading="lazy"
+                  width={260}
+                  height={195}
+                  onError={(e) => {
+                    // Fallback to jpg if png fails, or default pack
+                    const target = e.target as HTMLImageElement;
+                    if (target.src.endsWith('.png')) {
+                      target.src = target.src.replace('.png', '.jpg');
+                    }
+                  }}
                 />
                 {/* Coming Soon Badge */}
                 <span className="absolute right-2.5 top-2.5 bg-[#C9A65B] text-[#183B2D] text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-xs">
@@ -311,7 +458,7 @@ function FlavouredMakhanaGrid({ products, onAdded }: { products: PantryProduct[]
                 <h3 className="font-serif mt-1.5 text-base sm:text-lg font-bold text-[#183B2D] leading-snug">
                   {flavour.name}
                 </h3>
-                <p className="mt-1.5 text-xs text-[#617653] line-clamp-2 leading-relaxed">
+                <p className="mt-1.5 text-xs font-medium text-[#617653] line-clamp-2 leading-relaxed">
                   {flavour.description}
                 </p>
               </div>
@@ -425,27 +572,135 @@ export const Home: React.FC = () => {
   }, [filteredProducts]);
 
   return (
-    <div className="bg-[#FCFAF5] text-[#1C1C1C]">
-      {/* 1. HERO SECTION (EDITORIAL 2-COLUMN SPLIT) */}
+    <div className="bg-[#FCFAF5] text-[#1C1C1C] overflow-x-hidden">
+      {/* 1. HERO SECTION — Enhanced with botanical pattern + logo halo */}
       <section className="relative overflow-hidden bg-[#F7F1E5] py-12 sm:py-20 lg:py-24 border-b border-[#E8DECB]">
-        <div className="mx-auto max-w-[1280px] px-5 sm:px-8 lg:px-12">
-          <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
+        {/* Botanical SVG background pattern */}
+        <HeroBotanicalPattern />
+
+        <div className="relative z-10 mx-auto max-w-[1280px] px-5 sm:px-8 lg:px-12">
+          <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
             {/* Left Editorial Copy Column */}
-            <div className="lg:col-span-6 space-y-6">
-              <img src={logoImage} alt="NYUTA ELITE MAKHANA logo" className="mx-auto mb-4 w-[110px] sm:w-[130px] md:w-[150px] lg:w-[170px] rounded-full object-contain" />
-              <div className="flex items-center text-[#123D2D] uppercase tracking-[0.15em] font-extrabold text-sm my-2">
-                <div className="flex-1 h-px bg-[#C9A65B] mr-2"></div> PRESTIGE INDIAN MAKHANA <div className="flex-1 h-px bg-[#C9A65B] ml-2"></div>
+            <div className="lg:col-span-6 space-y-5">
+
+              {/* ── Premium Logo Medallion ──────────────────────────────── */}
+              <div className="flex justify-center lg:justify-start mb-1">
+
+                {/* Outermost wrapper: entrance animation + float */}
+                <div className="hero-logo-animate hero-medallion-float relative inline-flex items-center justify-center">
+
+                  {/* Layer 1 — Diffused gold bloom (pure CSS blur, no layout impact) */}
+                  <span
+                    aria-hidden="true"
+                    className="hero-halo-bloom absolute rounded-full pointer-events-none"
+                    style={{
+                      width: '180%',
+                      height: '180%',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      background: 'radial-gradient(circle, rgba(198,161,91,0.22) 0%, rgba(198,161,91,0.08) 45%, transparent 72%)',
+                      filter: 'blur(14px)',
+                    }}
+                  />
+
+                  {/* Layer 2 — Decorative SVG arc ring (slow rotation) */}
+                  <svg
+                    aria-hidden="true"
+                    className="hero-arc-drift absolute pointer-events-none"
+                    style={{
+                      width: '150%',
+                      height: '150%',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                    viewBox="0 0 200 200"
+                  >
+                    {/* Dashed outer ring */}
+                    <circle cx="100" cy="100" r="92"
+                      fill="none"
+                      stroke="#C6A15B"
+                      strokeWidth="0.8"
+                      strokeDasharray="4 6"
+                      opacity="0.45"
+                    />
+                    {/* Solid fine ring */}
+                    <circle cx="100" cy="100" r="86"
+                      fill="none"
+                      stroke="#C6A15B"
+                      strokeWidth="0.5"
+                      opacity="0.25"
+                    />
+                    {/* Cardinal leaf tips */}
+                    {[0, 90, 180, 270].map((deg, i) => (
+                      <g key={i} style={{ transform: `rotate(${deg}deg)`, transformOrigin: '100px 100px' }}>
+                        <path
+                          d="M100 8 C104 14 108 20 100 28 C92 20 96 14 100 8Z"
+                          fill="#C6A15B"
+                          opacity="0.38"
+                        />
+                      </g>
+                    ))}
+                    {/* Intercardinal dots */}
+                    {[45, 135, 225, 315].map((deg, i) => {
+                      const rad = (deg * Math.PI) / 180;
+                      const x = 100 + 92 * Math.sin(rad);
+                      const y = 100 - 92 * Math.cos(rad);
+                      return <circle key={`id${i}`} cx={x} cy={y} r="2.2" fill="#C6A15B" opacity="0.30" />;
+                    })}
+                  </svg>
+
+                  {/* Layer 3 — Emblem proper: warm gradient shell + border + shadow */}
+                  <div
+                    className="relative z-10 rounded-full"
+                    style={{
+                      padding: '5px',
+                      background: 'linear-gradient(145deg, rgba(212,176,106,0.30) 0%, rgba(247,241,229,0.85) 50%, rgba(212,176,106,0.20) 100%)',
+                      boxShadow: '0 0 0 1.5px rgba(198,161,91,0.50), 0 4px 24px rgba(18,59,42,0.14), 0 1px 4px rgba(18,59,42,0.10)',
+                    }}
+                  >
+                    {/* Inner white mount */}
+                    <div
+                      className="rounded-full overflow-hidden bg-white"
+                      style={{
+                        padding: '3px',
+                        boxShadow: 'inset 0 0 0 1px rgba(198,161,91,0.22)',
+                      }}
+                    >
+                      <img
+                        src={logoImage}
+                        alt="NYUTA ELITE MAKHANA logo"
+                        className="block rounded-full object-contain w-[108px] sm:w-[124px] md:w-[136px] lg:w-[152px]"
+                        fetchPriority="high"
+                        decoding="async"
+                        width={152}
+                        height={152}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <h1 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold leading-[1.04] text-[#092218] tracking-tight">
-                Better snacking starts with ingredients you can see.
+              {/* Eyebrow label */}
+              <div className="flex items-center text-[#123D2D] uppercase tracking-[0.15em] font-extrabold text-sm hero-eyebrow-animate">
+                <div className="flex-1 h-px bg-[#C9A65B] mr-2" />
+                PRESTIGE INDIAN MAKHANA
+                <div className="flex-1 h-px bg-[#C9A65B] ml-2" />
+              </div>
+
+              {/* Headline */}
+              <h1 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold leading-[1.04] text-[#092218] tracking-tight hero-headline-animate">
+                Pure Bihar Makhana.<br className="hidden sm:inline" /> Better snacking starts with ingredients you can see.
               </h1>
 
-              <p className="text-base sm:text-xl leading-relaxed text-[#68756E] max-w-lg">
+              {/* Description */}
+              <p className="text-base sm:text-xl leading-relaxed text-[#68756E] max-w-lg font-medium hero-desc-animate">
                 Discover carefully selected makhana, made for better everyday snacking. Hand-sorted jumbo fox nuts from freshwater ponds.
               </p>
 
-              <div className="flex flex-wrap items-center gap-3.5 pt-2">
+              {/* CTA Buttons */}
+              <div className="flex flex-wrap items-center gap-3.5 pt-2 hero-cta-animate">
                 <a
                   href="#pantry"
                   className="inline-flex min-h-12 items-center gap-2.5 bg-[#123B2A] hover:bg-[#092218] active:bg-black px-7 text-xs sm:text-sm font-extrabold uppercase tracking-widest text-white rounded-xl transition-all shadow-md cursor-pointer"
@@ -480,8 +735,7 @@ export const Home: React.FC = () => {
                   width={800}
                   height={600}
                 />
-                 <img src={logoImage} alt="NYUTA ELITE MAKHANA logo" className="mx-auto mb-4 w-[120px] sm:w-[180px]" />
-                {/* Floating Badge */}
+                {/* Floating Purity Badge */}
                 <div className="absolute bottom-4 left-4 bg-[#123B2A]/90 backdrop-blur-md text-white p-3.5 rounded-xl border border-[#C6A15B]/40 shadow-lg max-w-xs">
                   <p className="text-[10px] font-extrabold uppercase tracking-widest text-[#C6A15B]">
                     Purity Guarantee
@@ -541,6 +795,72 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
+      {/* ── CATEGORY GRID — 6 cards, 2-col × 3-row on mobile ────────── */}
+      <section className="bg-[#123B2A] py-10 sm:py-14 border-b border-[#092218]">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
+          {/* Section header */}
+          <div className="text-center mb-7 sm:mb-9">
+            <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#C9A65B]">
+              SHOP BY CATEGORY
+            </span>
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white mt-1">
+              Select Your Grade &amp; Pack
+            </h2>
+          </div>
+
+          {/*
+            2-col × 3-row on mobile/sm, 3-col × 2-row on md, 6-col on lg+
+            All six cards share the same CategoryCard component — same styles,
+            same image proportions, same rounded corners as the existing five.
+          */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+            {/* Card 1 — Premium Makhana */}
+            <CategoryCard
+              imageSrc="/images/products/premium-makhana-250g.png"
+              title="Premium Makhana"
+              subtitle="Jumbo 6-suta grade"
+              href="/categories?type=Premium"
+            />
+            {/* Card 2 — Normal Makhana */}
+            <CategoryCard
+              imageSrc="/images/products/normal-makhana-250g.png"
+              title="Normal Makhana"
+              subtitle="Everyday snack"
+              href="/categories?type=Normal"
+            />
+            {/* Card 3 — 100g Pouches */}
+            <CategoryCard
+              imageSrc="/images/products/premium-makhana-100g.png"
+              title="100g Pouches"
+              subtitle="Desk &amp; travel pack"
+              href="/products/makhana?sku=premium-100g"
+            />
+            {/* Card 4 — 200g Pouches */}
+            <CategoryCard
+              imageSrc="/images/products/premium-makhana-200g.png"
+              title="200g Pouches"
+              subtitle="Family pantry pack"
+              href="/products/makhana?sku=premium-200g"
+            />
+            {/* Card 5 — 250g Pouches */}
+            <CategoryCard
+              imageSrc="/images/products/premium-makhana-250g.png"
+              title="250g Pouches"
+              subtitle="Best-value bulk pack"
+              href="/products/makhana?sku=premium-250g"
+            />
+            {/* Card 6 — Why NYUTA ELITE? (informational, no invented product) */}
+            <CategoryCard
+              imageSrc="/images/process/01-harvest-pond.webp"
+              title="Why NYUTA ELITE?"
+              subtitle="Hand-sorted Bihar origin"
+              href="#quality"
+              fit="cover"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* 2. THE PANTRY COLLECTION CATALOG */}
       <section id="pantry" className="py-12 sm:py-16 md:py-20 bg-[#879778] border-b border-[#617653]">
         <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
@@ -558,8 +878,8 @@ export const Home: React.FC = () => {
             </div>
 
             {/* Quality Summary Tag & Carousel Navigation */}
-            <div className="flex items-center gap-3 shrink-0">
-              <div className="inline-flex items-center gap-2 bg-[#617653] border border-[#617653] px-3.5 py-1.5 rounded-xl text-xs font-bold text-[#F4F1DE] shrink-0">
+            <div className="flex flex-wrap items-center justify-between sm:justify-start gap-3">
+              <div className="inline-flex items-center gap-2 bg-[#617653] border border-[#617653] px-3.5 py-1.5 rounded-xl text-xs font-bold text-[#F4F1DE]">
                 <ShieldCheck className="w-4 h-4 text-[#C9A65B]" /> Exactly 6 Verified Packs (100g, 200g, 250g)
               </div>
 
@@ -757,15 +1077,15 @@ export const Home: React.FC = () => {
                   PREMIUM QUALITY GRADE
                 </span>
                 <h3 className="font-serif text-3xl font-bold text-[#123B2A]">PREMIUM QUALITY</h3>
-                <p className="mt-2 text-xs sm:text-sm text-[#68756E] leading-relaxed">
+                <p className="mt-2 text-xs sm:text-sm font-medium text-[#68756E] leading-relaxed">
                   Handpicked jumbo-grade fox nuts selected for consistent large size, round shape, and crisp expansion with minimal hard shell residue.
                 </p>
 
                 <div className="mt-6 aspect-[16/9] overflow-hidden rounded-2xl bg-[#F7F1E5] border border-[#E8DECB]">
                   <img
-                    src={heroImage}
-                    alt="Premium Makhana jumbo nuts"
-                    className="w-full h-full object-cover object-[70%_center]"
+                    src="/images/quality/premium-jumbo-makhana.webp"
+                    alt="Premium Makhana jumbo hand-sorted nuts"
+                    className="w-full h-full object-cover object-center"
                     loading="lazy"
                     decoding="async"
                     width={600}
@@ -797,7 +1117,7 @@ export const Home: React.FC = () => {
 
               <div className="mt-8 pt-6 border-t border-[#E8DECB] flex items-center justify-between">
                 <div>
-                  <span className="text-xs text-[#68756E]">Packs starting at</span>
+                  <span className="text-xs font-semibold text-[#68756E]">Packs starting at</span>
                   <p className="text-xl font-extrabold text-[#123B2A]">₹160 / 100g</p>
                 </div>
                 <Link
@@ -816,15 +1136,15 @@ export const Home: React.FC = () => {
                   EVERYDAY QUALITY GRADE
                 </span>
                 <h3 className="font-serif text-3xl font-bold text-[#1C1C1C]">NORMAL QUALITY</h3>
-                <p className="mt-2 text-xs sm:text-sm text-[#68756E] leading-relaxed">
+                <p className="mt-2 text-xs sm:text-sm font-medium text-[#68756E] leading-relaxed">
                   Standard everyday grade makhana. Slightly varied nut sizes with the exact same natural taste, crunch, and wholesome nutrients.
                 </p>
 
                 <div className="mt-6 aspect-[16/9] overflow-hidden rounded-2xl bg-[#F7F1E5] border border-[#E8DECB]">
                   <img
-                    src={macroImage}
-                    alt="Normal Makhana everyday nuts"
-                    className="w-full h-full object-cover object-[70%_center]"
+                    src="/images/quality/normal-everyday-makhana.webp"
+                    alt="Normal Makhana everyday natural texture nuts"
+                    className="w-full h-full object-cover object-center"
                     loading="lazy"
                     decoding="async"
                     width={600}
@@ -856,7 +1176,7 @@ export const Home: React.FC = () => {
 
               <div className="mt-8 pt-6 border-t border-[#E8DECB] flex items-center justify-between">
                 <div>
-                  <span className="text-xs text-[#68756E]">Packs starting at</span>
+                  <span className="text-xs font-semibold text-[#68756E]">Packs starting at</span>
                   <p className="text-xl font-extrabold text-[#123B2A]">₹120 / 100g</p>
                 </div>
                 <Link
@@ -963,7 +1283,7 @@ export const Home: React.FC = () => {
                       height={300}
                     />
                   </div>
-                  <p className="text-[11px] sm:text-xs text-[#D5DED6] leading-snug sm:leading-relaxed">{item.description}</p>
+                  <p className="text-[11px] sm:text-xs font-medium text-[#D5DED6] leading-snug sm:leading-relaxed">{item.description}</p>
                 </div>
               </div>
             ))}
@@ -1007,7 +1327,7 @@ export const Home: React.FC = () => {
                     {moment.tagline}
                   </span>
                   <h3 className="font-serif text-2xl font-bold mt-0.5">{moment.name}</h3>
-                  <p className="mt-2 text-xs text-[#D5DED6] line-clamp-2 leading-relaxed">{moment.note}</p>
+                  <p className="mt-2 text-xs font-medium text-[#D5DED6] line-clamp-2 leading-relaxed">{moment.note}</p>
                 </div>
               </div>
             ))}
@@ -1021,9 +1341,9 @@ export const Home: React.FC = () => {
           <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
             <div className="lg:col-span-5 aspect-[4/3] overflow-hidden rounded-3xl bg-white border border-[#E8DECB] shadow-sm">
               <img
-                src={heroImage}
-                alt="Bowl of healthy makhana"
-                className="w-full h-full object-cover"
+                src="/images/why-makhana/superfood-roasted-bowl.webp"
+                alt="Artisanal clay bowl of roasted superfood makhana"
+                className="w-full h-full object-cover object-center"
                 loading="lazy"
                 decoding="async"
                 width={600}
@@ -1038,7 +1358,7 @@ export const Home: React.FC = () => {
               <h2 className="font-serif text-3xl sm:text-5xl font-bold text-[#092218]">
                 WHY MAKE MAKHANA YOUR DAILY SNACK?
               </h2>
-              <p className="text-sm text-[#68756E] leading-relaxed">
+              <p className="text-sm font-medium text-[#68756E] leading-relaxed">
                 Makhana has been revered in traditional Indian diets for centuries. Naturally puffed from lotus water lily seeds, it offers a clean, crunchy alternative to deep-fried or artificial potato chips.
               </p>
 
@@ -1096,7 +1416,7 @@ export const Home: React.FC = () => {
                 <div className="mt-6 pt-4 border-t border-[#E8DECB] flex items-center justify-between">
                   <div>
                     <h4 className="text-xs font-extrabold text-[#123B2A]">{review.name}</h4>
-                    <p className="text-[10px] text-[#68756E]">
+                    <p className="text-[10px] font-medium text-[#68756E]">
                       {review.location} • {review.role}
                     </p>
                   </div>
@@ -1142,7 +1462,7 @@ export const Home: React.FC = () => {
                   </button>
 
                   {isOpen && (
-                    <div className="px-6 pb-5 pt-1 text-xs sm:text-sm text-[#68756E] leading-relaxed border-t border-[#E8DECB]/50">
+                    <div className="px-6 pb-5 pt-1 text-xs sm:text-sm font-medium text-[#68756E] leading-relaxed border-t border-[#E8DECB]/50">
                       {faq.answer}
                     </div>
                   )}
@@ -1157,7 +1477,7 @@ export const Home: React.FC = () => {
       <section className="relative bg-[#123B2A] text-white py-20 sm:py-28 overflow-hidden">
         <div
           className="absolute inset-0 opacity-15 pointer-events-none"
-          style={{ backgroundImage: `url(${heroImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+          style={{ backgroundImage: `url('/images/why-makhana/superfood-roasted-bowl.webp')`, backgroundSize: 'cover', backgroundPosition: 'center' }}
         />
         <div className="relative mx-auto max-w-3xl px-5 text-center space-y-6">
           <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#C6A15B]">
@@ -1166,7 +1486,7 @@ export const Home: React.FC = () => {
           <h2 className="font-serif text-4xl sm:text-6xl font-bold text-white leading-tight">
             MAKE MAKHANA PART OF YOUR PANTRY
           </h2>
-          <p className="text-base sm:text-lg text-[#D5DED6]">
+          <p className="text-base sm:text-lg font-medium text-[#D5DED6]">
             Explore our carefully selected makhana.
           </p>
           <div>

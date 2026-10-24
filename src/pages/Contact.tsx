@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, CheckCircle2, Clock } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Mail, Phone, MapPin, CheckCircle2, Clock, Globe, ShieldCheck } from 'lucide-react';
 
 export const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -45,9 +46,15 @@ export const Contact: React.FC = () => {
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-[#C6A15B] shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-bold text-white">Operations &amp; Dispatch Hub</h4>
+                  <h4 className="font-bold text-white">Registered Business Office (FSSAI)</h4>
                   <p className="text-xs text-[#D5DED6] mt-0.5">
-                    Mithila Region, Darbhanga, Bihar 846004, India
+                    Krishna Vihar Lock No. 11, Bahiro Ara, Bhojpur, Bihar 802301, India
+                  </p>
+                  <p className="text-[11px] text-[#C6A15B] mt-0.5 font-medium">
+                    FSSAI Reg. No. 20426021000494 (RAUSHAN KUMAR C/O NyutaElite)
+                  </p>
+                  <p className="text-[11px] text-[#9BB0A3] mt-0.5">
+                    Sourced from Bihar freshwater lotus harvest wetlands
                   </p>
                 </div>
               </div>
@@ -55,16 +62,62 @@ export const Contact: React.FC = () => {
               <div className="flex items-start gap-3">
                 <Phone className="w-5 h-5 text-[#C6A15B] shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-bold text-white">Helpline</h4>
-                  <p className="text-xs text-[#D5DED6] mt-0.5">+91 98765 43210 (Mon – Sat, 9 AM – 6 PM)</p>
+                  <h4 className="font-bold text-white">Contact Number</h4>
+                  <p className="text-xs text-[#D5DED6] mt-0.5">
+                    <a
+                      href="tel:+918102875852"
+                      className="hover:text-[#C6A15B] transition-colors font-semibold"
+                    >
+                      +91 81028 75852
+                    </a>{' '}
+                    <span className="text-[#9BB0A3] text-[11px] block sm:inline">
+                      (Mon – Sat, 9 AM – 7 PM IST)
+                    </span>
+                  </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
                 <Mail className="w-5 h-5 text-[#C6A15B] shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-bold text-white">Email Support</h4>
-                  <p className="text-xs text-[#D5DED6] mt-0.5">support@nyutaelite.com</p>
+                  <h4 className="font-bold text-white">Email Addresses</h4>
+                  <div className="text-xs text-[#D5DED6] mt-0.5 flex flex-col gap-1">
+                    <div>
+                      <span className="text-[#9BB0A3] text-[11px] block">Business Inquiries:</span>
+                      <a
+                        href="mailto:info@nyutaelite.com"
+                        className="hover:text-[#C6A15B] transition-colors font-medium break-all"
+                      >
+                        info@nyutaelite.com
+                      </a>
+                    </div>
+                    <div className="mt-1">
+                      <span className="text-[#9BB0A3] text-[11px] block">Additional Email:</span>
+                      <a
+                        href="mailto:enterprisesp0r@gmail.com"
+                        className="hover:text-[#C6A15B] transition-colors font-medium break-all"
+                      >
+                        enterprisesp0r@gmail.com
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <Globe className="w-5 h-5 text-[#C6A15B] shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-bold text-white">Official Website</h4>
+                  <p className="text-xs text-[#D5DED6] mt-0.5">
+                    <a
+                      href="https://nyutaelite.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-[#C6A15B] transition-colors font-medium break-all"
+                    >
+                      https://nyutaelite.com
+                    </a>
+                  </p>
                 </div>
               </div>
 
@@ -74,6 +127,34 @@ export const Contact: React.FC = () => {
                   <h4 className="font-bold text-white">Response Time</h4>
                   <p className="text-xs text-[#D5DED6] mt-0.5">Within 24 hours on business days</p>
                 </div>
+              </div>
+
+              <div className="flex items-start gap-3 pt-1 border-t border-white/10">
+                <ShieldCheck className="w-5 h-5 text-[#C6A15B] shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-bold text-white">Statutory Grievance Redressal</h4>
+                  <p className="text-xs text-[#D5DED6] mt-0.5">
+                    For consumer dispute escalations, review our{' '}
+                    <Link to="/about#grievance" className="text-[#C6A15B] font-semibold underline hover:text-white">
+                      Grievance Redressal Desk
+                    </Link>{' '}
+                    (Proposed Officer: Raushan Kumar).
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative aspect-[16/10] rounded-xl overflow-hidden border border-[#C6A15B]/30 bg-[#092218] mt-4 shadow-sm">
+              <img
+                src="/images/process/04-express-delivery.webp"
+                alt="NYUTA ELITE door-step parcel dispatch"
+                className="w-full h-full object-cover"
+                loading="lazy"
+                width={400}
+                height={250}
+              />
+              <div className="absolute bottom-2 left-2 right-2 bg-[#092218]/85 backdrop-blur-xs px-2.5 py-1 rounded-lg text-white text-[10px] font-semibold text-center">
+                Express Pan-India Logistics &amp; Customer Support
               </div>
             </div>
           </div>

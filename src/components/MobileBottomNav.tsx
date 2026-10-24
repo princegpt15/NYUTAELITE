@@ -11,7 +11,13 @@ interface MobileBottomNavProps {
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenCart }) => {
   const [cartCount, setCartCount] = useState(0);
   const location = useLocation();
-  const currentUser = authService.getCurrentUser();
+  const [currentUser, setCurrentUser] = useState(() => authService.getCurrentUser());
+
+  useEffect(() => {
+    setCurrentUser(authService.getCurrentUser());
+    const unsub = authService.subscribe(setCurrentUser);
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     const updateCount = () => {
@@ -94,7 +100,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenCart }) 
               </div>
               <span
                 className={`text-[10px] mt-1 tracking-tight font-medium ${
-                  isActive ? 'text-[#123B2A] font-extrabold' : 'text-[#68756E]'
+                  isActive ? 'text-[#123B2A] font-extrabold' : 'text-[#68756E] font-medium'
                 }`}
               >
                 {item.label}
@@ -136,7 +142,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenCart }) 
               className={`text-[10px] mt-1 tracking-tight font-medium ${
                 location.pathname === '/cart'
                   ? 'text-[#123B2A] font-extrabold'
-                  : 'text-[#68756E]'
+                  : 'text-[#68756E] font-medium'
               }`}
             >
               Cart

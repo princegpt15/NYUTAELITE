@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Heart, Sparkles, AlertCircle, Plus, Minus, RefreshCw, Leaf } from 'lucide-react';
 import type { PantryProduct } from '../types';
 import { cartService } from '../services/cart';
-import { retentionService } from '../services/retention';
-import { authService } from '../services/auth';
+import { wishlistService } from '../services/wishlist';
 import { trackSelectItem, trackAddToWishlist } from '../services/analytics';
 
 interface ProductCardProps {
@@ -20,32 +19,38 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   listId = 'product_collection',
   listName = 'Makhana Collection',
 }) => {
-  const navigate = useNavigate();
   // Local quantity reflects the authoritative shared cart state (0 means not in cart)
   const [quantity, setQuantity] = useState(0);
   const [adding, setAdding] = useState(false);
 
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isWishlisted, setIsWishlisted] = useState(() => wishlistService.isWishlisted(product.id));
   const [wishlistLoading, setWishlistLoading] = useState(false);
 
-  // Sync component state with the shared cart
+  // Sync component state with shared cart and wishlist
   useEffect(() => {
     // Initialise from current cart contents
     const init = () => {
       const items = cartService.getItems();
       const match = items.find((i) => i.productId === product.id);
       setQuantity(match?.quantity ?? 0);
+      setIsWishlisted(wishlistService.isWishlisted(product.id));
     };
     init();
 
     // Subscribe to cart updates
-    const unsubscribe = cartService.subscribe((items) => {
+    const unsubCart = cartService.subscribe((items) => {
       const match = items.find((i) => i.productId === product.id);
       setQuantity(match?.quantity ?? 0);
     });
 
+    // Subscribe to wishlist updates
+    const unsubWishlist = wishlistService.subscribe(() => {
+      setIsWishlisted(wishlistService.isWishlisted(product.id));
+    });
+
     return () => {
-      unsubscribe();
+      unsubCart();
+      unsubWishlist();
     };
   }, [product.id]);
 
@@ -133,26 +138,30 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const handleToggleWishlist = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const user = authService.getCurrentUser();
-    if (!user) {
-      navigate('/login?redirect=/wishlist');
-      return;
-    }
+    if (wishlistLoading) return;
 
     setWishlistLoading(true);
     try {
-      if (isWishlisted) {
-        await retentionService.removeFromWishlist(product.id);
-        setIsWishlisted(false);
-        if (onAdded) onAdded(`Removed ${displayName} from wishlist.`);
-      } else {
-        await retentionService.addToWishlist(product.id);
-        setIsWishlisted(true);
+      const nowSaved = await wishlistService.toggleWishlist({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        mrp: product.mrp,
+        image: product.image,
+        weightGrams: product.weightGrams,
+        slug: product.sku || product.id,
+        stock: product.stock,
+      });
+      setIsWishlisted(nowSaved);
+      if (nowSaved) {
         trackAddToWishlist(product);
         if (onAdded) onAdded(`Added ${displayName} to wishlist!`);
+      } else {
+        if (onAdded) onAdded(`Removed ${displayName} from wishlist.`);
       }
     } catch {
-      setIsWishlisted(!isWishlisted);
+      // Re-sync with authoritative cache if error
+      setIsWishlisted(wishlistService.isWishlisted(product.id));
     } finally {
       setWishlistLoading(false);
     }
@@ -165,7 +174,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     >
       <div>
         {/* Top Product Image Container */}
-        <div className="relative w-full aspect-square overflow-hidden rounded-xl bg-white border border-[#D8D9C2] flex items-center justify-center shadow-2xs">
+        <div className="relative w-full aspect-square overflow-hidden rounded-xl bg-[#FAF7EF] border border-[#D8D9C2] flex items-center justify-center shadow-2xs">
           <Link
             to={productUrl}
             onClick={() => trackSelectItem({ listId, listName, product })}
@@ -175,7 +184,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <img
               src={product.image}
               alt={`${displayName} ${displayWeight}`}
-              className="h-full w-full object-contain p-2 sm:p-3 transition-transform duration-500 group-hover:scale-106"
+              className="block h-full w-full object-contain object-center p-1.5 sm:p-2 transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
               width={260}
               height={260}
@@ -196,7 +205,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
 
           {/* Top Right: Wishlist & Discount */}
-          <div className="absolute right-2 top-2 flex flex-col items-end gap-1 z-10">
+          <div className="absolute right-2 top-2 flex flex-col items-end gap-1.5 z-10">
             <button
               type="button"
               onClick={handleToggleWishlist}
@@ -206,13 +215,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                   ? `Remove ${displayName} from wishlist`
                   : `Add ${displayName} to wishlist`
               }
-              className={`p-1.5 rounded-full backdrop-blur-md transition-all cursor-pointer shadow-2xs min-h-[28px] min-w-[28px] flex items-center justify-center ${
+              className={`p-2 rounded-full backdrop-blur-md transition-all cursor-pointer shadow-2xs min-h-[34px] min-w-[34px] flex items-center justify-center active:scale-95 ${
                 isWishlisted
-                  ? 'bg-rose-50 text-rose-600 border border-rose-200'
+                  ? 'bg-rose-50 text-rose-600 border border-rose-200 ring-1 ring-rose-200'
                   : 'bg-[#F1F0D9]/95 text-[#183B2D] hover:text-rose-600 hover:bg-white border border-[#D8D9C2]'
               }`}
             >
-              <Heart className={`w-3.5 h-3.5 ${isWishlisted ? 'fill-rose-600' : ''}`} />
+              <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-600' : ''}`} />
             </button>
 
             {discountPercent > 0 && (
@@ -297,13 +306,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             OUT OF STOCK
           </button>
         ) : quantity > 0 ? (
-          <div className="flex items-center justify-between bg-[#123D2D] text-white rounded-xl p-0.5 sm:p-1 shadow-xs border border-[#123D2D]">
+          <div className="flex items-center justify-between bg-[#123D2D] text-white rounded-xl p-1 shadow-xs border border-[#123D2D] min-h-[40px]">
             <button
               type="button"
               disabled={adding}
               onClick={handleDecrement}
               aria-label={`Decrease quantity of ${displayName}`}
-              className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg hover:bg-black/25 active:scale-90 transition-transform font-black text-white cursor-pointer disabled:opacity-50"
+              className="w-8 h-8 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-lg hover:bg-black/25 active:scale-90 transition-transform font-black text-white cursor-pointer disabled:opacity-50"
             >
               <Minus className="w-3.5 h-3.5" />
             </button>
@@ -318,7 +327,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               disabled={adding || quantity >= product.stock}
               onClick={handleIncrement}
               aria-label={`Increase quantity of ${displayName}`}
-              className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg hover:bg-black/25 active:scale-90 transition-transform font-black text-white cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-8 h-8 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-lg hover:bg-black/25 active:scale-90 transition-transform font-black text-white cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Plus className="w-3.5 h-3.5" />
             </button>
@@ -329,7 +338,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             disabled={adding}
             onClick={handleAddToCart}
             aria-label={`Add 1 pack of ${displayName} to cart`}
-            className="w-full py-1.5 sm:py-2 bg-[#123D2D] hover:bg-[#0a231a] active:scale-[0.98] text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50 border border-[#123D2D]"
+            className="w-full min-h-[40px] py-2 bg-[#123D2D] hover:bg-[#0a231a] active:scale-[0.98] text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50 border border-[#123D2D]"
           >
             {adding ? (
               <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#C9A65B]" />

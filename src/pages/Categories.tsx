@@ -6,6 +6,7 @@ import { fetchProducts } from '../services/products';
 import { PANTRY_PRODUCTS } from '../data/product';
 import { ProductCard } from '../components/ProductCard';
 import { Toast } from '../components/Toast';
+import { Breadcrumb } from '../components/Breadcrumb';
 
 export const Categories: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -76,17 +77,33 @@ export const Categories: React.FC = () => {
   return (
     <div className="bg-[#FCFAF5] min-h-screen py-8 lg:py-12">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb
+          items={[
+            { label: 'Home', to: '/' },
+            { label: 'Shop All Makhana' },
+          ]}
+        />
+
         {/* Header Section */}
         <div className="bg-[#123B2A] rounded-3xl p-6 sm:p-10 text-white relative overflow-hidden shadow-xl border border-[#C6A15B]/30">
+          <div
+            className="absolute inset-0 opacity-10 pointer-events-none"
+            style={{
+              backgroundImage: "url('/images/quality/premium-jumbo-makhana.webp')",
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          />
           <div className="relative z-10 max-w-2xl space-y-3">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FCFAF5]/10 backdrop-blur-md border border-[#C6A15B]/40 text-[#C6A15B] text-xs font-bold uppercase tracking-widest">
               <Sparkles className="w-3.5 h-3.5" />
               <span>SHOP BY GRADE &amp; PACK SIZE</span>
             </span>
             <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-black text-[#FCFAF5]">
-              Explore Makhana Categories
+              Buy Fox Nuts Online — All Makhana Packs & Sizes
             </h1>
-            <p className="text-xs sm:text-sm text-[#D5DED6] leading-relaxed">
+            <p className="text-xs sm:text-sm font-medium text-[#D5DED6] leading-relaxed">
               From hand-sorted Jumbo Premium grade to versatile everyday Normal harvest, choose the exact crunch and pouch size tailored to your pantry.
             </p>
           </div>
@@ -106,19 +123,33 @@ export const Categories: React.FC = () => {
             }`}
           >
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span
-                  className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md ${
-                    selectedQuality === 'Premium'
-                      ? 'bg-[#C6A15B] text-[#092218]'
-                      : 'bg-[#123B2A] text-white'
-                  }`}
-                >
-                  TOP TIER
-                </span>
-                <span className="text-xs font-bold opacity-80">3 Pouch Sizes</span>
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-2 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md ${
+                        selectedQuality === 'Premium'
+                          ? 'bg-[#C6A15B] text-[#092218]'
+                          : 'bg-[#123B2A] text-white'
+                      }`}
+                    >
+                      TOP TIER
+                    </span>
+                    <span className="text-xs font-bold opacity-80">3 Pouch Sizes</span>
+                  </div>
+                  <h2 className="font-serif text-2xl font-bold">Premium Jumbo Makhana</h2>
+                </div>
+
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-[#FAF7EF] p-1.5 border border-[#E8DECB]/60 shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
+                  <img
+                    src="/images/products/premium-makhana-250g.png"
+                    alt="NYUTA ELITE Premium Makhana pouch packaging"
+                    className="w-full h-full object-contain object-center group-hover:scale-105 transition-transform duration-300"
+                    width={96}
+                    height={96}
+                  />
+                </div>
               </div>
-              <h2 className="font-serif text-2xl font-bold">Premium Jumbo Makhana</h2>
               <p
                 className={`text-xs leading-relaxed ${
                   selectedQuality === 'Premium' ? 'text-[#D5DED6]' : 'text-[#68756E]'
@@ -126,7 +157,7 @@ export const Categories: React.FC = () => {
               >
                 Handpicked 6-suta jumbo puffs with uniform sphere size, shatteringly crisp crunch, and meticulously sorted shells. Ideal for direct roasting and mindful gifting.
               </p>
-              <div className="flex items-center gap-4 text-xs font-semibold pt-1">
+              <div className="flex items-center gap-4 text-xs font-bold pt-1">
                 <span>100g • 200g • 250g</span>
                 <span>From ₹160</span>
               </div>
@@ -149,19 +180,33 @@ export const Categories: React.FC = () => {
             }`}
           >
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span
-                  className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md ${
-                    selectedQuality === 'Normal'
-                      ? 'bg-[#C6A15B] text-[#092218]'
-                      : 'bg-[#E8DECB] text-[#123B2A]'
-                  }`}
-                >
-                  DAILY PANTRY
-                </span>
-                <span className="text-xs font-bold opacity-80">3 Pouch Sizes</span>
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-2 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md ${
+                        selectedQuality === 'Normal'
+                          ? 'bg-[#C6A15B] text-[#092218]'
+                          : 'bg-[#E8DECB] text-[#123B2A]'
+                      }`}
+                    >
+                      DAILY PANTRY
+                    </span>
+                    <span className="text-xs font-bold opacity-80">3 Pouch Sizes</span>
+                  </div>
+                  <h2 className="font-serif text-2xl font-bold">Normal Everyday Makhana</h2>
+                </div>
+
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-[#FAF7EF] p-1.5 border border-[#E8DECB]/60 shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
+                  <img
+                    src="/images/products/normal-makhana-250g.png"
+                    alt="Regular Makhana silver pouch packaging"
+                    className="w-full h-full object-contain object-center group-hover:scale-105 transition-transform duration-300"
+                    width={96}
+                    height={96}
+                  />
+                </div>
               </div>
-              <h2 className="font-serif text-2xl font-bold">Normal Everyday Makhana</h2>
               <p
                 className={`text-xs leading-relaxed ${
                   selectedQuality === 'Normal' ? 'text-[#D5DED6]' : 'text-[#68756E]'
@@ -169,7 +214,7 @@ export const Categories: React.FC = () => {
               >
                 Standard authentic Bihar harvest. Wholesome natural fox nuts perfect for home roasting, adding to traditional kheer, gravies, and everyday nutritious snacking.
               </p>
-              <div className="flex items-center gap-4 text-xs font-semibold pt-1">
+              <div className="flex items-center gap-4 text-xs font-bold pt-1">
                 <span>100g • 200g • 250g</span>
                 <span>From ₹120</span>
               </div>

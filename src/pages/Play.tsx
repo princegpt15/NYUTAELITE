@@ -14,10 +14,7 @@ import {
   ArrowRight,
   Check,
 } from 'lucide-react';
-import lotusImage from '../assets/images/lotus-source.png';
-import heroImage from '../assets/images/brand/makhana-hero.png';
-import macroImage from '../assets/images/brand/makhana-macro.png';
-import roastedMakhanaImage from '../assets/images/hero-makhana.png';
+// High-resolution contextual images from /images catalog
 import { cartService } from '../services/cart';
 import { Toast } from '../components/Toast';
 
@@ -41,7 +38,7 @@ const PLAY_STORIES: PlayItem[] = [
     title: 'Why Makhana? The Ancient Indian Superfood',
     category: 'Nutrition',
     duration: '0:45',
-    image: macroImage,
+    image: '/images/why-makhana/superfood-roasted-bowl.webp',
     headline: 'High plant protein, zero cholesterol, low glycemic index.',
     description:
       'Makhana (Euryale ferox) is harvested from freshwater lotus seeds and puffed into airy crunch. Packed with magnesium, potassium, and antioxidants, it provides steady energy without sugar spikes.',
@@ -59,7 +56,7 @@ const PLAY_STORIES: PlayItem[] = [
     title: 'From Mithila Ponds to Your Table',
     category: 'Sourcing',
     duration: '1:10',
-    image: lotusImage,
+    image: '/images/process/01-harvest-pond.webp',
     headline: 'Hand-harvested by generational farmers in Bihar.',
     description:
       'Over 85% of the world’s premium makhana originates in the wetlands of Mithila, Bihar. Our farmers wade into calm freshwater ponds at dawn to collect thorny lotus seed pods with centuries-old care.',
@@ -77,7 +74,7 @@ const PLAY_STORIES: PlayItem[] = [
     title: 'The Art of Natural Air-Popping',
     category: 'Roasting',
     duration: '0:38',
-    image: roastedMakhanaImage,
+    image: '/images/process/02-hand-sorting.webp',
     headline: 'Popped with high heat, never deep-fried in palm oil.',
     description:
       'Traditional roasting involves carefully drying raw seeds under the sun, heating them in cast-iron pans, and striking them to release the pure white puffed core. Zero artificial puffing agents or preservatives.',
@@ -95,7 +92,7 @@ const PLAY_STORIES: PlayItem[] = [
     title: 'Premium vs Normal: The Grading Standard',
     category: 'Comparison',
     duration: '0:50',
-    image: heroImage,
+    image: '/images/quality/premium-jumbo-makhana.webp',
     headline: 'How we sort by diameter, density, and shell residue.',
     description:
       'Premium makhana represents the top tier of the harvest: jumbo spherical kernels exceeding 6-suta diameter, hand-cleaned to minimize shell fragments. Normal makhana offers standard size, perfect for curries, kheer, and daily roasting.',
@@ -113,7 +110,7 @@ const PLAY_STORIES: PlayItem[] = [
     title: '3-Minute Ghee & Rock Salt Roasting Secret',
     category: 'Pairings',
     duration: '0:42',
-    image: macroImage,
+    image: '/images/bulk/wholesale-roasted-spiced.webp',
     headline: 'Transform plain makhana into your favorite evening crunch.',
     description:
       'Warm half a teaspoon of pure A2 desi cow ghee in a heavy pan. Add a pinch of pink Himalayan rock salt, freshly crushed black pepper, and toss NYUTA makhana on low flame for 3 minutes until shatteringly crisp.',
@@ -131,7 +128,7 @@ const PLAY_STORIES: PlayItem[] = [
     title: 'Mindful Snacking for Focused Workdays',
     category: 'Nutrition',
     duration: '0:35',
-    image: lotusImage,
+    image: '/images/lifestyle/work-break-snack.webp',
     headline: 'Ditch ultra-processed chips for clean energy.',
     description:
       'Afternoon slumps are often caused by blood sugar spikes from greasy snacks. Makhana provides slow-burning complex nourishment and crunch satisfaction without calorie bloat or sluggishness.',
@@ -243,8 +240,8 @@ export const Play: React.FC = () => {
 
           {/* Botanical background decoration */}
           <div className="absolute -right-10 -bottom-10 w-72 h-72 rounded-full bg-[#C6A15B]/10 blur-3xl pointer-events-none" />
-          <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-20 hidden md:block">
-            <img src={lotusImage} alt="" className="w-56 h-56 object-contain" />
+          <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-25 hidden md:block">
+            <img src="/images/quality/premium-jumbo-makhana.webp" alt="Purity popped makhana" className="w-52 h-52 object-cover rounded-full border-2 border-[#C6A15B]/40" />
           </div>
         </div>
 

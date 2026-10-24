@@ -808,7 +808,7 @@ export const Checkout: React.FC = () => {
             {/* Calculations Breakdown */}
             <div className="pt-4 border-t border-[#E8DECB] space-y-2 text-xs text-[#68756E]">
               <div className="flex justify-between">
-                <span>Subtotal</span>
+                <span className="font-medium text-[#1C1C1C]">Subtotal</span>
                 <span className="font-bold text-[#1C1C1C]">₹{subtotal}</span>
               </div>
               {discountAmount > 0 && (
@@ -820,7 +820,7 @@ export const Checkout: React.FC = () => {
                 </div>
               )}
               <div className="flex justify-between">
-                <span>Express Pan-India Delivery</span>
+                <span className="font-medium text-[#1C1C1C]">Express Pan-India Delivery</span>
                 <span className="font-bold text-[#1C1C1C]">
                   {shippingFee === 0 ? (
                     <span className="text-[#123B2A]">FREE</span>
@@ -868,15 +868,33 @@ export const Checkout: React.FC = () => {
               </button>
             )}
 
+            {/* Delivery Schedule & Trust Breakdown */}
+            <div className="p-3 bg-[#FCFAF5] rounded-xl border border-[#E8DECB] text-[11px] text-[#4A5550] space-y-1.5">
+              <div className="flex items-center gap-1.5 font-bold text-[#123B2A]">
+                <Truck className="w-4 h-4 text-[#C6A15B] shrink-0" />
+                <span>Fulfillment &amp; Delivery Timeline</span>
+              </div>
+              <ul className="text-[10.5px] leading-relaxed text-[#68756E] space-y-0.5">
+                <li>• <strong>Order Processing:</strong> 1–2 business days</li>
+                <li>• <strong>Estimated Courier Transit:</strong> 5–7 business days post-dispatch</li>
+                <li>• <strong>Expected Overall Timeline:</strong> ~6–9 business days (estimates only)</li>
+                <li>• <strong>Standard Shipping:</strong> ₹40 (FREE for orders ₹499+)</li>
+              </ul>
+              <div className="pt-1.5 border-t border-[#E8DECB]/70 text-[10px] text-[#68756E] flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#123B2A] shrink-0" />
+                <span>Report transit damage or broken seals within 48h of delivery</span>
+              </div>
+            </div>
+
             {/* Value Props */}
-            <div className="grid grid-cols-2 gap-2 pt-2 text-[11px] text-[#68756E] border-t border-[#E8DECB]">
+            <div className="grid grid-cols-2 gap-2 pt-1 text-[11px] font-medium text-[#68756E] border-t border-[#E8DECB]">
               <div className="flex items-center gap-1.5">
                 <Truck className="w-3.5 h-3.5 text-[#123B2A]" />
                 <span>Express Dispatch</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-[#123B2A]" />
-                <span>Verified Freshness</span>
+                <span>FSSAI Reg. 20426021000494</span>
               </div>
             </div>
           </aside>

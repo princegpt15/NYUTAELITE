@@ -57,12 +57,98 @@ body {
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* ── Hero entrance animations ──────────────────────────────────── */
+
+/* Logo descends gently from slightly above */
+@keyframes logo-appear {
+  from { opacity: 0; transform: translateY(-14px) scale(0.93); }
+  to   { opacity: 1; transform: translateY(0)     scale(1); }
+}
+
+/* Halo bloom fades in after logo */
+@keyframes halo-bloom {
+  from { opacity: 0; transform: scale(0.80); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Slow, gentle halo breathe (opacity only — no layout shift) */
+@keyframes halo-breathe {
+  0%, 100% { opacity: 0.75; }
+  50%       { opacity: 1; }
+}
+
+/* Medallion floats very slightly — barely perceptible drift */
+@keyframes medallion-float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+
+/* Text elements rise in from below */
+@keyframes text-rise {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Decorative arc ring rotates imperceptibly slowly */
+@keyframes arc-drift {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Utility animation classes ─────────────────────────────────── */
+
+.hero-logo-animate {
+  animation: logo-appear 0.80s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.hero-halo-bloom {
+  animation:
+    halo-bloom   0.90s cubic-bezier(0.22, 1, 0.36, 1) 0.10s both,
+    halo-breathe 5.0s  ease-in-out                    1.0s  infinite;
+}
+.hero-medallion-float {
+  animation: medallion-float 6s ease-in-out 1.2s infinite;
+}
+.hero-arc-drift {
+  animation: arc-drift 90s linear infinite;
+  transform-origin: center;
+}
+.hero-eyebrow-animate {
+  animation: text-rise 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.22s both;
+}
+.hero-headline-animate {
+  animation: text-rise 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.36s both;
+}
+.hero-desc-animate {
+  animation: text-rise 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.50s both;
+}
+.hero-cta-animate {
+  animation: text-rise 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.64s both;
+}
+
+/* Legacy alias kept so existing .hero-logo-halo classes (if any) still compile */
+.hero-logo-halo {
+  animation: halo-breathe 5s ease-in-out infinite;
+}
+.hero-leaf-spin {
+  animation: arc-drift 90s linear infinite;
+  transform-origin: center;
+}
+
+/* Respect prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
+  .hero-logo-animate,
+  .hero-halo-bloom,
+  .hero-medallion-float,
+  .hero-arc-drift,
+  .hero-eyebrow-animate,
+  .hero-headline-animate,
+  .hero-desc-animate,
+  .hero-cta-animate,
+  .hero-logo-halo,
+  .hero-leaf-spin {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 
@@ -80,4 +166,24 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #123B2A;
+}
+
+/* Normal Makhana image container */
+.normal-makhana-image-container {
+  width: 100%;
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #faf7ef;
+  padding: 12px;
+}
+
+.normal-makhana-image-container img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
 }

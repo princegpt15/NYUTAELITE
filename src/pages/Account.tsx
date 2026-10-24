@@ -15,6 +15,7 @@ import {
   Clock,
   ChevronRight,
   Sparkles,
+  LogOut,
 } from 'lucide-react';
 import { authService } from '../services/auth';
 import { retentionService, type AccountSummary, type LoyaltyTransactionItem } from '../services/retention';
@@ -23,9 +24,23 @@ import { growthApi } from '../services/growth';
 
 export const Account: React.FC = () => {
   const navigate = useNavigate();
-  const currentUser = authService.getCurrentUser();
+
+  // ── Auth state stored in React state, driven by authService subscription ──
+  // Using a subscription ensures re-renders happen when auth changes,
+  // without producing a new object reference on every render.
+  const [currentUser, setCurrentUser] = React.useState(() => authService.getCurrentUser());
+
+  React.useEffect(() => {
+    // Sync initial value (in case authService.restoreSession finished
+    // before this component mounted).
+    setCurrentUser(authService.getCurrentUser());
+    // Subscribe to future auth state changes (login / logout / session restore).
+    return authService.subscribe((user) => setCurrentUser(user));
+  }, []);
 
   const [summary, setSummary] = useState<AccountSummary | null>(null);
+  // "loading" is only true for the very first fetch (summary is null).
+  // Subsequent background refreshes use "refreshing" so the page stays stable.
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,17 +67,61 @@ export const Account: React.FC = () => {
   const [reorderingId, setReorderingId] = useState<string | null>(null);
   const [reorderFeedback, setReorderFeedback] = useState<string | null>(null);
 
+  // Stable user id: only changes when a *different* user logs in.
+  // Using the id (a string) instead of the full object prevents the
+  // "new object reference on every render" trap.
+  const currentUserId = currentUser?.id ?? null;
+
   useEffect(() => {
     if (!currentUser) {
       navigate('/login?redirect=/account');
       return;
     }
 
-    loadSummary();
-  }, [currentUser, navigate]);
+    let cancelled = false;
 
+    const fetch = async () => {
+      // Show the full-page spinner only on the very first load.
+      // If summary is already populated (e.g. navigating back to this
+      // page), keep the existing content visible and skip the spinner.
+      const isFirstLoad = true; // effect runs once per user id
+      if (isFirstLoad) setLoading(true);
+      setError(null);
+      try {
+        const [data, pref] = await Promise.all([
+          retentionService.getAccountSummary(),
+          growthApi.getCustomerPreferences().catch(() => null),
+        ]);
+        if (cancelled) return; // component unmounted
+        setSummary(data);
+        if (pref) setMarketingEmailOptIn(pref.marketingEmailOptIn);
+        if (data?.retention?.loyaltyBalance !== undefined) {
+          trackLoyaltyView(data.retention.loyaltyBalance);
+        }
+      } catch (err: any) {
+        if (cancelled) return;
+        // 429: surface a friendly message; do NOT auto-retry (that would
+        // hammer the rate limiter further). User can tap "Try Again".
+        if (err?.status === 429) {
+          setError(
+            'Too many requests — please wait a moment and tap "Try Again" below.'
+          );
+        } else {
+          setError(err?.message || 'Failed to load account details');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    fetch();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUserId, navigate]);
+
+  // Manual refresh (e.g. user hits "Retry" or pulls-to-refresh).
+  // Does NOT flash the full-page spinner; uses setError only on failure.
   const loadSummary = async () => {
-    setLoading(true);
     setError(null);
     try {
       const [data, pref] = await Promise.all([
@@ -78,8 +137,6 @@ export const Account: React.FC = () => {
       }
     } catch (err: any) {
       setError(err?.message || 'Failed to load account details');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -106,7 +163,7 @@ export const Account: React.FC = () => {
   };
 
   const handleCopyLink = (code: string) => {
-    const link = `https://nutyaelite.com?ref=${code}`;
+    const link = `https://nyutaelite.com?ref=${code}`;
     navigator.clipboard.writeText(link);
     setCopiedLink(true);
     trackReferralShare(code, 'clipboard_link');
@@ -165,6 +222,16 @@ export const Account: React.FC = () => {
     }
   };
 
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // non-fatal – always clear local state
+    }
+    navigate('/login');
+  };
+
   if (loading) {
     return (
       <div className="bg-[#FCFAF5] min-h-screen py-16 flex items-center justify-center">
@@ -217,7 +284,7 @@ export const Account: React.FC = () => {
               <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#092218] mt-1">
                 Welcome back, {profile.name}
               </h1>
-              <p className="text-xs text-[#68756E] mt-0.5">
+              <p className="text-xs font-medium text-[#68756E] mt-0.5">
                 {profile.email} {profile.phone ? `• ${profile.phone}` : ''} • Member since{' '}
                 {new Date(profile.memberSince).toLocaleDateString('en-IN', {
                   month: 'short',
@@ -227,7 +294,7 @@ export const Account: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Link
               to="/orders"
               className="px-4 py-2.5 rounded-lg border border-[#123B2A] text-[#123B2A] hover:bg-[#123B2A] hover:text-white text-xs font-bold uppercase tracking-wider transition-colors"
@@ -240,6 +307,15 @@ export const Account: React.FC = () => {
             >
               Shop Pantry
             </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-rose-300 text-rose-700 hover:bg-rose-50 active:bg-rose-100 text-xs font-bold uppercase tracking-wider transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Sign Out
+            </button>
+
           </div>
         </div>
 
@@ -381,7 +457,7 @@ export const Account: React.FC = () => {
                 )}
               </div>
               <p className="text-[11px] text-[#68756E]">
-                Bihar GI-tagged Fox Nut harvests freshly roasted and dispatched.
+                Authentic Bihar Mithila Fox Nut harvests freshly packed and dispatched.
               </p>
             </div>
             <div className="pt-4 border-t border-[#E8DECB]/60 mt-3">

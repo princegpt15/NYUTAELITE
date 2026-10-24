@@ -9,7 +9,7 @@
 
 import type { User } from '../types';
 import { api, ApiError } from './api';
-import { getAccessToken, setTokens, clearTokens, getRefreshToken } from './authStorage';
+import { getAccessToken, setTokens, clearTokens, getRefreshToken, clearAllUserCache } from './authStorage';
 
 const AUTH_STORAGE_KEY = 'nyutaelite_user';
 
@@ -32,7 +32,7 @@ function normalizeUser(rawUser: any): User {
     id: rawUser.id,
     fullName: rawUser.fullName || rawUser.name || '',
     businessName: rawUser.businessName,
-    email: rawUser.email,
+    email: rawUser.email || '',
     phone: rawUser.phone || '',
     gstNumber: rawUser.gstNumber,
     role: rawUser.role || 'CUSTOMER',
@@ -72,7 +72,7 @@ export const authService = {
     }
   },
 
-  /** Register a new account. */
+  /** Register a new account with email / password. */
   async register(userData: {
     fullName: string;
     businessName?: string;
@@ -108,6 +108,53 @@ export const authService = {
     return normalized;
   },
 
+  /** Login or register using Google OAuth ID token credential. */
+  async loginWithGoogle(credential: string): Promise<User> {
+    const payload = { credential };
+    const res = await api.post<any>('/auth/google', payload);
+    const data = res?.data ?? res;
+    setTokens(data.accessToken, data.refreshToken);
+    storeUser(data.user);
+    const normalized = normalizeUser(data.user);
+    notifyListeners(normalized);
+    return normalized;
+  },
+
+  /** Request an OTP for a mobile phone number */
+  async requestOtp(
+    phone: string,
+    countryCode = '+91'
+  ): Promise<{
+    phone: string;
+    formatted: string;
+    cooldownSeconds: number;
+    expiresInSeconds: number;
+  }> {
+    const res = await api.post<any>('/auth/otp/request', { phone, countryCode });
+    return res?.data ?? res;
+  },
+
+  /** Verify the submitted 6-digit OTP and authenticate user */
+  async verifyOtp(
+    phone: string,
+    otp: string,
+    countryCode = '+91'
+  ): Promise<{
+    user: User;
+    isNewUser: boolean;
+  }> {
+    const res = await api.post<any>('/auth/otp/verify', { phone, otp, countryCode });
+    const data = res?.data ?? res;
+    setTokens(data.accessToken, data.refreshToken);
+    storeUser(data.user);
+    const normalized = normalizeUser(data.user);
+    notifyListeners(normalized);
+    return {
+      user: normalized,
+      isNewUser: Boolean(data.isNewUser),
+    };
+  },
+
   /** Refresh the access token using the stored refresh token. */
   async refresh(): Promise<void> {
     const refreshToken = getRefreshToken();
@@ -118,24 +165,32 @@ export const authService = {
     setTokens(data.accessToken, refreshToken);
   },
 
-  /** Logout – clear tokens and user data. */
+  /** Logout – revoke session on the backend then clear all local user data. */
   async logout(): Promise<void> {
     try {
       await api.post('/auth/logout', {});
     } catch {
-      // ignore backend errors – we still want to clear local state
+      // Backend errors are non-fatal — always clear local state regardless
     }
-    clearTokens();
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+    clearAllUserCache();
     notifyListeners(null);
   },
 
   /** Restore a session on app start.
-   *  - If an access token exists, verify it via `/auth/me`.
+   *  - If a valid user is already in memory, return it immediately
+   *   without hitting the network (prevents duplicate /auth/me calls
+   *   when App, AdminProtectedRoute, and Checkout all call this).
+   *  - If an access token exists but no user record, verify via `/auth/me`.
    *  - On 401, attempt a token refresh and retry.
    *  - If everything fails, clear tokens/user.
    */
   async restoreSession(): Promise<User | null> {
+    const existing = this.getCurrentUser();
+    if (existing) {
+      notifyListeners(existing);
+      return existing;
+    }
+
     const accessToken = getAccessToken();
     const refreshToken = getRefreshToken();
     if (!accessToken && !refreshToken) {
@@ -161,14 +216,12 @@ export const authService = {
           notifyListeners(normalized);
           return normalized;
         } catch {
-          // Refresh explicitly failed – clear authentication
           clearTokens();
           localStorage.removeItem(AUTH_STORAGE_KEY);
           notifyListeners(null);
           return null;
         }
       } else {
-        // Transient network or server error (e.g. 500, 502, 429) - keep local session intact
         const existing = this.getCurrentUser();
         if (existing) {
           notifyListeners(existing);

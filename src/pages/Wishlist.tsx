@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingBag, Trash2, ArrowRight, RefreshCw, AlertCircle, Check } from 'lucide-react';
-import { retentionService, type WishlistItem } from '../services/retention';
+import { wishlistService, type WishlistItem } from '../services/wishlist';
 import {
   trackViewWishlist,
   trackRemoveFromWishlist,
@@ -11,39 +11,49 @@ import {
 import { authService } from '../services/auth';
 
 export const Wishlist: React.FC = () => {
-  const currentUser = authService.getCurrentUser();
-  const [items, setItems] = useState<WishlistItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState(() => authService.getCurrentUser());
+  const [items, setItems] = useState<WishlistItem[]>(() => wishlistService.getItems());
+  const [loading, setLoading] = useState(
+    () => wishlistService.getItems().length === 0 && Boolean(authService.getCurrentUser())
+  );
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [movingId, setMovingId] = useState<string | null>(null);
 
   useEffect(() => {
-    loadWishlist();
-  }, []);
+    // 1. Subscribe to auth changes
+    const unsubAuth = authService.subscribe((user) => {
+      setCurrentUser(user);
+    });
 
-  const loadWishlist = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await retentionService.getWishlist();
-      setItems(data);
-      if (data.length > 0) {
-        trackViewWishlist(data.map((i) => i.product));
+    // 2. Subscribe to wishlist changes
+    const unsubWishlist = wishlistService.subscribe((newItems) => {
+      setItems(newItems);
+      if (newItems.length > 0) {
+        trackViewWishlist(newItems.map((i) => i.product).filter(Boolean));
       }
-    } catch (err: any) {
-      setError(err?.message || 'Failed to load your wishlist');
-    } finally {
-      setLoading(false);
+    });
+
+    // 3. Silent background refresh
+    if (wishlistService.getItems().length === 0 && Boolean(authService.getCurrentUser())) {
+      setLoading(true);
+      wishlistService.loadWishlist().finally(() => setLoading(false));
+    } else {
+      wishlistService.loadWishlist().catch(() => {});
     }
-  };
+
+    return () => {
+      unsubAuth();
+      unsubWishlist();
+    };
+  }, []);
 
   const handleRemove = async (item: WishlistItem) => {
     try {
-      await retentionService.removeFromWishlist(item.productId);
-      setItems((prev) => prev.filter((i) => i.id !== item.id));
-      trackRemoveFromWishlist(item.product);
-      setFeedback({ type: 'success', text: `Removed ${item.product.name} from wishlist.` });
+      await wishlistService.removeItem(item.productId);
+      if (item.product) {
+        trackRemoveFromWishlist(item.product);
+      }
+      setFeedback({ type: 'success', text: `Removed ${item.product?.name || 'item'} from wishlist.` });
     } catch (err: any) {
       setFeedback({ type: 'error', text: err?.message || 'Failed to remove item.' });
     }
@@ -52,10 +62,11 @@ export const Wishlist: React.FC = () => {
   const handleMoveToCart = async (item: WishlistItem) => {
     setMovingId(item.productId);
     try {
-      const res = await retentionService.moveToCart(item.productId);
-      setItems((prev) => prev.filter((i) => i.id !== item.id));
-      trackWishlistToCart(item.product);
-      setFeedback({ type: 'success', text: res.message || `${item.product.name} moved to your cart!` });
+      await wishlistService.moveToCart(item);
+      if (item.product) {
+        trackWishlistToCart(item.product);
+      }
+      setFeedback({ type: 'success', text: `${item.product?.name || 'Item'} moved to your cart!` });
     } catch (err: any) {
       setFeedback({ type: 'error', text: err?.message || 'Failed to move item to cart.' });
     } finally {
@@ -75,10 +86,10 @@ export const Wishlist: React.FC = () => {
             <h1 className="font-serif text-3xl font-bold text-[#092218] mt-1">
               Your Wishlist &amp; Saved for Later
             </h1>
-            <p className="text-xs sm:text-sm text-[#68756E] mt-0.5">
+            <p className="text-xs sm:text-sm font-medium text-[#68756E] mt-0.5">
               {currentUser
                 ? `${items.length} item(s) saved under ${currentUser.email}`
-                : 'Save Bihar makhana packs to purchase anytime'}
+                : `${items.length} item(s) saved on this device`}
             </p>
           </div>
 
@@ -90,6 +101,22 @@ export const Wishlist: React.FC = () => {
             <ArrowRight className="w-4 h-4 text-[#C6A15B]" />
           </Link>
         </div>
+
+        {/* Guest storage notification */}
+        {!currentUser && items.length > 0 && (
+          <div className="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+            <p>
+              <strong>Saved on this browser:</strong> Sign in or register to sync your wishlist across your phone, tablet, and computer.
+            </p>
+            <Link
+              to="/login?redirect=/wishlist"
+              className="inline-flex items-center gap-1.5 font-bold text-[#123B2A] hover:text-[#C6A15B] transition-colors shrink-0 uppercase tracking-wider"
+            >
+              <span>Sign In Now</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        )}
 
         {/* Feedback Alert */}
         {feedback && (
@@ -110,7 +137,7 @@ export const Wishlist: React.FC = () => {
             </div>
             <button
               onClick={() => setFeedback(null)}
-              className="text-xs font-bold underline ml-3"
+              className="text-xs font-bold underline ml-3 cursor-pointer"
             >
               Dismiss
             </button>
@@ -118,20 +145,10 @@ export const Wishlist: React.FC = () => {
         )}
 
         {/* Content */}
-        {loading ? (
+        {loading && items.length === 0 ? (
           <div className="bg-white rounded-2xl p-12 text-center text-xs text-[#68756E] border border-[#E8DECB] space-y-3">
             <RefreshCw className="w-6 h-6 text-[#C6A15B] animate-spin mx-auto" />
             <p>Loading your saved pantry packs...</p>
-          </div>
-        ) : error ? (
-          <div className="bg-white rounded-2xl p-12 text-center border border-[#E8DECB] space-y-3">
-            <p className="text-xs text-rose-700">{error}</p>
-            <button
-              onClick={loadWishlist}
-              className="px-4 py-2 bg-[#123B2A] text-white rounded-lg text-xs font-bold uppercase tracking-wider"
-            >
-              Retry
-            </button>
           </div>
         ) : items.length === 0 ? (
           <div className="bg-white rounded-2xl p-12 text-center border border-[#E8DECB] space-y-4">
@@ -139,7 +156,7 @@ export const Wishlist: React.FC = () => {
               <Heart className="w-6 h-6" />
             </div>
             <h2 className="font-serif text-2xl font-bold text-[#1C1C1C]">Your Wishlist is Empty</h2>
-            <p className="text-xs text-[#68756E] max-w-sm mx-auto">
+            <p className="text-xs font-medium text-[#68756E] max-w-sm mx-auto">
               You haven't saved any items yet. Browse our freshly harvested Bihar makhana and click
               the heart icon to save packs for later.
             </p>
@@ -155,10 +172,14 @@ export const Wishlist: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {items.map((item) => {
               const product = item.product;
-              const isOutOfStock = product.stock <= 0;
+              if (!product) return null;
+
+              const isOutOfStock = (product.stock ?? 1) <= 0;
               const imageUrl =
-                product.images && product.images.length > 0
+                Array.isArray(product.images) && product.images.length > 0
                   ? product.images[0]
+                  : typeof product.images === 'string'
+                  ? product.images
                   : '/assets/product-main.png';
 
               return (
@@ -171,7 +192,7 @@ export const Wishlist: React.FC = () => {
                       <img
                         src={imageUrl}
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = '/assets/product-main.png';
                         }}
@@ -188,14 +209,14 @@ export const Wishlist: React.FC = () => {
                         {product.name}
                       </h3>
                       {product.weight && (
-                        <span className="text-[11px] text-[#68756E] block">{product.weight}</span>
+                        <span className="text-[11px] font-bold text-[#68756E] block">{product.weight}</span>
                       )}
                       <div className="flex items-baseline gap-2 mt-1">
                         <span className="text-lg font-extrabold text-[#123B2A]">
                           ₹{product.price}
                         </span>
                         {product.compareAtPrice && product.compareAtPrice > product.price && (
-                          <span className="text-xs text-[#68756E] line-through">
+                          <span className="text-xs font-medium text-[#68756E] line-through">
                             ₹{product.compareAtPrice}
                           </span>
                         )}
@@ -207,7 +228,7 @@ export const Wishlist: React.FC = () => {
                     <button
                       onClick={() => handleMoveToCart(item)}
                       disabled={isOutOfStock || movingId === product.id}
-                      className="flex-1 px-3 py-2 rounded-lg bg-[#123B2A] hover:bg-[#092218] text-white text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5 shadow-xs"
+                      className="flex-1 px-3 py-2 rounded-lg bg-[#123B2A] hover:bg-[#092218] text-white text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-98"
                     >
                       {movingId === product.id ? (
                         <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -219,8 +240,9 @@ export const Wishlist: React.FC = () => {
 
                     <button
                       onClick={() => handleRemove(item)}
-                      className="p-2 rounded-lg border border-[#E8DECB] hover:bg-rose-50 hover:border-rose-200 text-[#68756E] hover:text-rose-600 transition-colors"
+                      className="p-2 rounded-lg border border-[#E8DECB] hover:bg-rose-50 hover:border-rose-200 text-[#68756E] hover:text-rose-600 transition-colors cursor-pointer"
                       title="Remove from wishlist"
+                      aria-label={`Remove ${product.name} from wishlist`}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

@@ -191,11 +191,11 @@ export const Cart: React.FC = () => {
             {/* Order Calculation Breakdown */}
             <div className="pt-2 space-y-2 text-xs text-[#68756E]">
               <div className="flex justify-between">
-                <span>Subtotal ({items.reduce((a, b) => a + b.quantity, 0)} items)</span>
+                <span className="font-medium text-[#1C1C1C]">Subtotal ({items.reduce((a, b) => a + b.quantity, 0)} items)</span>
                 <span className="font-bold text-[#1C1C1C]">₹{subtotal}</span>
               </div>
               <div className="flex justify-between">
-                <span>Express Pan-India Delivery</span>
+                <span className="font-medium text-[#1C1C1C]">Express Pan-India Delivery</span>
                 <span className="font-bold text-[#1C1C1C]">
                   {shippingFee === 0 ? <span className="text-[#123B2A]">FREE</span> : `₹${shippingFee}`}
                 </span>
@@ -216,7 +216,7 @@ export const Cart: React.FC = () => {
             </button>
 
             {/* Value Badges */}
-            <div className="grid grid-cols-2 gap-2 pt-3 text-[11px] text-[#68756E] border-t border-[#E8DECB]">
+            <div className="grid grid-cols-2 gap-2 pt-3 text-[11px] font-medium text-[#68756E] border-t border-[#E8DECB]">
               <div className="flex items-center gap-1.5">
                 <Truck className="w-3.5 h-3.5 text-[#123B2A]" />
                 <span>Pan-India Delivery</span>

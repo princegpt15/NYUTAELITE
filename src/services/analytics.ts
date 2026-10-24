@@ -31,7 +31,7 @@ declare global {
 export const ANALYTICS_CONSENT_STORAGE_KEY = 'nyutaelite_analytics_consent';
 export const PURCHASED_TXNS_STORAGE_KEY = 'nyutaelite_ga4_purchased_txns';
 export const REFUNDED_TXNS_STORAGE_KEY = 'nyutaelite_ga4_refunded_txns';
-export const CANONICAL_ORIGIN = 'https://nutyaelite.com';
+export const CANONICAL_ORIGIN = 'https://nyutaelite.com';
 const BRAND_NAME = 'NYUTA ELITE MAKHANA';
 const DEFAULT_CURRENCY = 'INR';
 

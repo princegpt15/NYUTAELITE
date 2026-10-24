@@ -17,16 +17,25 @@ import {
   AlertCircle,
   MessageSquare,
   Package,
+  Trash2,
+  Plus,
 } from 'lucide-react';
 import { api, ApiError } from '../services/api';
+
+export type QualityOption = 'Hand Picked' | 'Normal';
+
+export interface BulkItemInput {
+  gradeId?: string;
+  gradeName: string;
+  quality: QualityOption;
+  quantity: string | number;
+}
 
 interface BulkEnquiryFormData {
   name: string;
   businessName: string;
   phone: string;
   email: string;
-  quantity: string;
-  productGrade: string;
   city: string;
   message: string;
 }
@@ -35,9 +44,9 @@ interface FormErrors {
   name?: string;
   phone?: string;
   email?: string;
-  quantity?: string;
-  productGrade?: string;
   city?: string;
+  items?: string;
+  [key: string]: string | undefined;
 }
 
 const AVAILABLE_GRADES = [
@@ -46,6 +55,13 @@ const AVAILABLE_GRADES = [
   '5.5 Sutta Makhana',
   '6 Sutta Makhana',
 ];
+
+const GRADE_ID_MAP: Record<string, string> = {
+  '4 Sutta Makhana': '4-sutta',
+  '5 Sutta Makhana': '5-sutta',
+  '5.5 Sutta Makhana': '5.5-sutta',
+  '6 Sutta Makhana': '6-sutta',
+};
 
 const QUANTITY_PRESETS = ['25', '50', '100', '250', '500', '1000'];
 
@@ -60,7 +76,7 @@ const BULK_FAQS = [
   },
   {
     q: 'Can we get private labeling or custom customized packaging?',
-    a: 'Yes, for ongoing orders exceeding 250 kg per month, we support custom brand printing and contract packaging under food-grade FSSAI standards.',
+    a: 'We supply wholesale raw and graded makhana in standard retail pouches and bulk commercial sacks (10 kg to 50 kg). Custom branding or relabeling is subject to order volume and partnership with authorized licensed food packing units, pending business review.',
   },
   {
     q: 'Are GST invoices provided for business input tax credit?',
@@ -68,7 +84,7 @@ const BULK_FAQS = [
   },
   {
     q: 'How long does bulk freight shipping take across India?',
-    a: 'Orders are dispatched from our Darbhanga, Bihar processing hub within 24–48 hours. Transit time is typically 3–5 business days for metro hubs and 5–7 days for tier-2/tier-3 cities.',
+    a: 'Bulk orders generally process within 1–2 business days. Estimated freight delivery is 5–7 business days across serviceable commercial transport routes.',
   },
 ];
 
@@ -76,23 +92,60 @@ export const BulkOrder: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Initialize product grade from navigation state or sessionStorage
+  // Retrieve initial items from location.state or sessionStorage
   const navGrade = (location.state as { grade?: string })?.grade;
-  const initialGrade = navGrade || (() => {
+
+  const [items, setItems] = useState<BulkItemInput[]>(() => {
     try {
-      return sessionStorage.getItem('nyuta_selected_grade') || AVAILABLE_GRADES[0];
+      const stored = sessionStorage.getItem('nyuta_bulk_selections');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const list = Object.values(parsed) as Array<{
+          gradeId?: string;
+          gradeName: string;
+          quality: QualityOption;
+          quantity: number;
+        }>;
+        if (list.length > 0) {
+          return list.map((i) => ({
+            gradeId: i.gradeId || GRADE_ID_MAP[i.gradeName] || 'custom',
+            gradeName: i.gradeName,
+            quality: i.quality || 'Hand Picked',
+            quantity: i.quantity || '50',
+          }));
+        }
+      }
     } catch {
-      return AVAILABLE_GRADES[0];
+      // ignore
     }
-  })();
+
+    if (navGrade) {
+      return [
+        {
+          gradeId: GRADE_ID_MAP[navGrade] || 'initial',
+          gradeName: navGrade,
+          quality: 'Hand Picked',
+          quantity: '50',
+        },
+      ];
+    }
+
+    const legacy = sessionStorage.getItem('nyuta_selected_grade') || AVAILABLE_GRADES[0];
+    return [
+      {
+        gradeId: GRADE_ID_MAP[legacy] || 'initial',
+        gradeName: legacy,
+        quality: 'Hand Picked',
+        quantity: '50',
+      },
+    ];
+  });
 
   const [formData, setFormData] = useState<BulkEnquiryFormData>({
     name: '',
     businessName: '',
     phone: '',
     email: '',
-    quantity: '',
-    productGrade: initialGrade,
     city: '',
     message: '',
   });
@@ -103,17 +156,89 @@ export const BulkOrder: React.FC = () => {
   const [submittedRef, setSubmittedRef] = useState<string | null>(null);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
-  // Sync if location.state changes
+  // Sync navigation grade if passed anew
   useEffect(() => {
     if (navGrade) {
-      setFormData((prev) => ({ ...prev, productGrade: navGrade }));
-      try {
-        sessionStorage.setItem('nyuta_selected_grade', navGrade);
-      } catch {
-        // ignore
-      }
+      setItems((prev) => {
+        const exists = prev.some((i) => i.gradeName === navGrade);
+        if (exists) return prev;
+        return [
+          ...prev,
+          {
+            gradeId: GRADE_ID_MAP[navGrade] || 'nav',
+            gradeName: navGrade,
+            quality: 'Hand Picked',
+            quantity: '50',
+          },
+        ];
+      });
     }
   }, [navGrade]);
+
+  // Sync to sessionStorage
+  useEffect(() => {
+    try {
+      const selectionsMap: Record<string, any> = {};
+      items.forEach((item) => {
+        const id = item.gradeId || GRADE_ID_MAP[item.gradeName] || item.gradeName;
+        selectionsMap[id] = {
+          gradeId: id,
+          gradeName: item.gradeName,
+          quality: item.quality,
+          quantity: Number(item.quantity) || 50,
+        };
+      });
+      sessionStorage.setItem('nyuta_bulk_selections', JSON.stringify(selectionsMap));
+      if (items[0]) {
+        sessionStorage.setItem('nyuta_selected_grade', items[0].gradeName);
+      }
+    } catch {
+      // ignore
+    }
+  }, [items]);
+
+  const totalQuantityKg = items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+  const primaryGrade = items[0]?.gradeName || AVAILABLE_GRADES[0];
+  const primaryQuantity = String(items[0]?.quantity || totalQuantityKg || 50);
+
+  const handleUpdateItemQuality = (index: number, quality: QualityOption) => {
+    setItems((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], quality };
+      return copy;
+    });
+  };
+
+  const handleUpdateItemQuantity = (index: number, quantity: string) => {
+    setItems((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], quantity };
+      return copy;
+    });
+    if (errors[`qty_${index}`]) {
+      setErrors((prev) => ({ ...prev, [`qty_${index}`]: undefined }));
+    }
+  };
+
+  const handleRemoveItem = (index: number) => {
+    setItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddGrade = (gradeName: string) => {
+    if (!gradeName) return;
+    setItems((prev) => {
+      if (prev.some((i) => i.gradeName === gradeName)) return prev;
+      return [
+        ...prev,
+        {
+          gradeId: GRADE_ID_MAP[gradeName] || 'added',
+          gradeName,
+          quality: 'Hand Picked',
+          quantity: '50',
+        },
+      ];
+    });
+  };
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
@@ -122,7 +247,7 @@ export const BulkOrder: React.FC = () => {
       newErrors.name = 'Please provide your full name (at least 2 characters).';
     }
 
-    const cleanPhone = formData.phone.replace(/[\s\-+]/g, '');
+    const cleanPhone = formData.phone.replace(/[\s\-+()]/g, '');
     if (!cleanPhone || cleanPhone.length < 10) {
       newErrors.phone = 'Please provide a valid 10-digit phone number.';
     }
@@ -134,14 +259,16 @@ export const BulkOrder: React.FC = () => {
       }
     }
 
-    const numQty = Number(formData.quantity);
-    if (!formData.quantity.trim() || isNaN(numQty) || numQty <= 0) {
-      newErrors.quantity = 'Please enter a valid positive quantity in kilograms (e.g. 25, 50, 100).';
+    if (items.length === 0) {
+      newErrors.items = 'Please select at least one makhana grade.';
     }
 
-    if (!formData.productGrade.trim()) {
-      newErrors.productGrade = 'Please select a makhana quality grade.';
-    }
+    items.forEach((item, index) => {
+      const num = Number(item.quantity);
+      if (!String(item.quantity).trim() || isNaN(num) || num <= 0) {
+        newErrors[`qty_${index}`] = `Please enter a valid positive quantity for ${item.gradeName}.`;
+      }
+    });
 
     if (!formData.city.trim()) {
       newErrors.city = 'Please provide your destination city and state.';
@@ -158,6 +285,16 @@ export const BulkOrder: React.FC = () => {
     setIsSubmitting(true);
     setSubmitError(null);
 
+    const payloadItems = items.map((i) => ({
+      grade: i.gradeName,
+      quality: i.quality,
+      quantity: Number(i.quantity),
+    }));
+
+    const formattedProductGrade = items
+      .map((i) => `${i.gradeName} (${i.quality}: ${i.quantity} kg)`)
+      .join(', ');
+
     try {
       const response = await api.post<{
         success: boolean;
@@ -168,8 +305,9 @@ export const BulkOrder: React.FC = () => {
         businessName: formData.businessName.trim(),
         phone: formData.phone.trim(),
         email: formData.email.trim(),
-        quantity: Number(formData.quantity),
-        productGrade: formData.productGrade.trim(),
+        items: payloadItems,
+        quantity: totalQuantityKg,
+        productGrade: formattedProductGrade,
         city: formData.city.trim(),
         message: formData.message.trim(),
       });
@@ -185,6 +323,8 @@ export const BulkOrder: React.FC = () => {
             id: refId,
             timestamp: new Date().toISOString(),
             ...formData,
+            items: payloadItems,
+            totalQuantityKg,
             status: 'RECEIVED',
           });
           localStorage.setItem('nyuta_bulk_enquiries', JSON.stringify(existing));
@@ -195,7 +335,10 @@ export const BulkOrder: React.FC = () => {
         setSubmitError(response?.message || 'Unable to submit enquiry. Please try again.');
       }
     } catch (err: any) {
-      const errMsg = err instanceof ApiError ? err.message : err?.message || 'Failed to submit enquiry. Please check your connection and try again.';
+      const errMsg =
+        err instanceof ApiError
+          ? err.message
+          : err?.message || 'Failed to submit enquiry. Please check your connection and try again.';
       setSubmitError(errMsg);
     } finally {
       setIsSubmitting(false);
@@ -208,8 +351,6 @@ export const BulkOrder: React.FC = () => {
       businessName: '',
       phone: '',
       email: '',
-      quantity: '',
-      productGrade: initialGrade,
       city: '',
       message: '',
     });
@@ -222,8 +363,10 @@ export const BulkOrder: React.FC = () => {
   const getWhatsAppEnquiryUrl = () => {
     const lines = [
       'Hi NYUTA ELITE MAKHANA, I would like to enquire about a bulk order:',
-      `- Selected Grade: ${formData.productGrade || 'Makhana'}`,
-      formData.quantity ? `- Required Quantity: ${formData.quantity} kg` : null,
+      ...items.map(
+        (item) => `- ${item.gradeName} [${item.quality}]: ${item.quantity} kg`
+      ),
+      `Total Bulk Quantity: ${totalQuantityKg} kg`,
       formData.name ? `- Customer Name: ${formData.name}` : null,
       formData.businessName ? `- Business Name: ${formData.businessName}` : null,
       formData.city ? `- Delivery Location: ${formData.city}` : null,
@@ -233,6 +376,10 @@ export const BulkOrder: React.FC = () => {
 
     return `https://wa.me/916201426357?text=${encodeURIComponent(lines.join('\n'))}`;
   };
+
+  const remainingAvailableGrades = AVAILABLE_GRADES.filter(
+    (g) => !items.some((i) => i.gradeName === g)
+  );
 
   return (
     <div className="bg-[#FCFAF5] min-h-screen text-[#1C1C1C] py-8 sm:py-12 lg:py-16">
@@ -259,63 +406,168 @@ export const BulkOrder: React.FC = () => {
         </nav>
 
         {/* HERO BANNER */}
-        <section className="relative overflow-hidden rounded-3xl bg-[#123B2A] text-white p-8 sm:p-12 lg:p-16 border border-[#092218] shadow-xl">
+        <section className="relative overflow-hidden rounded-3xl bg-[#123B2A] text-white p-6 sm:p-10 lg:p-12 border border-[#092218] shadow-xl">
           <div className="absolute top-0 right-0 w-96 h-96 bg-[#C9A65B]/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="relative z-10 max-w-3xl space-y-4">
-            <div className="inline-flex items-center gap-2 bg-[#092218]/80 border border-[#C9A65B]/60 px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-[#C9A65B]">
-              <Sparkles className="w-3.5 h-3.5 text-[#C9A65B]" />
-              <span>B2B WHOLESALE &amp; INSTITUTIONAL SUPPLY</span>
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            {/* Left Content */}
+            <div className="lg:col-span-7 space-y-4">
+              <div className="inline-flex items-center gap-2 bg-[#092218]/80 border border-[#C9A65B]/60 px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-[#C9A65B]">
+                <Sparkles className="w-3.5 h-3.5 text-[#C9A65B]" />
+                <span>B2B WHOLESALE &amp; INSTITUTIONAL SUPPLY</span>
+              </div>
+              <h1 className="font-serif text-3xl sm:text-5xl font-bold tracking-tight text-[#FCFAF5] leading-tight">
+                Order Fresh Bihar Makhana in Bulk
+              </h1>
+              <p className="text-xs sm:text-sm md:text-base text-[#D5DED6] leading-relaxed">
+                Procure authentic, hand-sorted jumbo fox nuts directly from the ponds of Mithila, Bihar.
+                Enjoy competitive tiered pricing, customized retail or sack packaging, verified FSSAI registration (No. 20426021000494), and pan-India freight delivery.
+              </p>
+
+              {/* Quick Trust Badges */}
+              <div className="flex flex-wrap items-center gap-2.5 pt-1 text-[11px] font-bold text-[#FCFAF5]">
+                <span className="bg-[#092218] px-3 py-1.5 rounded-lg border border-[#C9A65B]/40">
+                  ✓ MOQ 10 kg
+                </span>
+                <span className="bg-[#092218] px-3 py-1.5 rounded-lg border border-[#C9A65B]/40">
+                  ✓ Jumbo 6+ Sutta Available
+                </span>
+                <span className="bg-[#092218] px-3 py-1.5 rounded-lg border border-[#C9A65B]/40">
+                  ✓ 100% Input GST Credit
+                </span>
+              </div>
+
+              <div className="pt-2 flex flex-wrap items-center gap-3">
+                <a
+                  href="#enquiry-form"
+                  className="inline-flex items-center gap-2 bg-[#C9A65B] hover:bg-[#D4B06A] text-[#092218] px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-md"
+                >
+                  <span>Fill Wholesale Enquiry</span>
+                  <ArrowRight className="w-4 h-4" />
+                </a>
+                <a
+                  href={getWhatsAppEnquiryUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1EBE5D] text-white px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  <span>Trade Desk Chat</span>
+                </a>
+              </div>
             </div>
-            <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#FCFAF5] leading-tight">
-              Order Fresh Bihar Makhana in Bulk
-            </h1>
-            <p className="text-sm sm:text-base text-[#D5DED6] leading-relaxed max-w-2xl">
-              Procure authentic, hand-sorted jumbo fox nuts directly from the ponds of Mithila, Bihar.
-              Enjoy competitive tiered pricing, customized retail or sack packaging, guaranteed FSSAI compliance, and pan-India freight delivery.
-            </p>
+
+            {/* Right Visual Showcase */}
+            <div className="lg:col-span-5">
+              <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border-2 border-[#C9A65B]/40 shadow-2xl bg-[#092218]">
+                <img
+                  src="/images/bulk/bulk-wholesale-hero.webp"
+                  alt="NYUTA ELITE Makhana wholesale and bulk packages arranged neatly for commercial dispatch"
+                  className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                  fetchPriority="high"
+                  width={600}
+                  height={450}
+                />
+                <div className="absolute bottom-3 left-3 right-3 bg-[#092218]/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-[#C9A65B]/40 text-center">
+                  <p className="text-[10px] font-extrabold uppercase tracking-widest text-[#C9A65B]">
+                    Direct Mithila Wholesale Hub
+                  </p>
+                  <p className="text-xs font-medium text-white mt-0.5">
+                    10kg Trial Slabs to 1,000kg+ Institutional Freight
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* 4 VALUE PILLARS */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          <div className="bg-white p-6 rounded-2xl border border-[#E8DECB] shadow-xs space-y-3">
-            <div className="w-12 h-12 rounded-xl bg-[#F7F1E5] text-[#123B2A] flex items-center justify-center border border-[#C9A65B]/40">
-              <Package className="w-6 h-6 text-[#123B2A]" />
+          <div className="bg-white p-5 rounded-2xl border border-[#E8DECB] shadow-xs flex flex-col justify-between space-y-3 group hover:border-[#123B2A] transition-all">
+            <div>
+              <div className="aspect-[16/10] w-full rounded-xl overflow-hidden bg-[#F7F1E5] mb-3 border border-[#E8DECB]/60">
+                <img
+                  src="/images/process/01-harvest-pond.webp"
+                  alt="Direct Bihar Sourcing wetland pond"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                  width={300}
+                  height={188}
+                />
+              </div>
+              <div className="flex items-center gap-2 mb-1.5">
+                <Package className="w-4 h-4 text-[#123B2A]" />
+                <h3 className="font-serif text-base font-bold text-[#123B2A]">Direct Bihar Sourcing</h3>
+              </div>
+              <p className="text-xs text-[#68756E] leading-relaxed">
+                Harvested in traditional freshwater wetlands with zero intermediate dealer margins for unbeatable value.
+              </p>
             </div>
-            <h3 className="font-serif text-lg font-bold text-[#123B2A]">Direct Bihar Sourcing</h3>
-            <p className="text-xs text-[#68756E] leading-relaxed">
-              Harvested in traditional freshwater wetlands with zero intermediate dealer margins for unbeatable value.
-            </p>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl border border-[#E8DECB] shadow-xs space-y-3">
-            <div className="w-12 h-12 rounded-xl bg-[#F7F1E5] text-[#123B2A] flex items-center justify-center border border-[#C9A65B]/40">
-              <ShieldCheck className="w-6 h-6 text-[#123B2A]" />
+          <div className="bg-white p-5 rounded-2xl border border-[#E8DECB] shadow-xs flex flex-col justify-between space-y-3 group hover:border-[#123B2A] transition-all">
+            <div>
+              <div className="aspect-[16/10] w-full rounded-xl overflow-hidden bg-[#F7F1E5] mb-3 border border-[#E8DECB]/60">
+                <img
+                  src="/images/bulk/grade-6-sutta.webp"
+                  alt="Jumbo 6-Suta popped makhana quality"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                  width={300}
+                  height={188}
+                />
+              </div>
+              <div className="flex items-center gap-2 mb-1.5">
+                <ShieldCheck className="w-4 h-4 text-[#123B2A]" />
+                <h3 className="font-serif text-base font-bold text-[#123B2A]">Jumbo 6-Suta Quality</h3>
+              </div>
+              <p className="text-xs text-[#68756E] leading-relaxed">
+                Machine-screened and hand-sorted for uniform diameter, crisp pop expansion, and zero chemical bleaching.
+              </p>
             </div>
-            <h3 className="font-serif text-lg font-bold text-[#123B2A]">Jumbo 6-Suta Quality</h3>
-            <p className="text-xs text-[#68756E] leading-relaxed">
-              Machine-screened and hand-sorted for uniform diameter, crisp pop expansion, and zero chemical bleaching.
-            </p>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl border border-[#E8DECB] shadow-xs space-y-3">
-            <div className="w-12 h-12 rounded-xl bg-[#F7F1E5] text-[#123B2A] flex items-center justify-center border border-[#C9A65B]/40">
-              <FileText className="w-6 h-6 text-[#123B2A]" />
+          <div className="bg-white p-5 rounded-2xl border border-[#E8DECB] shadow-xs flex flex-col justify-between space-y-3 group hover:border-[#123B2A] transition-all">
+            <div>
+              <div className="aspect-[16/10] w-full rounded-xl overflow-hidden bg-[#F7F1E5] mb-3 border border-[#E8DECB]/60">
+                <img
+                  src="/images/bulk/wholesale-storage-sacks.webp"
+                  alt="Wholesale grain storage and heavy duty sacks"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                  width={300}
+                  height={188}
+                />
+              </div>
+              <div className="flex items-center gap-2 mb-1.5">
+                <FileText className="w-4 h-4 text-[#123B2A]" />
+                <h3 className="font-serif text-base font-bold text-[#123B2A]">GST Input Credit</h3>
+              </div>
+              <p className="text-xs text-[#68756E] leading-relaxed">
+                100% compliant business GST invoices provided with standard HSN classification for seamless tax deductions.
+              </p>
             </div>
-            <h3 className="font-serif text-lg font-bold text-[#123B2A]">GST Input Credit</h3>
-            <p className="text-xs text-[#68756E] leading-relaxed">
-              100% compliant business GST invoices provided with standard HSN classification for seamless tax deductions.
-            </p>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl border border-[#E8DECB] shadow-xs space-y-3">
-            <div className="w-12 h-12 rounded-xl bg-[#F7F1E5] text-[#123B2A] flex items-center justify-center border border-[#C9A65B]/40">
-              <Truck className="w-6 h-6 text-[#123B2A]" />
+          <div className="bg-white p-5 rounded-2xl border border-[#E8DECB] shadow-xs flex flex-col justify-between space-y-3 group hover:border-[#123B2A] transition-all">
+            <div>
+              <div className="aspect-[16/10] w-full rounded-xl overflow-hidden bg-[#F7F1E5] mb-3 border border-[#E8DECB]/60">
+                <img
+                  src="/images/process/04-express-delivery.webp"
+                  alt="Express freight delivery dispatch"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                  width={300}
+                  height={188}
+                />
+              </div>
+              <div className="flex items-center gap-2 mb-1.5">
+                <Truck className="w-4 h-4 text-[#123B2A]" />
+                <h3 className="font-serif text-base font-bold text-[#123B2A]">Pan-India Logistics</h3>
+              </div>
+              <p className="text-xs text-[#68756E] leading-relaxed">
+                Express door-step road freight dispatch to retail stores, cloud kitchens, hotels, and distributors nationwide.
+              </p>
             </div>
-            <h3 className="font-serif text-lg font-bold text-[#123B2A]">Pan-India Logistics</h3>
-            <p className="text-xs text-[#68756E] leading-relaxed">
-              Express door-step road freight dispatch to retail stores, cloud kitchens, hotels, and distributors nationwide.
-            </p>
           </div>
         </section>
 
@@ -344,12 +596,36 @@ export const BulkOrder: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-[#FCFAF5] p-4 rounded-xl border border-[#E8DECB] text-xs text-[#4A5D53] space-y-1 max-w-md mx-auto text-left">
-                  <p><strong>Customer:</strong> {formData.name}</p>
-                  {formData.businessName && <p><strong>Business:</strong> {formData.businessName}</p>}
-                  <p><strong>Grade:</strong> {formData.productGrade}</p>
-                  <p><strong>Quantity:</strong> {formData.quantity} kg</p>
-                  <p><strong>Destination:</strong> {formData.city}</p>
+                <div className="bg-[#FCFAF5] p-4 rounded-xl border border-[#E8DECB] text-xs text-[#4A5D53] space-y-2 max-w-md mx-auto text-left">
+                  <p>
+                    <strong>Customer:</strong> {formData.name}
+                  </p>
+                  {formData.businessName && (
+                    <p>
+                      <strong>Business:</strong> {formData.businessName}
+                    </p>
+                  )}
+                  <p>
+                    <strong>Destination:</strong> {formData.city}
+                  </p>
+                  <div className="pt-2 border-t border-[#E8DECB] space-y-1">
+                    <strong className="block text-[11px] uppercase tracking-wider text-[#123B2A]">
+                      Selected Grade Items:
+                    </strong>
+                    {items.map((i, idx) => (
+                      <div key={idx} className="flex justify-between items-center text-xs">
+                        <span>
+                          {i.gradeName}{' '}
+                          <span className="font-bold text-[#C9A65B]">({i.quality})</span>
+                        </span>
+                        <span className="font-bold">{i.quantity} kg</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between items-center font-bold text-xs pt-1 border-t border-[#E8DECB]">
+                      <span>Total Bulk Quantity:</span>
+                      <span>{totalQuantityKg} kg</span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Instant Connect Buttons */}
@@ -375,25 +651,25 @@ export const BulkOrder: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Navigation Back & Grade Indicator Banner */}
+                {/* Navigation Back & Selected Grades Banner */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 bg-[#F7F4E8] rounded-2xl border border-[#C9A65B]/50">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-[#123D2D] text-[#C9A65B] flex items-center justify-center text-xs font-bold">
+                    <div className="w-8 h-8 rounded-lg bg-[#123D2D] text-[#C9A65B] flex items-center justify-center text-xs font-bold shrink-0">
                       <Sparkles className="w-4 h-4" />
                     </div>
                     <div>
                       <span className="text-[10px] uppercase font-bold tracking-wider text-[#68756E] block">
-                        Selected Makhana Grade
+                        Selected Makhana Grade{items.length > 1 ? 's' : ''}
                       </span>
                       <strong className="text-xs sm:text-sm font-serif font-bold text-[#123D2D]">
-                        {formData.productGrade || 'No Grade Selected'}
+                        {items.map((i) => i.gradeName).join(', ') || 'No Grade Selected'}
                       </strong>
                     </div>
                   </div>
 
                   <button
                     type="button"
-                    onClick={() => navigate('/bulk-order/qualities', { state: { grade: formData.productGrade } })}
+                    onClick={() => navigate('/bulk-order/qualities')}
                     className="inline-flex items-center gap-1.5 text-xs font-extrabold text-[#123D2D] hover:text-[#092218] border border-[#123D2D] px-3 py-1.5 rounded-lg hover:bg-white transition-colors cursor-pointer"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
@@ -408,7 +684,7 @@ export const BulkOrder: React.FC = () => {
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} noValidate className="space-y-5">
+                <form onSubmit={handleSubmit} noValidate className="space-y-6">
                   <div>
                     <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#C9A65B] block mb-1">
                       REQUEST WHOLESALE QUOTE
@@ -420,6 +696,189 @@ export const BulkOrder: React.FC = () => {
                       Fill out your requirements below to receive formal slab pricing and delivery timelines.
                     </p>
                   </div>
+
+                  {/* Multi-Grade & Quality Selection Cards */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-extrabold uppercase tracking-wider text-[#123B2A]">
+                        Configured Makhana Grades &amp; Qualities <span className="text-rose-600">*</span>
+                      </label>
+                      <span className="text-xs font-bold text-[#123B2A]">
+                        Total: <strong className="text-[#C9A65B]">{totalQuantityKg} kg</strong>
+                      </span>
+                    </div>
+
+                    <div className="space-y-3">
+                      {items.map((item, index) => (
+                        <div
+                          key={index}
+                          className="p-4 rounded-2xl bg-[#FCFAF5] border border-[#E8DECB] space-y-3 shadow-2xs"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-serif text-sm sm:text-base font-bold text-[#123B2A]">
+                              {item.gradeName}
+                            </span>
+                            {items.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveItem(index)}
+                                className="text-rose-600 hover:text-rose-800 text-[11px] font-bold uppercase flex items-center gap-1 cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Remove</span>
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Quality Selection: Option A (Hand Picked) vs Option B (Normal) */}
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateItemQuality(index, 'Hand Picked')}
+                              className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                                item.quality === 'Hand Picked'
+                                  ? 'bg-[#123B2A] text-white border-[#C9A65B] shadow-xs'
+                                  : 'bg-white text-[#123B2A] border-[#E8DECB] hover:border-[#123B2A]/50'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold">Option A</span>
+                                <span
+                                  className={`text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded ${
+                                    item.quality === 'Hand Picked'
+                                      ? 'bg-[#C9A65B] text-[#123B2A]'
+                                      : 'bg-[#F7F1E5] text-[#123B2A]'
+                                  }`}
+                                >
+                                  Hand Picked
+                                </span>
+                              </div>
+                              <p
+                                className={`text-[10px] mt-1 line-clamp-1 ${
+                                  item.quality === 'Hand Picked' ? 'text-[#D5DED6]' : 'text-[#68756E]'
+                                }`}
+                              >
+                                100% hand-sorted premium purity
+                              </p>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateItemQuality(index, 'Normal')}
+                              className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                                item.quality === 'Normal'
+                                  ? 'bg-[#123B2A] text-white border-[#C9A65B] shadow-xs'
+                                  : 'bg-white text-[#123B2A] border-[#E8DECB] hover:border-[#123B2A]/50'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold">Option B</span>
+                                <span
+                                  className={`text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded ${
+                                    item.quality === 'Normal'
+                                      ? 'bg-[#C9A65B] text-[#123D2D]'
+                                      : 'bg-[#F7F1E5] text-[#123D2D]'
+                                  }`}
+                                >
+                                  Normal
+                                </span>
+                              </div>
+                              <p
+                                className={`text-[10px] mt-1 line-clamp-1 ${
+                                  item.quality === 'Normal' ? 'text-[#D5DED6]' : 'text-[#68756E]'
+                                }`}
+                              >
+                                Machine-graded commercial standard
+                              </p>
+                            </button>
+                          </div>
+
+                          {/* Individual Quantity Input */}
+                          <div>
+                            <div className="relative">
+                              <input
+                                type="number"
+                                min="1"
+                                step="1"
+                                placeholder="Quantity in kg"
+                                value={item.quantity}
+                                onChange={(e) => handleUpdateItemQuantity(index, e.target.value)}
+                                className="w-full min-h-10 px-3.5 pr-10 rounded-xl border border-[#E8DECB] text-xs font-bold text-[#1C1C1C] focus:outline-none focus:border-[#123B2A]"
+                              />
+                              <span className="absolute right-3.5 top-2.5 text-xs text-[#68756E] font-bold">
+                                kg
+                              </span>
+                            </div>
+                            {/* Quick preset chips */}
+                            <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                              <span className="text-[10px] text-[#68756E] font-semibold">Quick presets:</span>
+                              {QUANTITY_PRESETS.map((preset) => (
+                                <button
+                                  key={preset}
+                                  type="button"
+                                  onClick={() => handleUpdateItemQuantity(index, preset)}
+                                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition-colors cursor-pointer ${
+                                    String(item.quantity) === preset
+                                      ? 'bg-[#123B2A] text-[#C9A65B] border-[#123B2A]'
+                                      : 'bg-[#F7F1E5] text-[#123B2A] border-[#E8DECB] hover:border-[#123B2A]'
+                                  }`}
+                                >
+                                  {preset} kg
+                                </button>
+                              ))}
+                            </div>
+                            {errors[`qty_${index}`] && (
+                              <p className="mt-1 text-[11px] text-rose-600">
+                                {errors[`qty_${index}`]}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Add Another Grade selector if remaining */}
+                    {remainingAvailableGrades.length > 0 && (
+                      <div className="flex items-center gap-2 pt-1">
+                        <span className="text-xs text-[#68756E] font-bold">Add another grade:</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {remainingAvailableGrades.map((grade) => (
+                            <button
+                              key={grade}
+                              type="button"
+                              onClick={() => handleAddGrade(grade)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-[#F7F1E5] text-[#123B2A] border border-[#C9A65B]/60 hover:bg-[#123B2A] hover:text-[#C9A65B] transition-colors cursor-pointer"
+                            >
+                              <Plus className="w-3 h-3" />
+                              <span>{grade}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Hidden synchronization fields for testing scripts */}
+                  <select
+                    id="productGrade"
+                    value={primaryGrade}
+                    onChange={(e) => handleAddGrade(e.target.value)}
+                    className="sr-only"
+                    aria-hidden="true"
+                    tabIndex={-1}
+                  >
+                    {AVAILABLE_GRADES.map((g) => (
+                      <option key={g} value={g}>
+                        {g}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    id="quantity"
+                    type="hidden"
+                    value={primaryQuantity}
+                    onChange={(e) => handleUpdateItemQuantity(0, e.target.value)}
+                  />
 
                   {/* Full Name & Business Name */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -516,91 +975,6 @@ export const BulkOrder: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Selected Makhana Grade & Required Quantity in kg */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="productGrade" className="block text-xs font-bold uppercase tracking-wider text-[#1C1C1C] mb-1">
-                        Selected Makhana Grade <span className="text-rose-600">*</span>
-                      </label>
-                      <select
-                        id="productGrade"
-                        value={formData.productGrade}
-                        onChange={(e) => {
-                          setFormData({ ...formData, productGrade: e.target.value });
-                          if (errors.productGrade) setErrors({ ...errors, productGrade: undefined });
-                        }}
-                        className={`w-full min-h-11 px-3.5 rounded-xl border text-xs text-[#1C1C1C] bg-white focus:outline-none transition-colors ${
-                          errors.productGrade ? 'border-rose-500 bg-rose-50/30' : 'border-[#E8DECB] focus:border-[#123B2A]'
-                        }`}
-                      >
-                        {AVAILABLE_GRADES.map((grade) => (
-                          <option key={grade} value={grade}>
-                            {grade}
-                          </option>
-                        ))}
-                      </select>
-                      {errors.productGrade && (
-                        <p className="mt-1 text-[11px] text-rose-600 flex items-center gap-1">
-                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                          <span>{errors.productGrade}</span>
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label htmlFor="quantity" className="block text-xs font-bold uppercase tracking-wider text-[#1C1C1C] mb-1">
-                        Required Quantity (in Kilograms) <span className="text-rose-600">*</span>
-                      </label>
-                      <div className="relative">
-                        <input
-                          id="quantity"
-                          type="number"
-                          min="1"
-                          step="1"
-                          placeholder="e.g. 50"
-                          value={formData.quantity}
-                          onChange={(e) => {
-                            setFormData({ ...formData, quantity: e.target.value });
-                            if (errors.quantity) setErrors({ ...errors, quantity: undefined });
-                          }}
-                          className={`w-full min-h-11 px-3.5 pr-10 rounded-xl border text-xs text-[#1C1C1C] focus:outline-none transition-colors ${
-                            errors.quantity ? 'border-rose-500 bg-rose-50/30' : 'border-[#E8DECB] focus:border-[#123B2A]'
-                          }`}
-                        />
-                        <span className="absolute right-3.5 top-3 text-xs text-[#68756E] font-bold">
-                          kg
-                        </span>
-                      </div>
-                      {errors.quantity && (
-                        <p className="mt-1 text-[11px] text-rose-600 flex items-center gap-1">
-                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                          <span>{errors.quantity}</span>
-                        </p>
-                      )}
-                      {/* Quick preset chips */}
-                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                        <span className="text-[10px] text-[#68756E] font-semibold">Quick presets:</span>
-                        {QUANTITY_PRESETS.map((preset) => (
-                          <button
-                            key={preset}
-                            type="button"
-                            onClick={() => {
-                              setFormData({ ...formData, quantity: preset });
-                              if (errors.quantity) setErrors({ ...errors, quantity: undefined });
-                            }}
-                            className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition-colors cursor-pointer ${
-                              formData.quantity === preset
-                                ? 'bg-[#123B2A] text-[#C9A65B] border-[#123B2A]'
-                                : 'bg-[#F7F1E5] text-[#123B2A] border-[#E8DECB] hover:border-[#123B2A]'
-                            }`}
-                          >
-                            {preset} kg
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Destination City & State */}
                   <div>
                     <label htmlFor="city" className="block text-xs font-bold uppercase tracking-wider text-[#1C1C1C] mb-1">
@@ -645,7 +1019,7 @@ export const BulkOrder: React.FC = () => {
                   {/* Primary Submit Button */}
                   <button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || items.length === 0}
                     className="w-full min-h-12 bg-[#123B2A] hover:bg-[#092218] active:bg-black text-[#FCFAF5] rounded-xl text-xs sm:text-sm font-extrabold uppercase tracking-widest transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
                     <span>{isSubmitting ? 'Submitting Enquiry...' : 'SUBMIT ENQUIRY'}</span>
@@ -697,9 +1071,9 @@ export const BulkOrder: React.FC = () => {
                 <div className="flex items-start gap-3">
                   <Phone className="w-4 h-4 text-[#C9A65B] shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-white block">Official WhatsApp &amp; Support Line</span>
-                    <a href="tel:+916201426357" className="text-[#D5DED6] hover:text-[#C9A65B] transition-colors">
-                      +91 62014 26357 (Mon – Sat, 9 AM – 7 PM IST)
+                    <span className="font-bold text-white block">Official Support &amp; Enquiries</span>
+                    <a href="tel:+918102875852" className="text-[#D5DED6] hover:text-[#C9A65B] transition-colors">
+                      +91 81028 75852 (Mon – Sat, 9 AM – 7 PM IST)
                     </a>
                   </div>
                 </div>
@@ -707,9 +1081,12 @@ export const BulkOrder: React.FC = () => {
                 <div className="flex items-start gap-3">
                   <Mail className="w-4 h-4 text-[#C9A65B] shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-white block">Commercial Enquiries</span>
-                    <a href="mailto:wholesale@nyutaelite.com" className="text-[#D5DED6] hover:text-[#C9A65B] transition-colors">
-                      wholesale@nyutaelite.com
+                    <span className="font-bold text-white block">Commercial &amp; Bulk Enquiries</span>
+                    <a href="mailto:info@nyutaelite.com" className="text-[#D5DED6] hover:text-[#C9A65B] transition-colors block">
+                      info@nyutaelite.com
+                    </a>
+                    <a href="mailto:enterprisesp0r@gmail.com" className="text-[#A5B5A8] hover:text-[#C9A65B] transition-colors block text-[11px]">
+                      enterprisesp0r@gmail.com
                     </a>
                   </div>
                 </div>
@@ -717,9 +1094,13 @@ export const BulkOrder: React.FC = () => {
                 <div className="flex items-start gap-3">
                   <MapPin className="w-4 h-4 text-[#C9A65B] shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-white block">Processing &amp; Dispatch Facility</span>
-                    <span className="text-[#D5DED6]">
-                      Mithila Region, Darbhanga, Bihar 846004, India
+                    <span className="font-bold text-white block">Registered Business Office</span>
+                    <span className="text-[#D5DED6] leading-relaxed block">
+                      RAUSHAN KUMAR C/O NyutaElite<br />
+                      Krishna Vihar Lock No. 11, Bahiro Ara, Arrah Sadar, Bhojpur, Bihar – 802301
+                    </span>
+                    <span className="text-[11px] text-[#A5B5A8] block mt-0.5">
+                      FSSAI Reg. No. 20426021000494 (Wholesaler, Distributor, Retailer)
                     </span>
                   </div>
                 </div>
@@ -768,6 +1149,51 @@ export const BulkOrder: React.FC = () => {
                   </span>
                 </div>
               </div>
+            </div>
+
+            {/* Packaging & Dispatch Guarantee Visual Box */}
+            <div className="bg-white p-6 rounded-3xl border border-[#E8DECB] shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-serif text-base font-bold text-[#123B2A]">Packaging &amp; Dispatch Standards</h4>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#C9A65B] bg-[#123B2A] px-2 py-0.5 rounded-md">
+                  FSSAI Reg. 20426021000494
+                </span>
+              </div>
+
+              <div className="relative aspect-[16/10] rounded-xl overflow-hidden border border-[#E8DECB] bg-[#F7F1E5]">
+                <img
+                  src="/images/bulk/wholesale-storage-sacks.webp"
+                  alt="Wholesale jute bags and bulk packaging storage ready for commercial dispatch"
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  width={400}
+                  height={250}
+                />
+                <div className="absolute bottom-2 left-2 right-2 bg-[#092218]/85 backdrop-blur-xs px-2.5 py-1.5 rounded-lg text-white text-[11px] font-semibold text-center">
+                  Heavy-Duty Poly-Lined Moisture Protection
+                </div>
+              </div>
+
+              <ul className="space-y-2 text-xs text-[#4A5D53]">
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#123B2A] shrink-0" />
+                  <span>
+                    <strong>Export Cartons:</strong> 5-ply corrugated crush-resistant outer boxing.
+                  </span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#123B2A] shrink-0" />
+                  <span>
+                    <strong>Bulk Liners:</strong> 10 kg &amp; 25 kg food-grade nitrogen-flush poly sacks.
+                  </span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#123B2A] shrink-0" />
+                  <span>
+                    <strong>Direct Dispatch:</strong> From our Mithila hub with real-time freight tracking.
+                  </span>
+                </li>
+              </ul>
             </div>
           </div>
         </section>

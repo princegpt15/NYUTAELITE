@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, ShoppingBag, Search, User as UserIcon, Heart } from 'lucide-react';
 import { cartService } from '../services/cart';
+import { wishlistService } from '../services/wishlist';
 import { authService } from '../services/auth';
 import { CartDrawer } from './CartDrawer';
 import { SearchModal } from './SearchModal';
@@ -11,13 +12,20 @@ export const Header: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(() => wishlistService.getCount());
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const location = useLocation();
   const navigate = useNavigate();
-  const currentUser = authService.getCurrentUser();
+  const [currentUser, setCurrentUser] = useState(() => authService.getCurrentUser());
+
+  useEffect(() => {
+    setCurrentUser(authService.getCurrentUser());
+    const unsub = authService.subscribe(setCurrentUser);
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,11 +45,18 @@ export const Header: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    const unsubWishlist = wishlistService.subscribe((items) => {
+      setWishlistCount(items.length);
+    });
+    return () => unsubWishlist();
+  }, []);
+
   const navLinks = [
     { label: 'Home', path: '/' },
     { label: 'Shop Makhana', path: '/#pantry' },
-    { label: 'Premium', path: '/products/makhana?sku=premium-100g' },
-    { label: 'Normal', path: '/products/makhana?sku=normal-100g' },
+    { label: 'Premium', path: '/categories?type=Premium' },
+    { label: 'Normal', path: '/categories?type=Normal' },
     { label: 'Why Makhana', path: '/#why-makhana' },
     { label: 'About', path: '/about' },
     { label: 'Contact', path: '/contact' },
@@ -118,11 +133,16 @@ export const Header: React.FC = () => {
               {/* Wishlist Link */}
               <Link
                 to="/wishlist"
-                className="p-2 text-[#1C1C1C] hover:text-rose-600 rounded-full hover:bg-[#F7F1E5] transition-colors cursor-pointer"
+                className="p-2 text-[#1C1C1C] hover:text-rose-600 rounded-full hover:bg-[#F7F1E5] transition-colors cursor-pointer relative"
                 aria-label="Wishlist"
                 title="Saved Wishlist"
               >
                 <Heart className="w-5 h-5" />
+                {wishlistCount > 0 && (
+                  <span className="absolute top-1 right-1 bg-rose-600 text-white text-[9px] font-black rounded-full h-4 w-4 flex items-center justify-center shadow-xs">
+                    {wishlistCount > 9 ? '9+' : wishlistCount}
+                  </span>
+                )}
               </Link>
 
               {/* Account Link */}

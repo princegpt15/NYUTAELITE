@@ -70,11 +70,17 @@ function ScrollToTop() {
 
   useEffect(() => {
     if (hash) {
-      const element = document.getElementById(hash.replace('#', ''));
+      const id = hash.replace('#', '');
+      const element = document.getElementById(id);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth' });
         return;
       }
+      const timer = setTimeout(() => {
+        const delayedEl = document.getElementById(id);
+        if (delayedEl) delayedEl.scrollIntoView({ behavior: 'smooth' });
+      }, 180);
+      return () => clearTimeout(timer);
     }
     window.scrollTo(0, 0);
   }, [pathname, hash]);
@@ -186,6 +192,15 @@ export function App() {
             <Route path="/bulk-order/enquiry" element={<BulkOrder />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/play" element={<Play />} />
+            {/* Policy Direct Route Aliases */}
+            <Route path="/shipping" element={<Navigate to="/about#shipping" replace />} />
+            <Route path="/returns" element={<Navigate to="/about#refund" replace />} />
+            <Route path="/refund" element={<Navigate to="/about#refund" replace />} />
+            <Route path="/privacy" element={<Navigate to="/about#privacy" replace />} />
+            <Route path="/terms" element={<Navigate to="/about#terms" replace />} />
+            <Route path="/fssai" element={<Navigate to="/about#fssai" replace />} />
+            <Route path="/grievance" element={<Navigate to="/about#grievance" replace />} />
+            <Route path="/policies" element={<Navigate to="/about#shipping" replace />} />
             {/* Fallback route */}
             <Route path="*" element={<Home />} />
           </Route>
