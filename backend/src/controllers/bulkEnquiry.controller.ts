@@ -19,14 +19,14 @@ export async function createBulkEnquiry(req: Request, res: Response, next: NextF
       });
     }
 
-    const { name, businessName, phone, email, quantity, productGrade, city, message } = parseResult.data;
+    const { name, businessName, phone, email, items, totalQuantity, productGrade, quantity, city, message } =
+      parseResult.data;
 
-    // Database-backed duplicate check: prevent rapid double-clicks (last 60 seconds from same phone & same grade)
+    // Database-backed duplicate check: prevent rapid double-clicks (last 60 seconds from same phone)
     const sixtySecondsAgo = new Date(Date.now() - 60 * 1000);
     const existing = await prisma.contactMessage.findFirst({
       where: {
         phone,
-        subject: { contains: productGrade },
         createdAt: { gte: sixtySecondsAgo },
       },
       orderBy: { createdAt: 'desc' },
@@ -48,7 +48,7 @@ export async function createBulkEnquiry(req: Request, res: Response, next: NextF
     const randomSuffix = Math.floor(1000 + Math.random() * 9000).toString();
     const refId = `NE-BULK-${Date.now().toString().slice(-6)}${randomSuffix}`;
 
-    const effectiveEmail = email || `${phone}@bulk.nyutaelite.com`;
+    const effectiveEmail = email || `${phone}@bulk.nutyaelite.com`;
 
     const payloadDetails = {
       refId,
@@ -56,6 +56,12 @@ export async function createBulkEnquiry(req: Request, res: Response, next: NextF
       businessName,
       phone,
       email,
+      items: items.map((i) => ({
+        grade: i.grade,
+        quality: i.quality,
+        quantityKg: i.quantity,
+      })),
+      totalQuantityKg: totalQuantity,
       productGrade,
       quantityKg: quantity,
       deliveryLocation: city,
@@ -63,12 +69,14 @@ export async function createBulkEnquiry(req: Request, res: Response, next: NextF
       submittedAt: new Date().toISOString(),
     };
 
+    const itemsSummary = items.map((i) => `${i.grade} [${i.quality}: ${i.quantity}kg]`).join(', ');
+
     await prisma.contactMessage.create({
       data: {
         name,
         email: effectiveEmail,
         phone,
-        subject: `[${refId}] Bulk Order Enquiry - ${productGrade} (${quantity} kg)`,
+        subject: `[${refId}] Bulk Order Enquiry - ${itemsSummary} (Total: ${totalQuantity} kg)`,
         message: JSON.stringify(payloadDetails, null, 2),
         status: 'RECEIVED',
       },
@@ -80,8 +88,10 @@ export async function createBulkEnquiry(req: Request, res: Response, next: NextF
       message: 'Thank you for your enquiry! Our team will contact you with bulk pricing and availability.',
       data: {
         refId,
+        items,
+        totalQuantityKg: totalQuantity,
         productGrade,
-        quantityKg: quantity,
+        quantityKg: totalQuantity,
         deliveryLocation: city,
       },
     });

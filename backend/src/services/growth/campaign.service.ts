@@ -246,7 +246,7 @@ export class CampaignService {
           campaignId: campaign.id,
           userId: u.id,
           channel: campaign.channel,
-          recipient: campaign.channel === 'WHATSAPP' ? u.phone || u.email : u.email,
+          recipient: (campaign.channel === 'WHATSAPP' ? u.phone || u.email : u.email) || '',
           status: 'PENDING' as const,
           idempotencyKey,
         });

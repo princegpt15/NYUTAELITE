@@ -183,6 +183,49 @@ async function runResendVerificationSuite() {
     );
 
     // --------------------------------------------------------------------------
+    // TEST 3B: Live Customer Email Delivery (EMAIL_TEST_MODE = false)
+    // --------------------------------------------------------------------------
+    console.log('\n=== TEST 3B: Live Customer Email Delivery (EMAIL_TEST_MODE = false) ===');
+    (env as any).EMAIL_TEST_MODE = false;
+
+    const liveResult = await emailNotificationProvider.send({
+      notificationId: 'test_resend_live_001',
+      orderId: 'order_live_123',
+      orderNumber: 'TEST-LIVE-123',
+      type: 'ORDER_CONFIRMED',
+      channel: 'EMAIL',
+      recipient: 'real_customer_live@nutyaelite.com',
+      subject: 'Order Confirmed — TEST-LIVE-123',
+      text: 'Your order was confirmed.',
+      html: '<p>Your order was confirmed.</p>',
+    });
+
+    assert(liveResult.success === true, 'Live mode delivery returns success: true');
+    assert(
+      Array.isArray(capturedBody?.to) &&
+        capturedBody.to.length === 1 &&
+        capturedBody.to[0] === 'real_customer_live@nutyaelite.com',
+      'Live Mode: to array contains strictly the customer address (real_customer_live@nutyaelite.com)'
+    );
+    assert(
+      !capturedBody.to.includes('enterprisesp0r@gmail.com'),
+      'Live Mode: Test recipient is NEVER in the to array when EMAIL_TEST_MODE=false'
+    );
+    assert(
+      !capturedBody.subject.includes('[TEST'),
+      'Live Mode: Subject is clean with no [TEST] prefix'
+    );
+    assert(
+      capturedBody?.headers === undefined,
+      'Live Mode: Internal test headers are completely omitted'
+    );
+    assert(capturedBody?.cc === undefined, 'Live Mode: CC is completely undefined');
+    assert(capturedBody?.bcc === undefined, 'Live Mode: BCC is completely undefined');
+
+    // Restore test mode for subsequent tests
+    (env as any).EMAIL_TEST_MODE = true;
+
+    // --------------------------------------------------------------------------
     // TEST 4: Resend Rate Limit Handling (HTTP 429)
     // --------------------------------------------------------------------------
     console.log('\n=== TEST 4: Resend Rate Limit Error Handling (HTTP 429) ===');

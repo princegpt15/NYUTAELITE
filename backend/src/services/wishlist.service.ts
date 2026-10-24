@@ -94,10 +94,16 @@ export class WishlistService {
   /**
    * Add a product to the customer's wishlist.
    * Idempotent: If product already exists in wishlist, returns existing item.
+   * Supports looking up products by ID or Slug.
    */
   async addItem(userId: string, productId: string) {
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
+    const product = await prisma.product.findFirst({
+      where: {
+        OR: [
+          { id: productId },
+          { slug: productId },
+        ],
+      },
       select: { id: true, name: true, isActive: true },
     });
 
@@ -112,18 +118,18 @@ export class WishlistService {
       create: { userId },
     });
 
-    // Idempotent upsert
+    // Idempotent upsert using resolved product UUID
     const item = await prisma.wishlistItem.upsert({
       where: {
         wishlistId_productId: {
           wishlistId: wishlist.id,
-          productId,
+          productId: product.id,
         },
       },
       update: {},
       create: {
         wishlistId: wishlist.id,
-        productId,
+        productId: product.id,
       },
       include: {
         product: {
@@ -146,6 +152,7 @@ export class WishlistService {
 
   /**
    * Remove a product from the customer's wishlist safely.
+   * Supports looking up products by ID or Slug.
    */
   async removeItem(userId: string, productId: string) {
     const wishlist = await prisma.wishlist.findUnique({
@@ -157,10 +164,22 @@ export class WishlistService {
       return { success: true };
     }
 
+    const product = await prisma.product.findFirst({
+      where: {
+        OR: [
+          { id: productId },
+          { slug: productId },
+        ],
+      },
+      select: { id: true },
+    });
+
+    const targetId = product?.id || productId;
+
     await prisma.wishlistItem.deleteMany({
       where: {
         wishlistId: wishlist.id,
-        productId,
+        productId: targetId,
       },
     });
 
@@ -190,8 +209,13 @@ export class WishlistService {
    * Server strictly revalidates product active status, stock, and CURRENT database price.
    */
   async moveToCart(userId: string, productId: string) {
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
+    const product = await prisma.product.findFirst({
+      where: {
+        OR: [
+          { id: productId },
+          { slug: productId },
+        ],
+      },
     });
 
     if (!product) {

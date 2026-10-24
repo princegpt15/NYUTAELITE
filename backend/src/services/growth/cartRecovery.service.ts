@@ -237,7 +237,7 @@ export class CartRecoveryService {
         orderNumber: `CART-${cart.id.slice(0, 8)}`,
         type: 'ORDER_PROCESSING' as any,
         channel: 'EMAIL',
-        recipient: user.email,
+        recipient: user.email || '',
         subject,
         html,
         text: `Your artisanal Makhana is waiting! Complete your order: ${recoveryUrl}`,

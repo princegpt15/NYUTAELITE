@@ -78,6 +78,12 @@ app.use(
       if (cfPagesPreviewPattern.test(origin)) {
         return callback(null, true);
       }
+      if (env.NODE_ENV !== 'production') {
+        const isLocalNetwork = /^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/.test(origin);
+        if (isLocalNetwork) {
+          return callback(null, true);
+        }
+      }
       return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
