@@ -10,8 +10,10 @@ datasource db {
 model User {
   id            String         @id @default(uuid())
   name          String?
-  email         String         @unique
+  email         String?        @unique
+  googleId      String?        @unique
   phone         String?
+  phoneVerified Boolean        @default(false)
   passwordHash  String
   role          UserRole       @default(CUSTOMER)
   isVerified    Boolean        @default(false)
@@ -34,6 +36,24 @@ model User {
   campaignRecipients       CampaignRecipient[]
 
   @@index([role, createdAt])
+  @@index([phone])
+}
+
+model PhoneOtp {
+  id           String   @id @default(uuid())
+  phone        String   @unique
+  otpHash      String
+  salt         String
+  attempts     Int      @default(0)
+  maxAttempts  Int      @default(5)
+  expiresAt    DateTime
+  lastSentAt   DateTime @default(now())
+  requestCount Int      @default(1)
+  windowStart  DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([phone, expiresAt])
 }
 
 model Address {
