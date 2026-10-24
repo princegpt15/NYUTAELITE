@@ -79,7 +79,8 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
           callback: handleCredentialResponse,
           auto_select: false,
           cancel_on_tap_outside: true,
-          use_fedcm_for_prompt: true,
+          // NOTE: use_fedcm_for_prompt conflicts with ux_mode:'popup' on Android Chrome 120+
+          // FedCM is left at its default (browser-controlled). Explicit popup mode is used instead.
           ux_mode: 'popup',
         });
 
