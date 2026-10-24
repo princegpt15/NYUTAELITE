@@ -1,0 +1,30 @@
+/*
+  X-Frame-Options: SAMEORIGIN
+  X-XSS-Protection: 1; mode=block
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
+
+# Cache static assets aggressively (hashed filenames by Vite)
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Cache product images for 7 days
+/images/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+# Cache public dir assets for 7 days
+/nyuta-elite-logo.png
+  Cache-Control: public, max-age=604800
+/favicon.svg
+  Cache-Control: public, max-age=604800
+
+# sitemap.xml: cache for 1 day
+/sitemap.xml
+  Cache-Control: public, max-age=86400
+  Content-Type: application/xml; charset=utf-8
+
+# robots.txt: cache for 1 day
+/robots.txt
+  Cache-Control: public, max-age=86400
+  Content-Type: text/plain; charset=utf-8
