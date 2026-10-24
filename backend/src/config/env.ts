@@ -31,5 +31,13 @@ export const env = {
   WHATSAPP_PROVIDER: process.env.WHATSAPP_PROVIDER ?? 'disabled',
   WHATSAPP_ACCESS_TOKEN: process.env.WHATSAPP_ACCESS_TOKEN ?? '',
   WHATSAPP_PHONE_NUMBER_ID: process.env.WHATSAPP_PHONE_NUMBER_ID ?? '',
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? '',
+  OTP_PROVIDER: process.env.OTP_PROVIDER ?? 'disabled',
+  OTP_API_KEY: process.env.OTP_API_KEY ?? '',
+  OTP_SENDER_ID: process.env.OTP_SENDER_ID ?? '',
+  OTP_TEMPLATE_ID: process.env.OTP_TEMPLATE_ID ?? '',
+  TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID ?? '',
+  TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN ?? '',
+  TWILIO_FROM_PHONE: process.env.TWILIO_FROM_PHONE ?? '',
   APP_VERSION: process.env.NYUTA_ELITE_VERSION ?? '0.17.0',
 };
