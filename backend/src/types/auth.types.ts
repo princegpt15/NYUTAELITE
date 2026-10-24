@@ -11,14 +11,30 @@ export interface LoginBody {
   password: string;
 }
 
+export interface GoogleLoginBody {
+  credential: string;
+}
+
+export interface RequestOtpBody {
+  phone: string;
+  countryCode?: string;
+}
+
+export interface VerifyOtpBody {
+  phone: string;
+  otp: string;
+  countryCode?: string;
+}
+
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
   user: {
     id: string;
-    name: string;
-    email: string;
-    phone: string;
+    name: string | null;
+    email: string | null;
+    phone: string | null;
     role: string;
   };
+  isNewUser?: boolean;
 }
