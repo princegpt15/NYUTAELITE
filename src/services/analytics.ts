@@ -194,7 +194,25 @@ export function isAnalyticsDebugEnabled(): boolean {
     return runtimeDebugOverride;
   }
   const raw = safeGetEnv('VITE_ANALYTICS_DEBUG').toLowerCase();
-  return raw === 'true' || raw === '1';
+  if (raw === 'true' || raw === '1') {
+    return true;
+  }
+  try {
+    if (typeof window !== 'undefined' && window.location) {
+      const search = window.location.search || '';
+      if (
+        search.includes('debug_ga=true') ||
+        search.includes('debug_ga=1') ||
+        search.includes('_dbg=1') ||
+        search.includes('debug=true')
+      ) {
+        return true;
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return false;
 }
 
 /**
@@ -247,16 +265,17 @@ export function getAnalyticsConsent(): AnalyticsConsentState {
 export function setAnalyticsConsent(state: AnalyticsConsentState): void {
   try {
     safeStorageSet(ANALYTICS_CONSENT_STORAGE_KEY, state);
-    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
-      window.gtag('consent', 'update', {
-        analytics_storage: state === 'granted' ? 'granted' : 'denied',
-        ad_storage: 'denied',
-        ad_user_data: 'denied',
-        ad_personalization: 'denied',
-      });
-    }
     if (state === 'granted') {
       initGA4();
+    }
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      const grantStr = state === 'granted' ? 'granted' : 'denied';
+      window.gtag('consent', 'update', {
+        analytics_storage: grantStr,
+        ad_storage: grantStr,
+        ad_user_data: grantStr,
+        ad_personalization: grantStr,
+      });
     }
     consentListeners.forEach((cb) => {
       try {
@@ -455,15 +474,14 @@ export function initGA4(pathname?: string): boolean {
       // Set default consent mode before config
       window.gtag('consent', 'default', {
         analytics_storage: 'granted',
-        ad_storage: 'denied',
-        ad_user_data: 'denied',
-        ad_personalization: 'denied',
+        ad_storage: 'granted',
+        ad_user_data: 'granted',
+        ad_personalization: 'granted',
       });
 
       window.gtag('js', new Date());
       window.gtag('config', measurementId, {
         send_page_view: false, // Controlled explicitly by SPA route tracker to prevent duplicate page_view
-        anonymize_ip: true,
         debug_mode: isAnalyticsDebugEnabled(),
       });
 
