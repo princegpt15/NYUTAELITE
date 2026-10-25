@@ -118,6 +118,15 @@ function buildProductJsonLd(sku, p, canonicalUrl) {
           transitTime:  { '@type': 'QuantitativeValue', minValue: 3, maxValue: 7, unitCode: 'DAY' },
         },
       },
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'IN',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 2,
+        returnMethod: 'https://schema.org/ReturnByMail',
+        returnFees: 'https://schema.org/FreeReturn',
+        refundType: 'https://schema.org/FullRefund',
+      },
     },
   };
 }
@@ -172,7 +181,13 @@ function resolveSeoForRequest(url) {
       title: `All Makhana Packs | Shop Bihar Fox Nuts Online | ${SITE}`,
       desc:  `Browse all ${BRAND} makhana packs — Premium and Normal grades in 100g, 200g, and 250g. Free pan-India shipping.`,
       canonical: `${ORIGIN}/categories`, ogType: 'website',
-      ogImage: `${ORIGIN}/nyuta-elite-logo.png`, jsonLd: [],
+      ogImage: `${ORIGIN}/nyuta-elite-logo.png`,
+      jsonLd: [
+        buildBreadcrumb([
+          { name: 'Home',      url: `${ORIGIN}/` },
+          { name: 'All Packs', url: `${ORIGIN}/categories` },
+        ]),
+      ],
     };
   }
 
@@ -182,7 +197,13 @@ function resolveSeoForRequest(url) {
       title: `About Our Bihar Makhana Heritage & Quality | ${SITE}`,
       desc:  `Learn how ${BRAND} sources unbleached, naturally air-popped Euryale ferox from traditional harvesting communities in Mithila, Bihar.`,
       canonical: `${ORIGIN}/about`, ogType: 'website',
-      ogImage: `${ORIGIN}/nyuta-elite-logo.png`, jsonLd: [],
+      ogImage: `${ORIGIN}/nyuta-elite-logo.png`,
+      jsonLd: [
+        buildBreadcrumb([
+          { name: 'Home',  url: `${ORIGIN}/` },
+          { name: 'About', url: `${ORIGIN}/about` },
+        ]),
+      ],
     };
   }
 
@@ -192,7 +213,13 @@ function resolveSeoForRequest(url) {
       title: `FAQ — Makhana Grades, Pack Sizes & Shipping | ${SITE}`,
       desc:  `Answers on ${BRAND} Premium vs Normal grades, 100g–250g sizes, roasting tips, pan-India delivery, and returns.`,
       canonical: `${ORIGIN}/faq`, ogType: 'website',
-      ogImage: `${ORIGIN}/nyuta-elite-logo.png`, jsonLd: [],
+      ogImage: `${ORIGIN}/nyuta-elite-logo.png`,
+      jsonLd: [
+        buildBreadcrumb([
+          { name: 'Home', url: `${ORIGIN}/` },
+          { name: 'FAQ',  url: `${ORIGIN}/faq` },
+        ]),
+      ],
     };
   }
 
@@ -202,7 +229,13 @@ function resolveSeoForRequest(url) {
       title: `Contact Customer Care | ${SITE}`,
       desc:  `Get in touch with ${BRAND} MAKHANA for order tracking, product enquiries, bulk orders, or delivery assistance.`,
       canonical: `${ORIGIN}/contact`, ogType: 'website',
-      ogImage: `${ORIGIN}/nyuta-elite-logo.png`, jsonLd: [],
+      ogImage: `${ORIGIN}/nyuta-elite-logo.png`,
+      jsonLd: [
+        buildBreadcrumb([
+          { name: 'Home',    url: `${ORIGIN}/` },
+          { name: 'Contact', url: `${ORIGIN}/contact` },
+        ]),
+      ],
     };
   }
 

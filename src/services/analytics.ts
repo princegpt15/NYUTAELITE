@@ -161,11 +161,20 @@ function roundCurrency(value: unknown): number {
 /**
  * Retrieve the configured GA4 Measurement ID (e.g. G-XXXXXXXXXX).
  */
+export const DEFAULT_PRODUCTION_MEASUREMENT_ID = 'G-K1R0QB4M3F';
+
+/**
+ * Retrieve the configured GA4 Measurement ID (e.g. G-K1R0QB4M3F).
+ */
 export function getMeasurementId(): string {
   if (runtimeMeasurementIdOverride !== undefined) {
     return runtimeMeasurementIdOverride.trim();
   }
-  return safeGetEnv('VITE_GA_MEASUREMENT_ID');
+  const envVal = safeGetEnv('VITE_GA_MEASUREMENT_ID');
+  if (envVal && !/^G-X+$/i.test(envVal.trim())) {
+    return envVal.trim();
+  }
+  return DEFAULT_PRODUCTION_MEASUREMENT_ID;
 }
 
 export function isValidMeasurementId(...args: Array<string | null | undefined>): boolean {

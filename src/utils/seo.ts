@@ -237,6 +237,17 @@ export function buildProductJsonLd(
           },
         },
       },
+      // Merchant Listings enhancement: explicit return policy for food hygiene & statutory damage remedy
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'IN',
+        returnPolicyCategory:
+          'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 2,
+        returnMethod: 'https://schema.org/ReturnByMail',
+        returnFees: 'https://schema.org/FreeReturn',
+        refundType: 'https://schema.org/FullRefund',
+      },
     },
   };
 }

@@ -7,7 +7,7 @@
     <loc>https://nyutaelite.com/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <lastmod>2026-10-24</lastmod>
+    <lastmod>2026-10-25</lastmod>
   </url>
 
   <!-- Shop / All Products -->
@@ -15,7 +15,15 @@
     <loc>https://nyutaelite.com/categories</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <lastmod>2026-10-24</lastmod>
+    <lastmod>2026-10-25</lastmod>
+  </url>
+
+  <!-- Primary Makhana Product Page -->
+  <url>
+    <loc>https://nyutaelite.com/products/makhana</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <lastmod>2026-10-25</lastmod>
   </url>
 
   <!-- Product: Premium Makhana 100g -->
@@ -23,10 +31,10 @@
     <loc>https://nyutaelite.com/products/makhana?sku=premium-100g</loc>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
-    <lastmod>2026-10-24</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <image:image>
       <image:loc>https://nyutaelite.com/images/products/premium-makhana-100g.png</image:loc>
-      <image:title>Premium Makhana 100g — Nyuta Elite</image:title>
+      <image:title>Premium Makhana 100g — NYUTAELITE</image:title>
       <image:caption>Handpicked jumbo-grade Bihar fox nuts, 100g Premium pack</image:caption>
     </image:image>
   </url>
@@ -36,10 +44,10 @@
     <loc>https://nyutaelite.com/products/makhana?sku=premium-200g</loc>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
-    <lastmod>2026-10-24</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <image:image>
       <image:loc>https://nyutaelite.com/images/products/premium-makhana-200g.png</image:loc>
-      <image:title>Premium Makhana 200g — Nyuta Elite</image:title>
+      <image:title>Premium Makhana 200g — NYUTAELITE</image:title>
       <image:caption>Selected jumbo Bihar makhana, 200g Premium family pack</image:caption>
     </image:image>
   </url>
@@ -49,10 +57,10 @@
     <loc>https://nyutaelite.com/products/makhana?sku=premium-250g</loc>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
-    <lastmod>2026-10-24</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <image:image>
       <image:loc>https://nyutaelite.com/images/products/premium-makhana-250g.png</image:loc>
-      <image:title>Premium Makhana 250g — Nyuta Elite</image:title>
+      <image:title>Premium Makhana 250g — NYUTAELITE</image:title>
       <image:caption>Highest grade Bihar fox nuts, 250g Premium pantry pack</image:caption>
     </image:image>
   </url>
@@ -62,10 +70,10 @@
     <loc>https://nyutaelite.com/products/makhana?sku=normal-100g</loc>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
-    <lastmod>2026-10-24</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <image:image>
       <image:loc>https://nyutaelite.com/images/products/normal-makhana-100g.png</image:loc>
-      <image:title>Normal Makhana 100g — Nyuta Elite</image:title>
+      <image:title>Normal Makhana 100g — NYUTAELITE</image:title>
       <image:caption>Everyday Bihar makhana, 100g Normal grade pack</image:caption>
     </image:image>
   </url>
@@ -75,10 +83,10 @@
     <loc>https://nyutaelite.com/products/makhana?sku=normal-200g</loc>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
-    <lastmod>2026-10-24</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <image:image>
       <image:loc>https://nyutaelite.com/images/products/normal-makhana-200g.png</image:loc>
-      <image:title>Normal Makhana 200g — Nyuta Elite</image:title>
+      <image:title>Normal Makhana 200g — NYUTAELITE</image:title>
       <image:caption>Everyday Bihar makhana, 200g Normal grade pantry pouch</image:caption>
     </image:image>
   </url>
@@ -88,10 +96,10 @@
     <loc>https://nyutaelite.com/products/makhana?sku=normal-250g</loc>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
-    <lastmod>2026-10-24</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <image:image>
       <image:loc>https://nyutaelite.com/images/products/normal-makhana-250g.png</image:loc>
-      <image:title>Normal Makhana 250g — Nyuta Elite</image:title>
+      <image:title>Normal Makhana 250g — NYUTAELITE</image:title>
       <image:caption>Everyday Bihar makhana, 250g Normal grade pantry pack</image:caption>
     </image:image>
   </url>
@@ -101,7 +109,7 @@
     <loc>https://nyutaelite.com/about</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
-    <lastmod>2026-10-24</lastmod>
+    <lastmod>2026-10-25</lastmod>
   </url>
 
   <!-- FAQ -->
@@ -109,7 +117,7 @@
     <loc>https://nyutaelite.com/faq</loc>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
-    <lastmod>2026-10-24</lastmod>
+    <lastmod>2026-10-25</lastmod>
   </url>
 
   <!-- Contact -->
@@ -117,7 +125,7 @@
     <loc>https://nyutaelite.com/contact</loc>
     <changefreq>monthly</changefreq>
     <priority>0.65</priority>
-    <lastmod>2026-10-24</lastmod>
+    <lastmod>2026-10-25</lastmod>
   </url>
 
   <!-- Bulk Order -->
@@ -125,7 +133,7 @@
     <loc>https://nyutaelite.com/bulk-order/qualities</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
-    <lastmod>2026-10-24</lastmod>
+    <lastmod>2026-10-25</lastmod>
   </url>
 
 </urlset>
