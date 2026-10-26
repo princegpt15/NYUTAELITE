@@ -1,0 +1,67 @@
+name: Daily Search Engine Discovery & SEO Audit
+
+on:
+  schedule:
+    # 06:00 UTC every morning (11:30 AM IST)
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run in dry-run mode (read-only without saving state)'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: seo-automation-engine
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  seo-audit:
+    name: Execute SEO Discovery & Health Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Execute Automated SEO Engine Tests
+        run: npm run seo:test
+
+      - name: Run SEO Discovery & Audit Engine
+        env:
+          GSC_SITE_URL: ${{ secrets.GSC_SITE_URL }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          BING_API_KEY: ${{ secrets.BING_API_KEY }}
+          BING_SITE_URL: ${{ secrets.BING_SITE_URL }}
+          SEO_ALERT_WEBHOOK_URL: ${{ secrets.SEO_ALERT_WEBHOOK_URL }}
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            npm run seo:audit
+          else
+            npm run seo:daily
+          fi
+
+      - name: Archive SEO Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-audit-reports
+          path: reports/seo/
+          retention-days: 30

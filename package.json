@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "seo:audit": "npx tsx scripts/seo-engine/run.ts --dry-run",
+    "seo:daily": "npx tsx scripts/seo-engine/run.ts --full",
+    "seo:test": "npx tsx scripts/seo-engine/test-seo-engine.ts"
   },
   "dependencies": {
     "lucide-react": "^1.48.0",

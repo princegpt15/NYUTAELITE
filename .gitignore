@@ -28,3 +28,4 @@ dist-ssr
 .env*
 backend/debug_env.js
 scratch/
+data/seo/
