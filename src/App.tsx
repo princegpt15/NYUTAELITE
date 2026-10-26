@@ -40,6 +40,9 @@ const Play = lazy(() => import('./pages/Play').then((m) => ({ default: m.Play })
 const HowToChooseMakhana = lazy(() =>
   import('./pages/learn/HowToChooseMakhana').then((m) => ({ default: m.HowToChooseMakhana }))
 );
+const MakhanaHealthBenefits = lazy(() =>
+  import('./pages/learn/MakhanaHealthBenefits').then((m) => ({ default: m.MakhanaHealthBenefits }))
+);
 
 // Admin Portal Components (Lazy-loaded to keep customer bundle lean)
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin').then((m) => ({ default: m.AdminLogin })));
@@ -195,6 +198,7 @@ export function App() {
             <Route path="/bulk-order/enquiry" element={<BulkOrder />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/learn/how-to-choose-good-quality-makhana" element={<HowToChooseMakhana />} />
+            <Route path="/learn/makhana-benefits-health" element={<MakhanaHealthBenefits />} />
             <Route path="/play" element={<Play />} />
             {/* Policy Direct Route Aliases */}
             <Route path="/shipping" element={<Navigate to="/about#shipping" replace />} />

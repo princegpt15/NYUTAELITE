@@ -121,6 +121,14 @@ export async function discoverUrls(): Promise<InventoryDiscoveryResult> {
       priority: 0.8,
       changefreq: 'monthly',
     },
+    {
+      url: CONFIG.benefitsGuideUrl,
+      type: 'article',
+      inSitemap: false,
+      expectedCanonical: CONFIG.benefitsGuideUrl,
+      priority: 0.8,
+      changefreq: 'monthly',
+    },
   ];
 
   // 2. Add Authoritative Products from catalog

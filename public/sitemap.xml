@@ -149,4 +149,17 @@
     </image:image>
   </url>
 
+  <!-- Health & Nutrition Guide: Makhana Benefits -->
+  <url>
+    <loc>https://nyutaelite.com/learn/makhana-benefits-health</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-10-26</lastmod>
+    <image:image>
+      <image:loc>https://nyutaelite.com/images/products/premium-makhana-100g.png</image:loc>
+      <image:title>Makhana Health Benefits - NYUTAELITE</image:title>
+      <image:caption>7 evidence-informed health benefits of eating Bihar makhana (fox nuts) daily</image:caption>
+    </image:image>
+  </url>
+
 </urlset>

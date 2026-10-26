@@ -52,6 +52,11 @@ export const Footer: React.FC = () => {
                   Quality Buyer's Guide
                 </Link>
               </li>
+              <li>
+                <Link to="/learn/makhana-benefits-health" className="hover:text-white transition-colors">
+                  Makhana Health Benefits
+                </Link>
+              </li>
             </ul>
           </div>
 

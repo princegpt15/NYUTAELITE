@@ -637,6 +637,64 @@ export function resolveRouteSeo(
     };
   }
 
+  // 6. Educational Guide: Makhana Health Benefits (/learn/makhana-benefits-health)
+  if (normalizedPath === '/learn/makhana-benefits-health') {
+    const canonicalUrl = `${PRODUCTION_ORIGIN}/learn/makhana-benefits-health`;
+    const title = `Makhana Benefits: 7 Reasons to Eat Fox Nuts Every Day | ${SITE_NAME}`;
+    const description =
+      `Discover 7 evidence-informed health benefits of makhana (fox nuts). Learn how Bihar Euryale ferox supports weight management, heart health, digestion, and bone strength.`;
+    const ogImage = `${PRODUCTION_ORIGIN}/images/products/premium-makhana-100g.png`;
+    const articleJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: 'Makhana Benefits: 7 Reasons to Eat Fox Nuts Every Day',
+      description,
+      image: [ogImage],
+      datePublished: '2026-10-26T00:00:00+05:30',
+      dateModified: '2026-10-26T00:00:00+05:30',
+      mainEntityOfPage: canonicalUrl,
+      author: {
+        '@type': 'Organization',
+        name: BRAND_NAME,
+        url: `${PRODUCTION_ORIGIN}/`,
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: BRAND_NAME,
+        logo: {
+          '@type': 'ImageObject',
+          url: `${PRODUCTION_ORIGIN}/nyuta-elite-logo.png`,
+        },
+      },
+    };
+    return {
+      title,
+      description,
+      canonicalUrl,
+      robots: 'index, follow',
+      ogType: 'website',
+      ogTitle: title,
+      ogDescription: description,
+      ogImage,
+      ogUrl: canonicalUrl,
+      ogSiteName: SITE_NAME,
+      twitterCard: 'summary_large_image',
+      twitterTitle: title,
+      twitterDescription: description,
+      twitterImage: ogImage,
+      ...(verificationToken ? { googleSiteVerification: verificationToken } : {}),
+      jsonLd: [
+        buildOrganizationJsonLd(),
+        buildBreadcrumbJsonLd([
+          { name: 'Home', url: `${PRODUCTION_ORIGIN}/` },
+          { name: 'Learn', url: `${PRODUCTION_ORIGIN}/categories` },
+          { name: 'Makhana Benefits', url: canonicalUrl },
+        ]),
+        articleJsonLd,
+      ],
+    };
+  }
+
   // 5. Default / Homepage (/)
   const canonicalUrl = `${PRODUCTION_ORIGIN}/`;
   const title = `Buy Makhana Online | Premium Fox Nuts | ${SITE_NAME}`;

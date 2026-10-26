@@ -282,6 +282,49 @@ function resolveSeoForRequest(url) {
     };
   }
 
+  // Educational Article 2: /learn/makhana-benefits-health
+  if (path === '/learn/makhana-benefits-health') {
+    const canonicalUrl = `${ORIGIN}/learn/makhana-benefits-health`;
+    const title = `Makhana Benefits: 7 Reasons to Eat Fox Nuts Every Day | ${SITE}`;
+    const desc  = `Discover 7 evidence-informed health benefits of makhana (fox nuts). Learn how Bihar Euryale ferox supports weight management, heart health, digestion, and bone strength.`;
+    const articleJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: 'Makhana Benefits: 7 Reasons to Eat Fox Nuts Every Day',
+      description: desc,
+      image: [`${ORIGIN}/images/products/premium-makhana-100g.png`],
+      datePublished: '2026-10-26T00:00:00+05:30',
+      dateModified: '2026-10-26T00:00:00+05:30',
+      mainEntityOfPage: canonicalUrl,
+      author: {
+        '@type': 'Organization',
+        name: BRAND,
+        url: `${ORIGIN}/`,
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: BRAND,
+        logo: {
+          '@type': 'ImageObject',
+          url: `${ORIGIN}/nyuta-elite-logo.png`,
+        },
+      },
+    };
+    const breadcrumbJsonLd = buildBreadcrumb([
+      { name: 'Home', url: `${ORIGIN}/` },
+      { name: 'Learn', url: `${ORIGIN}/categories` },
+      { name: 'Makhana Benefits', url: canonicalUrl },
+    ]);
+    return {
+      title,
+      desc,
+      canonical: canonicalUrl,
+      ogType: 'article',
+      ogImage: `${ORIGIN}/images/products/premium-makhana-100g.png`,
+      jsonLd: [articleJsonLd, breadcrumbJsonLd],
+    };
+  }
+
   // Bulk order
   if (path === '/bulk-order/qualities') {
     return {

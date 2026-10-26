@@ -11,6 +11,7 @@ export interface SeoEngineConfig {
   robotsUrl: string;
   feedUrl: string;
   buyerGuideUrl: string;
+  benefitsGuideUrl: string;
   gscSiteUrl: string;
   googleClientId?: string;
   googleClientSecret?: string;
@@ -68,6 +69,7 @@ export const CONFIG: SeoEngineConfig = {
   robotsUrl: 'https://nyutaelite.com/robots.txt',
   feedUrl: 'https://nyutaelite.com/feed.xml',
   buyerGuideUrl: 'https://nyutaelite.com/learn/how-to-choose-good-quality-makhana',
+  benefitsGuideUrl: 'https://nyutaelite.com/learn/makhana-benefits-health',
   gscSiteUrl: localEnv.GSC_SITE_URL || 'https://nyutaelite.com/',
   googleClientId: localEnv.GOOGLE_CLIENT_ID || undefined,
   googleClientSecret: localEnv.GOOGLE_CLIENT_SECRET || undefined,
