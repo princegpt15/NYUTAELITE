@@ -33,7 +33,7 @@ export const FAQS: FAQ[] = [
     id: 'faq-5',
     question: 'How do I choose high quality makhana when buying online?',
     answer:
-      'When choosing quality makhana, look for: (1) Sizing & expansion — higher grade makhana (like our Premium Jumbo) has large, round, fully popped kernels; (2) Minimal shell residue — hand-graded makhana has fewer black hard seed shells; (3) Clean, unbleached off-white color — avoids artificial sulfur bleaching chemicals; and (4) Crisp crunch upon opening — ensured by moisture-barrier pouches.',
+      'When choosing quality makhana, look for: (1) Sizing & expansion — higher grade makhana (like our Premium Jumbo) has large, round, fully popped kernels; (2) Minimal shell residue — hand-graded makhana has fewer black hard seed shells; (3) Clean, unbleached off-white color — natural ivory tone from unbleached Bihar harvest; and (4) Crisp crunch upon opening — ensured by moisture-barrier pouches. Explore our complete Makhana Quality Guide for sizing standards and freshness checks.',
     category: 'Product Information',
   },
   {

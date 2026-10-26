@@ -115,4 +115,32 @@ const breadcrumbSchema = {
 JSON.parse(JSON.stringify(breadcrumbSchema));
 console.log('5. BreadcrumbList Schema: VALID JSON-LD');
 
-console.log('\nAll 5 Schema.org types tested and syntax-validated with 0 errors.');
+// 6. Article Schema (How to Choose Good-Quality Makhana)
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'How to Choose Good-Quality Makhana: A Complete Buyer’s Guide',
+  description:
+    'Learn how to choose good-quality Bihar makhana. Understand Suta sizing (4 Suta vs 5+ Suta jumbo), unbleached vs bleached fox nuts, crispness checks, and storage tips.',
+  image: ['https://nyutaelite.com/images/products/premium-makhana-100g.png'],
+  datePublished: '2026-10-25T00:00:00+05:30',
+  dateModified: '2026-10-25T00:00:00+05:30',
+  mainEntityOfPage: 'https://nyutaelite.com/learn/how-to-choose-good-quality-makhana',
+  author: {
+    '@type': 'Organization',
+    name: 'NYUTAELITE',
+    url: 'https://nyutaelite.com/',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'NYUTAELITE',
+    logo: {
+      '@type': 'ImageObject',
+      url: 'https://nyutaelite.com/nyuta-elite-logo.png',
+    },
+  },
+};
+JSON.parse(JSON.stringify(articleSchema));
+console.log('6. Article Schema: VALID JSON-LD');
+
+console.log('\nAll 6 Schema.org types tested and syntax-validated with 0 errors.');

@@ -136,4 +136,17 @@
     <lastmod>2026-10-25</lastmod>
   </url>
 
+  <!-- Buyer's Guide: How to Choose Good-Quality Makhana -->
+  <url>
+    <loc>https://nyutaelite.com/learn/how-to-choose-good-quality-makhana</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-10-25</lastmod>
+    <image:image>
+      <image:loc>https://nyutaelite.com/images/products/premium-makhana-100g.png</image:loc>
+      <image:title>How to Choose Good-Quality Makhana — NYUTAELITE</image:title>
+      <image:caption>Complete buyer's guide to evaluating Bihar makhana quality and Suta grades</image:caption>
+    </image:image>
+  </url>
+
 </urlset>

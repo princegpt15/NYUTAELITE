@@ -239,6 +239,49 @@ function resolveSeoForRequest(url) {
     };
   }
 
+  // Buyer's Guide Article: /learn/how-to-choose-good-quality-makhana
+  if (path === '/learn/how-to-choose-good-quality-makhana') {
+    const canonicalUrl = `${ORIGIN}/learn/how-to-choose-good-quality-makhana`;
+    const title = `How to Choose Good-Quality Makhana: Complete Buyer's Guide | ${SITE}`;
+    const desc  = `Learn how to choose good-quality Bihar makhana. Understand Suta sizing (4 Suta vs 5+ Suta jumbo), unbleached vs bleached fox nuts, crispness checks, and storage tips.`;
+    const articleJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: 'How to Choose Good-Quality Makhana: A Complete Buyer’s Guide',
+      description: desc,
+      image: [`${ORIGIN}/images/products/premium-makhana-100g.png`],
+      datePublished: '2026-10-25T00:00:00+05:30',
+      dateModified: '2026-10-25T00:00:00+05:30',
+      mainEntityOfPage: canonicalUrl,
+      author: {
+        '@type': 'Organization',
+        name: BRAND,
+        url: `${ORIGIN}/`,
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: BRAND,
+        logo: {
+          '@type': 'ImageObject',
+          url: `${ORIGIN}/nyuta-elite-logo.png`,
+        },
+      },
+    };
+    const breadcrumbJsonLd = buildBreadcrumb([
+      { name: 'Home', url: `${ORIGIN}/` },
+      { name: 'Learn', url: `${ORIGIN}/categories` },
+      { name: 'How to Choose Good-Quality Makhana', url: canonicalUrl },
+    ]);
+    return {
+      title,
+      desc,
+      canonical: canonicalUrl,
+      ogType: 'article',
+      ogImage: `${ORIGIN}/images/products/premium-makhana-100g.png`,
+      jsonLd: [articleJsonLd, breadcrumbJsonLd],
+    };
+  }
+
   // Bulk order
   if (path === '/bulk-order/qualities') {
     return {

@@ -579,6 +579,64 @@ export function resolveRouteSeo(
     };
   }
 
+  // 5. Educational / Buyer's Guide (/learn/how-to-choose-good-quality-makhana)
+  if (normalizedPath === '/learn/how-to-choose-good-quality-makhana') {
+    const canonicalUrl = `${PRODUCTION_ORIGIN}/learn/how-to-choose-good-quality-makhana`;
+    const title = `How to Choose Good-Quality Makhana: Complete Buyer's Guide | ${SITE_NAME}`;
+    const description =
+      `Learn how to choose good-quality Bihar makhana. Understand Suta sizing (4 Suta vs 5+ Suta jumbo), unbleached vs bleached fox nuts, crispness checks, and storage tips.`;
+    const ogImage = `${PRODUCTION_ORIGIN}/images/products/premium-makhana-100g.png`;
+    const articleJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: 'How to Choose Good-Quality Makhana: A Complete Buyer’s Guide',
+      description,
+      image: [ogImage],
+      datePublished: '2026-10-25T00:00:00+05:30',
+      dateModified: '2026-10-25T00:00:00+05:30',
+      mainEntityOfPage: canonicalUrl,
+      author: {
+        '@type': 'Organization',
+        name: BRAND_NAME,
+        url: `${PRODUCTION_ORIGIN}/`,
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: BRAND_NAME,
+        logo: {
+          '@type': 'ImageObject',
+          url: `${PRODUCTION_ORIGIN}/nyuta-elite-logo.png`,
+        },
+      },
+    };
+    return {
+      title,
+      description,
+      canonicalUrl,
+      robots: 'index, follow',
+      ogType: 'website',
+      ogTitle: title,
+      ogDescription: description,
+      ogImage,
+      ogUrl: canonicalUrl,
+      ogSiteName: SITE_NAME,
+      twitterCard: 'summary_large_image',
+      twitterTitle: title,
+      twitterDescription: description,
+      twitterImage: ogImage,
+      ...(verificationToken ? { googleSiteVerification: verificationToken } : {}),
+      jsonLd: [
+        buildOrganizationJsonLd(),
+        buildBreadcrumbJsonLd([
+          { name: 'Home', url: `${PRODUCTION_ORIGIN}/` },
+          { name: 'Learn', url: `${PRODUCTION_ORIGIN}/categories` },
+          { name: 'How to Choose Good-Quality Makhana', url: canonicalUrl },
+        ]),
+        articleJsonLd,
+      ],
+    };
+  }
+
   // 5. Default / Homepage (/)
   const canonicalUrl = `${PRODUCTION_ORIGIN}/`;
   const title = `Buy Makhana Online | Premium Fox Nuts | ${SITE_NAME}`;

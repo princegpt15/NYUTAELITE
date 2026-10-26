@@ -47,6 +47,11 @@ export const Footer: React.FC = () => {
                   Normal Quality
                 </Link>
               </li>
+              <li>
+                <Link to="/learn/how-to-choose-good-quality-makhana" className="hover:text-white transition-colors">
+                  Quality Buyer's Guide
+                </Link>
+              </li>
             </ul>
           </div>
 
