@@ -691,12 +691,12 @@ export const Home: React.FC = () => {
 
               {/* Headline */}
               <h1 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold leading-[1.04] text-[#092218] tracking-tight hero-headline-animate">
-                Pure Bihar Makhana.<br className="hidden sm:inline" /> Better snacking starts with ingredients you can see.
+                NYUTA ELITE MAKHANA – Premium Makhana
               </h1>
 
               {/* Description */}
               <p className="text-base sm:text-xl leading-relaxed text-[#68756E] max-w-lg font-medium hero-desc-animate">
-                Discover carefully selected makhana, made for better everyday snacking. Hand-sorted jumbo fox nuts from freshwater ponds.
+                Discover NYUTA ELITE MAKHANA, crafted for mindful everyday snacking. Hand-sorted jumbo Bihar fox nuts from pristine freshwater ponds.
               </p>
 
               {/* CTA Buttons */}
@@ -1084,7 +1084,7 @@ export const Home: React.FC = () => {
                 <div className="mt-6 aspect-[16/9] overflow-hidden rounded-2xl bg-[#F7F1E5] border border-[#E8DECB]">
                   <img
                     src="/images/quality/premium-jumbo-makhana.webp"
-                    alt="Premium Makhana jumbo hand-sorted nuts"
+                    alt="NYUTA ELITE Premium Makhana jumbo hand-sorted fox nuts"
                     className="w-full h-full object-cover object-center"
                     loading="lazy"
                     decoding="async"
@@ -1143,7 +1143,7 @@ export const Home: React.FC = () => {
                 <div className="mt-6 aspect-[16/9] overflow-hidden rounded-2xl bg-[#F7F1E5] border border-[#E8DECB]">
                   <img
                     src="/images/quality/normal-everyday-makhana.webp"
-                    alt="Normal Makhana everyday natural texture nuts"
+                    alt="NYUTA ELITE Normal Makhana everyday natural fox nuts"
                     className="w-full h-full object-cover object-center"
                     loading="lazy"
                     decoding="async"
@@ -1222,7 +1222,7 @@ export const Home: React.FC = () => {
               <div className="overflow-hidden rounded-2xl bg-[#F7F1E5] aspect-[4/5] border border-[#E8DECB]">
                 <img
                   src={macroImage}
-                  alt="Macro texture of makhana"
+                  alt="NYUTA ELITE Makhana macro texture showing crisp air-popped structure"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                   loading="lazy"
                   decoding="async"
@@ -1233,7 +1233,7 @@ export const Home: React.FC = () => {
               <div className="overflow-hidden rounded-2xl bg-[#F7F1E5] aspect-[4/5] mt-6 border border-[#E8DECB]">
                 <img
                   src={featuredImage}
-                  alt="Pantry bowl of makhana"
+                  alt="Pantry bowl of roasted NYUTA ELITE fox nuts"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                   loading="lazy"
                   decoding="async"

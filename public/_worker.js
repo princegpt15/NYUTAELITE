@@ -13,8 +13,8 @@
 //   first-pass snapshot.
 
 const ORIGIN = 'https://nyutaelite.com';
-const BRAND  = 'NYUTAELITE';
-const SITE   = 'NYUTAELITE Makhana';
+const BRAND  = 'NYUTA ELITE MAKHANA';
+const SITE   = 'NYUTA ELITE MAKHANA';
 
 // ─── Authoritative product catalog ────────────────────────────────────────────
 // Keep in sync with src/data/product.ts
@@ -337,8 +337,8 @@ function resolveSeoForRequest(url) {
 
   // Default / homepage
   return {
-    title: `Buy Makhana Online | Premium Fox Nuts | ${SITE}`,
-    desc:  `Buy premium makhana (fox nuts) online in India. ${BRAND} offers handpicked Bihar makhana in 100g, 200g & 250g packs — Premium and Normal grade. Free delivery.`,
+    title: 'NYUTA ELITE MAKHANA | Premium Makhana & Fox Nuts',
+    desc:  'Discover NYUTA ELITE MAKHANA and explore our range of makhana (fox nuts). Find product details, pack sizes, quality information, and ordering options.',
     canonical: `${ORIGIN}/`, ogType: 'website',
     ogImage: `${ORIGIN}/nyuta-elite-logo.png`, jsonLd: [],
   };

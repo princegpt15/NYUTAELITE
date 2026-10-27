@@ -415,7 +415,7 @@ export const Product: React.FC = () => {
                   AUTHENTIC BIHAR HARVEST • MITHILA REGION
                 </span>
                 <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#092218]">
-                  {product.name}
+                  NYUTA ELITE {product.name} – {product.weightGrams}g
                 </h1>
 
                 {/* Rating Stars Summary */}

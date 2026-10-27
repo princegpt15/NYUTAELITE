@@ -18,8 +18,7 @@ Disallow: /register
 Disallow: /api/
 Disallow: /bulk-order/enquiry
 
-# Block query-string variations to prevent duplicate indexing
-# Google will still crawl ?sku= product URLs via sitemap
-Disallow: /categories?*
+# Allow public crawling with canonical consolidation
+# Private transactional routes are disallowed above
 
 Sitemap: https://nyutaelite.com/sitemap.xml
