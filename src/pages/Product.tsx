@@ -32,11 +32,18 @@ import {
   trackSubmitReview,
   trackBackInStockSignup,
 } from '../services/analytics';
-import { resolveRouteSeo, applySeoToDocument } from '../utils/seo';
+import { resolveRouteSeo, applySeoToDocument, finalizeSeo } from '../utils/seo';
 import { Toast } from '../components/Toast';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { authService } from '../services/auth';
-import defaultProductImage from '../assets/images/product-main.png';
+// Helper to truncate long strings without cutting words in half.
+function truncate(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const trimmed = text.slice(0, max);
+  const lastSpace = trimmed.lastIndexOf(' ');
+  return (lastSpace > 0 ? trimmed.slice(0, lastSpace) : trimmed) + '…';
+}
+
 import { ProductJsonLd } from '../components/ProductJsonLd';
 
 export const Product: React.FC = () => {
@@ -103,24 +110,65 @@ export const Product: React.FC = () => {
   };
 
   useEffect(() => {
+  if (product) {
+    const rawSeo = resolveRouteSeo({
+      pathname: location.pathname,
+      search: location.search,
+      product,
+    });
+    const seo = finalizeSeo(rawSeo);
+    applySeoToDocument(seo);
+    trackViewItem(product, 1);
+    loadRetentionData(product.id);
+  }
+}, [product, location.pathname, location.search]);
     loadProduct();
   }, [sku]);
 
   useEffect(() => {
+  if (product) {
+    const rawSeo = resolveRouteSeo({
+      pathname: location.pathname,
+      search: location.search,
+      product,
+    });
+    const seo = finalizeSeo(rawSeo);
+    applySeoToDocument(seo);
+    trackViewItem(product, 1);
+    loadRetentionData(product.id);
+  }
+}, [product, location.pathname, location.search]);
     if (product) {
-      const seo = resolveRouteSeo({
-        pathname: location.pathname,
-        search: location.search,
-        product,
-      });
-      applySeoToDocument(seo);
-      trackViewItem(product, 1);
-      loadRetentionData(product.id);
-    }
+  const rawSeo = resolveRouteSeo({
+    pathname: location.pathname,
+    search: location.search,
+    product,
+  });
+  const seo = {
+    ...rawSeo,
+    title: truncate(rawSeo.title, 60),
+    description: truncate(rawSeo.description, 160),
+  };
+  applySeoToDocument(seo);
+  trackViewItem(product, 1);
+  loadRetentionData(product.id);
+}
   }, [product, location.pathname, location.search]);
 
   // Synchronize wishlisted status
   useEffect(() => {
+  if (product) {
+    const rawSeo = resolveRouteSeo({
+      pathname: location.pathname,
+      search: location.search,
+      product,
+    });
+    const seo = finalizeSeo(rawSeo);
+    applySeoToDocument(seo);
+    trackViewItem(product, 1);
+    loadRetentionData(product.id);
+  }
+}, [product, location.pathname, location.search]);
     if (!product) return;
     setIsWishlisted(wishlistService.isWishlisted(product.id));
     const unsub = wishlistService.subscribe(() => {

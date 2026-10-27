@@ -1,0 +1,490 @@
+{
+  "timestamp": "2026-10-26T04:23:08.175Z",
+  "origin": "https://nyutaelite.com",
+  "overallHealth": "HEALTHY",
+  "summary": {
+    "urlsDiscovered": 14,
+    "sitemapUrls": 14,
+    "pagesPassing": 6,
+    "pagesWithIssues": 8,
+    "feedItemCount": 6,
+    "criticalIssuesCount": 0,
+    "highIssuesCount": 0,
+    "mediumIssuesCount": 0,
+    "lowIssuesCount": 14
+  },
+  "sitemapValidation": {
+    "valid": true,
+    "totalUrls": 14,
+    "totalImages": 7,
+    "entries": [
+      {
+        "loc": "https://nyutaelite.com/",
+        "changefreq": "weekly",
+        "priority": 1,
+        "lastmod": "2026-10-25",
+        "images": []
+      },
+      {
+        "loc": "https://nyutaelite.com/categories",
+        "changefreq": "weekly",
+        "priority": 0.9,
+        "lastmod": "2026-10-25",
+        "images": []
+      },
+      {
+        "loc": "https://nyutaelite.com/products/makhana",
+        "changefreq": "weekly",
+        "priority": 0.9,
+        "lastmod": "2026-10-25",
+        "images": []
+      },
+      {
+        "loc": "https://nyutaelite.com/products/makhana?sku=premium-100g",
+        "changefreq": "weekly",
+        "priority": 0.95,
+        "lastmod": "2026-10-25",
+        "images": [
+          {
+            "loc": "https://nyutaelite.com/images/products/premium-makhana-100g.png",
+            "title": "Premium Makhana 100g — NYUTAELITE",
+            "caption": "Handpicked jumbo-grade Bihar fox nuts, 100g Premium pack"
+          }
+        ]
+      },
+      {
+        "loc": "https://nyutaelite.com/products/makhana?sku=premium-200g",
+        "changefreq": "weekly",
+        "priority": 0.95,
+        "lastmod": "2026-10-25",
+        "images": [
+          {
+            "loc": "https://nyutaelite.com/images/products/premium-makhana-200g.png",
+            "title": "Premium Makhana 200g — NYUTAELITE",
+            "caption": "Selected jumbo Bihar makhana, 200g Premium family pack"
+          }
+        ]
+      },
+      {
+        "loc": "https://nyutaelite.com/products/makhana?sku=premium-250g",
+        "changefreq": "weekly",
+        "priority": 0.95,
+        "lastmod": "2026-10-25",
+        "images": [
+          {
+            "loc": "https://nyutaelite.com/images/products/premium-makhana-250g.png",
+            "title": "Premium Makhana 250g — NYUTAELITE",
+            "caption": "Highest grade Bihar fox nuts, 250g Premium pantry pack"
+          }
+        ]
+      },
+      {
+        "loc": "https://nyutaelite.com/products/makhana?sku=normal-100g",
+        "changefreq": "weekly",
+        "priority": 0.85,
+        "lastmod": "2026-10-25",
+        "images": [
+          {
+            "loc": "https://nyutaelite.com/images/products/normal-makhana-100g.png",
+            "title": "Normal Makhana 100g — NYUTAELITE",
+            "caption": "Everyday Bihar makhana, 100g Normal grade pack"
+          }
+        ]
+      },
+      {
+        "loc": "https://nyutaelite.com/products/makhana?sku=normal-200g",
+        "changefreq": "weekly",
+        "priority": 0.85,
+        "lastmod": "2026-10-25",
+        "images": [
+          {
+            "loc": "https://nyutaelite.com/images/products/normal-makhana-200g.png",
+            "title": "Normal Makhana 200g — NYUTAELITE",
+            "caption": "Everyday Bihar makhana, 200g Normal grade pantry pouch"
+          }
+        ]
+      },
+      {
+        "loc": "https://nyutaelite.com/products/makhana?sku=normal-250g",
+        "changefreq": "weekly",
+        "priority": 0.85,
+        "lastmod": "2026-10-25",
+        "images": [
+          {
+            "loc": "https://nyutaelite.com/images/products/normal-makhana-250g.png",
+            "title": "Normal Makhana 250g — NYUTAELITE",
+            "caption": "Everyday Bihar makhana, 250g Normal grade pantry pack"
+          }
+        ]
+      },
+      {
+        "loc": "https://nyutaelite.com/about",
+        "changefreq": "monthly",
+        "priority": 0.7,
+        "lastmod": "2026-10-25",
+        "images": []
+      },
+      {
+        "loc": "https://nyutaelite.com/faq",
+        "changefreq": "monthly",
+        "priority": 0.75,
+        "lastmod": "2026-10-25",
+        "images": []
+      },
+      {
+        "loc": "https://nyutaelite.com/contact",
+        "changefreq": "monthly",
+        "priority": 0.65,
+        "lastmod": "2026-10-25",
+        "images": []
+      },
+      {
+        "loc": "https://nyutaelite.com/bulk-order/qualities",
+        "changefreq": "monthly",
+        "priority": 0.7,
+        "lastmod": "2026-10-25",
+        "images": []
+      },
+      {
+        "loc": "https://nyutaelite.com/learn/how-to-choose-good-quality-makhana",
+        "changefreq": "monthly",
+        "priority": 0.8,
+        "lastmod": "2026-10-25",
+        "images": [
+          {
+            "loc": "https://nyutaelite.com/images/products/premium-makhana-100g.png",
+            "title": "How to Choose Good-Quality Makhana — NYUTAELITE",
+            "caption": "Complete buyer's guide to evaluating Bihar makhana quality and Suta grades"
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "warnings": []
+  },
+  "feedValidation": {
+    "valid": true,
+    "itemCount": 6,
+    "expectedItemCount": 6,
+    "items": [
+      {
+        "sku": "NYM-PREM-100",
+        "title": "NYUTAELITE Premium Makhana – 100g Jumbo Fox Nuts",
+        "link": "https://nyutaelite.com/products/makhana?sku=premium-100g",
+        "price": "160.00 INR",
+        "availability": "in_stock",
+        "image": "https://nyutaelite.com/images/products/premium-makhana-100g.png",
+        "brand": "NYUTAELITE",
+        "weight": "100 g",
+        "matchesCatalog": true,
+        "errors": []
+      },
+      {
+        "sku": "NYM-PREM-200",
+        "title": "NYUTAELITE Premium Makhana – 200g Jumbo Fox Nuts",
+        "link": "https://nyutaelite.com/products/makhana?sku=premium-200g",
+        "price": "310.00 INR",
+        "availability": "in_stock",
+        "image": "https://nyutaelite.com/images/products/premium-makhana-200g.png",
+        "brand": "NYUTAELITE",
+        "weight": "200 g",
+        "matchesCatalog": true,
+        "errors": []
+      },
+      {
+        "sku": "NYM-PREM-250",
+        "title": "NYUTAELITE Premium Makhana – 250g Jumbo Fox Nuts",
+        "link": "https://nyutaelite.com/products/makhana?sku=premium-250g",
+        "price": "380.00 INR",
+        "availability": "in_stock",
+        "image": "https://nyutaelite.com/images/products/premium-makhana-250g.png",
+        "brand": "NYUTAELITE",
+        "weight": "250 g",
+        "matchesCatalog": true,
+        "errors": []
+      },
+      {
+        "sku": "NYM-NORM-100",
+        "title": "NYUTAELITE Makhana – 100g Everyday Fox Nuts",
+        "link": "https://nyutaelite.com/products/makhana?sku=normal-100g",
+        "price": "120.00 INR",
+        "availability": "in_stock",
+        "image": "https://nyutaelite.com/images/products/normal-makhana-100g.png",
+        "brand": "NYUTAELITE",
+        "weight": "100 g",
+        "matchesCatalog": true,
+        "errors": []
+      },
+      {
+        "sku": "NYM-NORM-200",
+        "title": "NYUTAELITE Makhana – 200g Everyday Fox Nuts",
+        "link": "https://nyutaelite.com/products/makhana?sku=normal-200g",
+        "price": "230.00 INR",
+        "availability": "in_stock",
+        "image": "https://nyutaelite.com/images/products/normal-makhana-200g.png",
+        "brand": "NYUTAELITE",
+        "weight": "200 g",
+        "matchesCatalog": true,
+        "errors": []
+      },
+      {
+        "sku": "NYM-NORM-250",
+        "title": "NYUTAELITE Makhana – 250g Everyday Fox Nuts",
+        "link": "https://nyutaelite.com/products/makhana?sku=normal-250g",
+        "price": "280.00 INR",
+        "availability": "in_stock",
+        "image": "https://nyutaelite.com/images/products/normal-makhana-250g.png",
+        "brand": "NYUTAELITE",
+        "weight": "250 g",
+        "matchesCatalog": true,
+        "errors": []
+      }
+    ],
+    "errors": [],
+    "warnings": []
+  },
+  "indexingSummary": [
+    {
+      "url": "https://nyutaelite.com/",
+      "category": "INSPECTION_PENDING_CREDENTIALS",
+      "evidence": "HTTP 200 OK & indexable HTML served. Awaiting Google Search Console API credentials for official index state.",
+      "potentialCause": "GSC API credentials not yet configured in local environment.",
+      "recommendedRemediation": "Configure GOOGLE_APPLICATION_CREDENTIALS or inspect manually via Google Search Console URL Inspection tool.",
+      "source": "TECHNICAL_CRAWLABILITY_INFERENCE"
+    },
+    {
+      "url": "https://nyutaelite.com/categories",
+      "category": "INSPECTION_PENDING_CREDENTIALS",
+      "evidence": "HTTP 200 OK & indexable HTML served. Awaiting Google Search Console API credentials for official index state.",
+      "potentialCause": "GSC API credentials not yet configured in local environment.",
+      "recommendedRemediation": "Configure GOOGLE_APPLICATION_CREDENTIALS or inspect manually via Google Search Console URL Inspection tool.",
+      "source": "TECHNICAL_CRAWLABILITY_INFERENCE"
+    },
+    {
+      "url": "https://nyutaelite.com/products/makhana",
+      "category": "INSPECTION_PENDING_CREDENTIALS",
+      "evidence": "HTTP 200 OK & indexable HTML served. Awaiting Google Search Console API credentials for official index state.",
+      "potentialCause": "GSC API credentials not yet configured in local environment.",
+      "recommendedRemediation": "Configure GOOGLE_APPLICATION_CREDENTIALS or inspect manually via Google Search Console URL Inspection tool.",
+      "source": "TECHNICAL_CRAWLABILITY_INFERENCE"
+    },
+    {
+      "url": "https://nyutaelite.com/about",
+      "category": "INSPECTION_PENDING_CREDENTIALS",
+      "evidence": "HTTP 200 OK & indexable HTML served. Awaiting Google Search Console API credentials for official index state.",
+      "potentialCause": "GSC API credentials not yet configured in local environment.",
+      "recommendedRemediation": "Configure GOOGLE_APPLICATION_CREDENTIALS or inspect manually via Google Search Console URL Inspection tool.",
+      "source": "TECHNICAL_CRAWLABILITY_INFERENCE"
+    },
+    {
+      "url": "https://nyutaelite.com/faq",
+      "category": "INSPECTION_PENDING_CREDENTIALS",
+      "evidence": "HTTP 200 OK & indexable HTML served. Awaiting Google Search Console API credentials for official index state.",
+      "potentialCause": "GSC API credentials not yet configured in local environment.",
+      "recommendedRemediation": "Configure GOOGLE_APPLICATION_CREDENTIALS or inspect manually via Google Search Console URL Inspection tool.",
+      "source": "TECHNICAL_CRAWLABILITY_INFERENCE"
+    },
+    {
+      "url": "https://nyutaelite.com/contact",
+      "category": "INSPECTION_PENDING_CREDENTIALS",
+      "evidence": "HTTP 200 OK & indexable HTML served. Awaiting Google Search Console API credentials for official index state.",
+      "potentialCause": "GSC API credentials not yet configured in local environment.",
+      "recommendedRemediation": "Configure GOOGLE_APPLICATION_CREDENTIALS or inspect manually via Google Search Console URL Inspection tool.",
+      "source": "TECHNICAL_CRAWLABILITY_INFERENCE"
+    },
+    {
+      "url": "https://nyutaelite.com/bulk-order/qualities",
+      "category": "INSPECTION_PENDING_CREDENTIALS",
+      "evidence": "HTTP 200 OK & indexable HTML served. Awaiting Google Search Console API credentials for official index state.",
+      "potentialCause": "GSC API credentials not yet configured in local environment.",
+      "recommendedRemediation": "Configure GOOGLE_APPLICATION_CREDENTIALS or inspect manually via Google Search Console URL Inspection tool.",
+      "source": "TECHNICAL_CRAWLABILITY_INFERENCE"
+    },
+    {
+      "url": "https://nyutaelite.com/learn/how-to-choose-good-quality-makhana",
+      "category": "INSPECTION_PENDING_CREDENTIALS",
+      "evidence": "HTTP 200 OK & indexable HTML served. Awaiting Google Search Console API credentials for official index state.",
+      "potentialCause": "GSC API credentials not yet configured in local environment.",
+      "recommendedRemediation": "Configure GOOGLE_APPLICATION_CREDENTIALS or inspect manually via Google Search Console URL Inspection tool.",
+      "source": "TECHNICAL_CRAWLABILITY_INFERENCE"
+    },
+    {
+      "url": "https://nyutaelite.com/products/makhana?sku=premium-100g",
+      "category": "INSPECTION_PENDING_CREDENTIALS",
+      "evidence": "HTTP 200 OK & indexable HTML served. Awaiting Google Search Console API credentials for official index state.",
+      "potentialCause": "GSC API credentials not yet configured in local environment.",
+      "recommendedRemediation": "Configure GOOGLE_APPLICATION_CREDENTIALS or inspect manually via Google Search Console URL Inspection tool.",
+      "source": "TECHNICAL_CRAWLABILITY_INFERENCE"
+    },
+    {
+      "url": "https://nyutaelite.com/products/makhana?sku=premium-200g",
+      "category": "INSPECTION_PENDING_CREDENTIALS",
+      "evidence": "HTTP 200 OK & indexable HTML served. Awaiting Google Search Console API credentials for official index state.",
+      "potentialCause": "GSC API credentials not yet configured in local environment.",
+      "recommendedRemediation": "Configure GOOGLE_APPLICATION_CREDENTIALS or inspect manually via Google Search Console URL Inspection tool.",
+      "source": "TECHNICAL_CRAWLABILITY_INFERENCE"
+    },
+    {
+      "url": "https://nyutaelite.com/products/makhana?sku=premium-250g",
+      "category": "INSPECTION_PENDING_CREDENTIALS",
+      "evidence": "HTTP 200 OK & indexable HTML served. Awaiting Google Search Console API credentials for official index state.",
+      "potentialCause": "GSC API credentials not yet configured in local environment.",
+      "recommendedRemediation": "Configure GOOGLE_APPLICATION_CREDENTIALS or inspect manually via Google Search Console URL Inspection tool.",
+      "source": "TECHNICAL_CRAWLABILITY_INFERENCE"
+    },
+    {
+      "url": "https://nyutaelite.com/products/makhana?sku=normal-100g",
+      "category": "INSPECTION_PENDING_CREDENTIALS",
+      "evidence": "HTTP 200 OK & indexable HTML served. Awaiting Google Search Console API credentials for official index state.",
+      "potentialCause": "GSC API credentials not yet configured in local environment.",
+      "recommendedRemediation": "Configure GOOGLE_APPLICATION_CREDENTIALS or inspect manually via Google Search Console URL Inspection tool.",
+      "source": "TECHNICAL_CRAWLABILITY_INFERENCE"
+    },
+    {
+      "url": "https://nyutaelite.com/products/makhana?sku=normal-200g",
+      "category": "INSPECTION_PENDING_CREDENTIALS",
+      "evidence": "HTTP 200 OK & indexable HTML served. Awaiting Google Search Console API credentials for official index state.",
+      "potentialCause": "GSC API credentials not yet configured in local environment.",
+      "recommendedRemediation": "Configure GOOGLE_APPLICATION_CREDENTIALS or inspect manually via Google Search Console URL Inspection tool.",
+      "source": "TECHNICAL_CRAWLABILITY_INFERENCE"
+    },
+    {
+      "url": "https://nyutaelite.com/products/makhana?sku=normal-250g",
+      "category": "INSPECTION_PENDING_CREDENTIALS",
+      "evidence": "HTTP 200 OK & indexable HTML served. Awaiting Google Search Console API credentials for official index state.",
+      "potentialCause": "GSC API credentials not yet configured in local environment.",
+      "recommendedRemediation": "Configure GOOGLE_APPLICATION_CREDENTIALS or inspect manually via Google Search Console URL Inspection tool.",
+      "source": "TECHNICAL_CRAWLABILITY_INFERENCE"
+    }
+  ],
+  "gscStatus": {
+    "authMethod": "NONE",
+    "connected": false,
+    "error": "Authentication not configured",
+    "missingConfigInstructions": "Google Search Console API Authentication is not configured.\n\nOption A (Recommended for Automated Jobs: Service Account):\n  1. Create a Google Cloud Project & enable Google Search Console API.\n  2. Create a Service Account, download the JSON key file.\n  3. Add the service account email as a \"Full\" user in Google Search Console for https://nyutaelite.com/.\n  4. Set GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json in your .env or environment.\n\nOption B (OAuth 2.0 Web/App):\n  1. Configure OAuth 2.0 Client credentials in Google Cloud Console.\n  2. Generate a Refresh Token with scope: https://www.googleapis.com/auth/webmasters.readonly\n  3. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REFRESH_TOKEN in your .env."
+  },
+  "bingStatus": {
+    "configured": false,
+    "connected": false,
+    "error": "Bing API key not configured",
+    "missingConfigInstructions": "Bing Webmaster Tools API is not configured.\n\nSetup Steps:\n  1. Log in to Bing Webmaster Tools (https://www.bing.com/webmasters).\n  2. Ensure https://nyutaelite.com is verified (can import from Google Search Console in 1 click).\n  3. Navigate to Settings (gear icon) -> API Access -> API Key.\n  4. Generate or copy your Bing Webmaster API Key.\n  5. Set BING_API_KEY=<your_api_key> in your .env or environment."
+  },
+  "issues": {
+    "newIssues": [
+      {
+        "id": "https://nyutaelite.com/products/makhana::Sub-optimal title length: 78 characters (recommended 30-60)",
+        "url": "https://nyutaelite.com/products/makhana",
+        "description": "Sub-optimal title length: 78 characters (recommended 30-60)",
+        "severity": "LOW",
+        "firstSeen": "2026-10-26T04:23:08.175Z",
+        "lastSeen": "2026-10-26T04:23:08.175Z"
+      },
+      {
+        "id": "https://nyutaelite.com/learn/how-to-choose-good-quality-makhana::Sub-optimal title length: 79 characters (recommended 30-60)",
+        "url": "https://nyutaelite.com/learn/how-to-choose-good-quality-makhana",
+        "description": "Sub-optimal title length: 79 characters (recommended 30-60)",
+        "severity": "LOW",
+        "firstSeen": "2026-10-26T04:23:08.175Z",
+        "lastSeen": "2026-10-26T04:23:08.175Z"
+      },
+      {
+        "id": "https://nyutaelite.com/learn/how-to-choose-good-quality-makhana::Sub-optimal meta description length: 166 characters (recommended 120-160)",
+        "url": "https://nyutaelite.com/learn/how-to-choose-good-quality-makhana",
+        "description": "Sub-optimal meta description length: 166 characters (recommended 120-160)",
+        "severity": "LOW",
+        "firstSeen": "2026-10-26T04:23:08.175Z",
+        "lastSeen": "2026-10-26T04:23:08.175Z"
+      },
+      {
+        "id": "https://nyutaelite.com/products/makhana?sku=premium-100g::Sub-optimal title length: 96 characters (recommended 30-60)",
+        "url": "https://nyutaelite.com/products/makhana?sku=premium-100g",
+        "description": "Sub-optimal title length: 96 characters (recommended 30-60)",
+        "severity": "LOW",
+        "firstSeen": "2026-10-26T04:23:08.175Z",
+        "lastSeen": "2026-10-26T04:23:08.175Z"
+      },
+      {
+        "id": "https://nyutaelite.com/products/makhana?sku=premium-100g::Sub-optimal meta description length: 191 characters (recommended 120-160)",
+        "url": "https://nyutaelite.com/products/makhana?sku=premium-100g",
+        "description": "Sub-optimal meta description length: 191 characters (recommended 120-160)",
+        "severity": "LOW",
+        "firstSeen": "2026-10-26T04:23:08.175Z",
+        "lastSeen": "2026-10-26T04:23:08.175Z"
+      },
+      {
+        "id": "https://nyutaelite.com/products/makhana?sku=premium-200g::Sub-optimal title length: 96 characters (recommended 30-60)",
+        "url": "https://nyutaelite.com/products/makhana?sku=premium-200g",
+        "description": "Sub-optimal title length: 96 characters (recommended 30-60)",
+        "severity": "LOW",
+        "firstSeen": "2026-10-26T04:23:08.175Z",
+        "lastSeen": "2026-10-26T04:23:08.175Z"
+      },
+      {
+        "id": "https://nyutaelite.com/products/makhana?sku=premium-250g::Sub-optimal title length: 96 characters (recommended 30-60)",
+        "url": "https://nyutaelite.com/products/makhana?sku=premium-250g",
+        "description": "Sub-optimal title length: 96 characters (recommended 30-60)",
+        "severity": "LOW",
+        "firstSeen": "2026-10-26T04:23:08.175Z",
+        "lastSeen": "2026-10-26T04:23:08.175Z"
+      },
+      {
+        "id": "https://nyutaelite.com/products/makhana?sku=premium-250g::Sub-optimal meta description length: 175 characters (recommended 120-160)",
+        "url": "https://nyutaelite.com/products/makhana?sku=premium-250g",
+        "description": "Sub-optimal meta description length: 175 characters (recommended 120-160)",
+        "severity": "LOW",
+        "firstSeen": "2026-10-26T04:23:08.175Z",
+        "lastSeen": "2026-10-26T04:23:08.175Z"
+      },
+      {
+        "id": "https://nyutaelite.com/products/makhana?sku=normal-100g::Sub-optimal title length: 96 characters (recommended 30-60)",
+        "url": "https://nyutaelite.com/products/makhana?sku=normal-100g",
+        "description": "Sub-optimal title length: 96 characters (recommended 30-60)",
+        "severity": "LOW",
+        "firstSeen": "2026-10-26T04:23:08.175Z",
+        "lastSeen": "2026-10-26T04:23:08.175Z"
+      },
+      {
+        "id": "https://nyutaelite.com/products/makhana?sku=normal-100g::Sub-optimal meta description length: 171 characters (recommended 120-160)",
+        "url": "https://nyutaelite.com/products/makhana?sku=normal-100g",
+        "description": "Sub-optimal meta description length: 171 characters (recommended 120-160)",
+        "severity": "LOW",
+        "firstSeen": "2026-10-26T04:23:08.175Z",
+        "lastSeen": "2026-10-26T04:23:08.175Z"
+      },
+      {
+        "id": "https://nyutaelite.com/products/makhana?sku=normal-200g::Sub-optimal title length: 96 characters (recommended 30-60)",
+        "url": "https://nyutaelite.com/products/makhana?sku=normal-200g",
+        "description": "Sub-optimal title length: 96 characters (recommended 30-60)",
+        "severity": "LOW",
+        "firstSeen": "2026-10-26T04:23:08.175Z",
+        "lastSeen": "2026-10-26T04:23:08.175Z"
+      },
+      {
+        "id": "https://nyutaelite.com/products/makhana?sku=normal-200g::Sub-optimal meta description length: 170 characters (recommended 120-160)",
+        "url": "https://nyutaelite.com/products/makhana?sku=normal-200g",
+        "description": "Sub-optimal meta description length: 170 characters (recommended 120-160)",
+        "severity": "LOW",
+        "firstSeen": "2026-10-26T04:23:08.175Z",
+        "lastSeen": "2026-10-26T04:23:08.175Z"
+      },
+      {
+        "id": "https://nyutaelite.com/products/makhana?sku=normal-250g::Sub-optimal title length: 96 characters (recommended 30-60)",
+        "url": "https://nyutaelite.com/products/makhana?sku=normal-250g",
+        "description": "Sub-optimal title length: 96 characters (recommended 30-60)",
+        "severity": "LOW",
+        "firstSeen": "2026-10-26T04:23:08.175Z",
+        "lastSeen": "2026-10-26T04:23:08.175Z"
+      },
+      {
+        "id": "https://nyutaelite.com/products/makhana?sku=normal-250g::Sub-optimal meta description length: 169 characters (recommended 120-160)",
+        "url": "https://nyutaelite.com/products/makhana?sku=normal-250g",
+        "description": "Sub-optimal meta description length: 169 characters (recommended 120-160)",
+        "severity": "LOW",
+        "firstSeen": "2026-10-26T04:23:08.175Z",
+        "lastSeen": "2026-10-26T04:23:08.175Z"
+      }
+    ],
+    "continuingIssues": [],
+    "resolvedIssues": []
+  }
+}

@@ -54,6 +54,49 @@ function getGoogleSiteVerificationToken(): string {
   }
   return '';
 }
+  // Existing implementation unchanged
+}
+
+// Helper to truncate long strings without cutting words.
+function truncate(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const trimmed = text.slice(0, max);
+  const lastSpace = trimmed.lastIndexOf(' ');
+  return (lastSpace > 0 ? trimmed.slice(0, lastSpace) : trimmed) + '…';
+}
+
+export function finalizeSeo(metadata: RouteSeoMetadata): RouteSeoMetadata {
+  return {
+    ...metadata,
+    title: truncate(metadata.title, 60),
+    description: truncate(metadata.description, 160),
+  };
+}
+(metadata: RouteSeoMetadata): RouteSeoMetadata {
+  return {
+    ...metadata,
+    title: truncate(metadata.title, 60),
+    description: truncate(metadata.description, 160),
+  };
+}
+  try {
+    const metaEnv = (import.meta as any)?.env;
+    if (metaEnv && typeof metaEnv.VITE_GOOGLE_SITE_VERIFICATION === 'string') {
+      return metaEnv.VITE_GOOGLE_SITE_VERIFICATION.trim();
+    }
+  } catch {
+    // ignore
+  }
+  try {
+    const nodeEnv = (globalThis as any)?.process?.env;
+    if (nodeEnv && typeof nodeEnv.VITE_GOOGLE_SITE_VERIFICATION === 'string') {
+      return nodeEnv.VITE_GOOGLE_SITE_VERIFICATION.trim();
+    }
+  } catch {
+    // ignore
+  }
+  return '';
+}
 
 /**
  * Resolve an image path to a valid absolute https://nyutaelite.com URL for Open Graph & Schema.org.
@@ -864,7 +907,10 @@ export function applySeoToDocument(seo: RouteSeoMetadata): void {
     );
     existingDynamicScripts.forEach((node) => node.parentNode?.removeChild(node));
 
+    // Skip injecting Product JSON‑LD here – the <ProductJsonLd> component handles it.
     for (const schemaObj of seo.jsonLd) {
+      // Exclude Product schema; it will be rendered by ProductJsonLd component.
+      if ((schemaObj as any)['@type'] === 'Product') continue;
       const script = document.createElement('script');
       script.type = 'application/ld+json';
       script.setAttribute('data-nyuta-seo-jsonld', 'true');
