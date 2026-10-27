@@ -17,6 +17,7 @@ export interface SeoEngineConfig {
   googleClientSecret?: string;
   googleRefreshToken?: string;
   googleApplicationCredentials?: string;
+  googleApplicationCredentialsJson?: string;
   bingApiKey?: string;
   bingSiteUrl?: string;
   alertWebhookUrl?: string;
@@ -75,6 +76,7 @@ export const CONFIG: SeoEngineConfig = {
   googleClientSecret: localEnv.GOOGLE_CLIENT_SECRET || undefined,
   googleRefreshToken: localEnv.GOOGLE_REFRESH_TOKEN || undefined,
   googleApplicationCredentials: localEnv.GOOGLE_APPLICATION_CREDENTIALS || undefined,
+  googleApplicationCredentialsJson: localEnv.GOOGLE_APPLICATION_CREDENTIALS_JSON || localEnv.GOOGLE_SERVICE_ACCOUNT_KEY || undefined,
   bingApiKey: localEnv.BING_API_KEY || undefined,
   bingSiteUrl: localEnv.BING_SITE_URL || 'https://nyutaelite.com/',
   alertWebhookUrl: localEnv.SEO_ALERT_WEBHOOK_URL || undefined,
@@ -112,6 +114,8 @@ export function redactSecrets(text: string): string {
   cleaned = cleaned.replace(/client_secret=([^&\s]+)/gi, 'client_secret=[REDACTED]');
   cleaned = cleaned.replace(/refresh_token=([^&\s]+)/gi, 'refresh_token=[REDACTED]');
   cleaned = cleaned.replace(/Bearer\s+([a-zA-Z0-9_.-]{12,})/gi, 'Bearer [REDACTED]');
+  cleaned = cleaned.replace(/-----BEGIN[ A-Z_-]+KEY-----[\s\S]*?-----END[ A-Z_-]+KEY-----/gi, '[REDACTED_PRIVATE_KEY]');
+  cleaned = cleaned.replace(/"private_key":\s*"[^"]+"/gi, '"private_key": "[REDACTED]"');
 
   return cleaned;
 }

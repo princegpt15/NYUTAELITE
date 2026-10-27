@@ -74,17 +74,34 @@ Options:
     console.log(`   Notice:      ${gscSites.error}`);
   }
 
-  // Retrieve Search Analytics if GSC is connected
+    // Retrieve Search Analytics if GSC is connected
   let performance: PerformanceAnalysisSummary | undefined;
+
   if (gscSites.success) {
     console.log('   Retrieving recent search analytics performance...');
+
     const now = new Date();
-    const endDate = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const analyticsRes = await gscClient.querySearchAnalytics({ startDate, endDate });
+    const endDate = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0];
+    const startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0];
+
+    console.log(`   Date Range: ${startDate} to ${endDate}`);
+
+    const analyticsRes = await gscClient.querySearchAnalytics({
+      startDate,
+      endDate,
+    });
+
     if (analyticsRes.success && analyticsRes.data) {
       performance = analyzeSearchPerformance(analyticsRes.data);
+      console.log(`   Analytics Rows: ${analyticsRes.data.length}`);
       console.log(`   Performance Data: ${performance.totalClicks} clicks, ${performance.totalImpressions} impressions`);
+    } else {
+      console.log('   Analytics Status: FAILED');
+      console.log(`   Reason: ${analyticsRes.error || 'Unknown error returned by Google Search Console'}`);
     }
   }
 

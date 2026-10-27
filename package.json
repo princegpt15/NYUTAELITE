@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "seo:audit": "npx tsx scripts/seo-engine/run.ts --dry-run",
     "seo:daily": "npx tsx scripts/seo-engine/run.ts --full",
-    "seo:test": "npx tsx scripts/seo-engine/test-seo-engine.ts"
+    "seo:test": "npx tsx scripts/seo-engine/test-seo-engine.ts",
+    "deploy:prod": "node scripts/deploy_and_verify.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.48.0",

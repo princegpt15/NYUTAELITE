@@ -1,5 +1,6 @@
 // scripts/seo-engine/search-console.ts
 import fs from 'node:fs';
+import path from 'node:path';
 import crypto from 'node:crypto';
 import { CONFIG, redactSecrets } from './config';
 
@@ -31,6 +32,31 @@ export interface GscUrlInspectionResult {
   raw?: any;
 }
 
+export interface GscSitemapItem {
+  path: string;
+  lastSubmitted?: string;
+  isPending?: boolean;
+  isSitemapsIndex?: boolean;
+  type?: string;
+  lastDownloaded?: string;
+  warnings?: string;
+  errors?: string;
+  contents?: Array<{ type: string; submitted: string; indexed: string }>;
+}
+
+export interface ServiceAccountCredentials {
+  type?: string;
+  project_id?: string;
+  private_key_id?: string;
+  private_key: string;
+  client_email: string;
+  client_id?: string;
+  auth_uri?: string;
+  token_uri?: string;
+  auth_provider_x509_cert_url?: string;
+  client_x509_cert_url?: string;
+}
+
 export interface GscClientResult<T> {
   success: boolean;
   data?: T;
@@ -42,15 +68,86 @@ export interface GscClientResult<T> {
 export class GoogleSearchConsoleClient {
   private accessToken: string | null = null;
   private tokenExpiresAt = 0;
+  private config = { ...CONFIG };
+
+  constructor(configOverride?: Partial<typeof CONFIG>) {
+    if (configOverride) {
+      this.config = { ...this.config, ...configOverride };
+    }
+  }
 
   public getAuthMethod(): 'OAUTH2' | 'SERVICE_ACCOUNT' | 'NONE' {
-    if (CONFIG.googleClientId && CONFIG.googleClientSecret && CONFIG.googleRefreshToken) {
+    if (this.config.googleClientId && this.config.googleClientSecret && this.config.googleRefreshToken) {
       return 'OAUTH2';
     }
-    if (CONFIG.googleApplicationCredentials) {
+    if (this.config.googleApplicationCredentials || this.config.googleApplicationCredentialsJson) {
       return 'SERVICE_ACCOUNT';
     }
     return 'NONE';
+  }
+
+  public parseServiceAccountCredentials(): { creds?: ServiceAccountCredentials; error?: string } {
+    // 1. Direct JSON string or Base64 in this.config.googleApplicationCredentialsJson
+    if (this.config.googleApplicationCredentialsJson) {
+      let raw = this.config.googleApplicationCredentialsJson.trim();
+      if (!raw.startsWith('{') && !raw.startsWith('[')) {
+        try {
+          raw = Buffer.from(raw, 'base64').toString('utf8').trim();
+        } catch {
+          // continue
+        }
+      }
+      try {
+        const parsed = JSON.parse(raw);
+        if (!parsed.client_email) return { error: 'Service account JSON missing "client_email"' };
+        if (!parsed.private_key) return { error: 'Service account JSON missing "private_key"' };
+        if (typeof parsed.private_key === 'string' && parsed.private_key.includes('\\n')) {
+          parsed.private_key = parsed.private_key.replace(/\\n/g, '\n');
+        }
+        return { creds: parsed };
+      } catch (err: any) {
+        return { error: `Failed to parse service account JSON from environment: ${err.message}` };
+      }
+    }
+
+    // 2. this.config.googleApplicationCredentials (can be file path OR inline JSON)
+    if (this.config.googleApplicationCredentials) {
+      const raw = this.config.googleApplicationCredentials.trim();
+      if (raw.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (!parsed.client_email) return { error: 'Service account JSON missing "client_email"' };
+          if (!parsed.private_key) return { error: 'Service account JSON missing "private_key"' };
+          if (typeof parsed.private_key === 'string' && parsed.private_key.includes('\\n')) {
+            parsed.private_key = parsed.private_key.replace(/\\n/g, '\n');
+          }
+          return { creds: parsed };
+        } catch (err: any) {
+          return { error: `Failed to parse inline service account JSON: ${err.message}` };
+        }
+      }
+
+      // Check file path
+      const resolved = path.isAbsolute(raw) ? raw : path.resolve(process.cwd(), raw);
+      if (!fs.existsSync(resolved)) {
+        return { error: `Service account credentials file not found: ${resolved}` };
+      }
+
+      try {
+        const fileContent = fs.readFileSync(resolved, 'utf8').trim();
+        const parsed = JSON.parse(fileContent);
+        if (!parsed.client_email) return { error: `Service account file '${resolved}' missing "client_email"` };
+        if (!parsed.private_key) return { error: `Service account file '${resolved}' missing "private_key"` };
+        if (typeof parsed.private_key === 'string' && parsed.private_key.includes('\\n')) {
+          parsed.private_key = parsed.private_key.replace(/\\n/g, '\n');
+        }
+        return { creds: parsed };
+      } catch (err: any) {
+        return { error: `Failed to read or parse service account file '${resolved}': ${err.message}` };
+      }
+    }
+
+    return { error: 'No service account credentials provided' };
   }
 
   public getMissingConfigInstructions(): string {
@@ -61,7 +158,8 @@ export class GoogleSearchConsoleClient {
       '  1. Create a Google Cloud Project & enable Google Search Console API.',
       '  2. Create a Service Account, download the JSON key file.',
       '  3. Add the service account email as a "Full" user in Google Search Console for https://nyutaelite.com/.',
-      '  4. Set GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json in your .env or environment.',
+      '  4. Set GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json in your .env or environment,',
+      '     OR set GOOGLE_APPLICATION_CREDENTIALS_JSON with the JSON content in GitHub Actions Secrets.',
       '',
       'Option B (OAuth 2.0 Web/App):',
       '  1. Configure OAuth 2.0 Client credentials in Google Cloud Console.',
@@ -80,9 +178,9 @@ export class GoogleSearchConsoleClient {
     if (authMethod === 'OAUTH2') {
       const tokenUrl = 'https://oauth2.googleapis.com/token';
       const body = new URLSearchParams({
-        client_id: CONFIG.googleClientId!,
-        client_secret: CONFIG.googleClientSecret!,
-        refresh_token: CONFIG.googleRefreshToken!,
+        client_id: this.config.googleClientId!,
+        client_secret: this.config.googleClientSecret!,
+        refresh_token: this.config.googleRefreshToken!,
         grant_type: 'refresh_token',
       });
 
@@ -104,11 +202,10 @@ export class GoogleSearchConsoleClient {
     }
 
     if (authMethod === 'SERVICE_ACCOUNT') {
-      const credPath = CONFIG.googleApplicationCredentials!;
-      if (!fs.existsSync(credPath)) {
-        throw new Error(`Service account credentials file not found: ${credPath}`);
+      const { creds, error } = this.parseServiceAccountCredentials();
+      if (!creds || error) {
+        throw new Error(`Service account error: ${error || 'Invalid credentials'}`);
       }
-      const creds = JSON.parse(fs.readFileSync(credPath, 'utf8'));
 
       // Generate signed JWT for Service Account
       const now = Math.floor(Date.now() / 1000);
@@ -142,16 +239,16 @@ export class GoogleSearchConsoleClient {
 
       if (!tokenRes.ok) {
         const errText = await tokenRes.text();
-        throw new Error(`GSC Service Account JWT token exchange failed (${tokenRes.status}): ${redactSecrets(errText)}`);
+        throw new Error(`GSC Service Account JWT exchange failed (${tokenRes.status}): ${redactSecrets(errText)}`);
       }
 
-      const json = (await tokenRes.json()) as any;
-      this.accessToken = json.access_token;
-      this.tokenExpiresAt = Date.now() + (json.expires_in || 3600) * 1000;
+      const tokenJson = (await tokenRes.json()) as any;
+      this.accessToken = tokenJson.access_token;
+      this.tokenExpiresAt = Date.now() + (tokenJson.expires_in || 3600) * 1000;
       return this.accessToken!;
     }
 
-    throw new Error('NO_CREDENTIALS');
+    throw new Error('Google Search Console API authentication is not configured.');
   }
 
   public async listSites(): Promise<GscClientResult<GscSiteItem[]>> {
@@ -173,11 +270,15 @@ export class GoogleSearchConsoleClient {
 
       if (!res.ok) {
         const text = await res.text();
-        return { success: false, authMethod, error: `GSC sites.list failed (${res.status}): ${redactSecrets(text)}` };
+        let errMsg = `GSC sites.list failed (${res.status}): ${redactSecrets(text)}`;
+        if (res.status === 403) {
+          errMsg = `GSC Permission Denied (403): The authenticated service identity is valid, but has not been added to any Search Console property. Please add the Service Account email to your property under Settings -> Users and Permissions in Google Search Console.`;
+        }
+        return { success: false, authMethod, error: errMsg };
       }
 
       const json = (await res.json()) as any;
-      const entries = (json.siteEntry || []).map((e: any) => ({
+      const entries: GscSiteItem[] = (json.siteEntry || []).map((e: any) => ({
         siteUrl: e.siteUrl,
         permissionLevel: e.permissionLevel,
       }));
@@ -188,11 +289,35 @@ export class GoogleSearchConsoleClient {
     }
   }
 
+  public async findMatchingSiteUrl(preferredSite?: string): Promise<string | null> {
+    const sitesRes = await this.listSites();
+    if (!sitesRes.success || !sitesRes.data || sitesRes.data.length === 0) {
+      return null;
+    }
+
+    const preferred = preferredSite || this.config.gscSiteUrl;
+    // 1. Exact match
+    const exact = sitesRes.data.find((s) => s.siteUrl === preferred);
+    if (exact) return exact.siteUrl;
+
+    // 2. Normalized trailing slash match
+    const normPreferred = preferred.replace(/\/+$/, '');
+    const normMatch = sitesRes.data.find((s) => s.siteUrl.replace(/\/+$/, '') === normPreferred);
+    if (normMatch) return normMatch.siteUrl;
+
+    // 3. Domain property match
+    const domainMatch = sitesRes.data.find((s) => s.siteUrl === 'sc-domain:nyutaelite.com' || s.siteUrl.includes('nyutaelite.com'));
+    if (domainMatch) return domainMatch.siteUrl;
+
+    return null;
+  }
+
   public async querySearchAnalytics(params: {
     startDate: string;
     endDate: string;
     dimensions?: Array<'date' | 'query' | 'page' | 'country' | 'device'>;
     rowLimit?: number;
+    siteUrl?: string;
   }): Promise<GscClientResult<GscSearchAnalyticsRow[]>> {
     const authMethod = this.getAuthMethod();
     if (authMethod === 'NONE') {
@@ -206,7 +331,8 @@ export class GoogleSearchConsoleClient {
 
     try {
       const token = await this.getAccessToken();
-      const siteUrlParam = encodeURIComponent(CONFIG.gscSiteUrl);
+      const targetSite = params.siteUrl || this.config.gscSiteUrl;
+      const siteUrlParam = encodeURIComponent(targetSite);
       const url = `https://www.googleapis.com/webmasters/v3/sites/${siteUrlParam}/searchAnalytics/query`;
 
       const body = {
@@ -227,7 +353,11 @@ export class GoogleSearchConsoleClient {
 
       if (!res.ok) {
         const text = await res.text();
-        return { success: false, authMethod, error: `GSC searchAnalytics.query failed (${res.status}): ${redactSecrets(text)}` };
+        let errMsg = `GSC searchAnalytics.query failed (${res.status}): ${redactSecrets(text)}`;
+        if (res.status === 403) {
+          errMsg = `GSC Permission Denied (403): The authenticated identity does not have permission for '${targetSite}'. Go to Google Search Console -> Settings -> Users and Permissions, and add the Service Account email as a 'Full' user.`;
+        }
+        return { success: false, authMethod, error: errMsg };
       }
 
       const json = (await res.json()) as any;
@@ -245,7 +375,7 @@ export class GoogleSearchConsoleClient {
     }
   }
 
-  public async inspectUrl(inspectionUrl: string): Promise<GscClientResult<GscUrlInspectionResult>> {
+  public async inspectUrl(inspectionUrl: string, siteUrl?: string): Promise<GscClientResult<GscUrlInspectionResult>> {
     const authMethod = this.getAuthMethod();
     if (authMethod === 'NONE') {
       return {
@@ -258,11 +388,12 @@ export class GoogleSearchConsoleClient {
 
     try {
       const token = await this.getAccessToken();
+      const targetSite = siteUrl || this.config.gscSiteUrl;
       const url = 'https://searchconsole.googleapis.com/v1/urlInspection/index:inspect';
 
       const body = {
         inspectionUrl,
-        siteUrl: CONFIG.gscSiteUrl,
+        siteUrl: targetSite,
       };
 
       const res = await fetch(url, {
@@ -276,7 +407,11 @@ export class GoogleSearchConsoleClient {
 
       if (!res.ok) {
         const text = await res.text();
-        return { success: false, authMethod, error: `GSC urlInspection failed (${res.status}): ${redactSecrets(text)}` };
+        let errMsg = `GSC urlInspection failed (${res.status}): ${redactSecrets(text)}`;
+        if (res.status === 403) {
+          errMsg = `GSC Permission Denied (403): Cannot inspect '${inspectionUrl}' on '${targetSite}'. Please check property permissions in Search Console.`;
+        }
+        return { success: false, authMethod, error: errMsg };
       }
 
       const json = (await res.json()) as any;
@@ -299,6 +434,89 @@ export class GoogleSearchConsoleClient {
       };
 
       return { success: true, authMethod, data: result };
+    } catch (err: any) {
+      return { success: false, authMethod, error: redactSecrets(err.message) };
+    }
+  }
+
+  public async listSitemaps(siteUrl?: string): Promise<GscClientResult<GscSitemapItem[]>> {
+    const authMethod = this.getAuthMethod();
+    if (authMethod === 'NONE') {
+      return {
+        success: false,
+        authMethod: 'NONE',
+        error: 'Authentication not configured',
+        missingConfigInstructions: this.getMissingConfigInstructions(),
+      };
+    }
+
+    try {
+      const token = await this.getAccessToken();
+      const targetSite = siteUrl || this.config.gscSiteUrl;
+      const encodedSite = encodeURIComponent(targetSite);
+      const url = `https://www.googleapis.com/webmasters/v3/sites/${encodedSite}/sitemaps`;
+
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        let errMsg = `GSC sitemaps.list failed (${res.status}): ${redactSecrets(text)}`;
+        if (res.status === 403) {
+          errMsg = `GSC Permission Denied (403): The authenticated identity does not have permission for '${targetSite}'.`;
+        }
+        return { success: false, authMethod, error: errMsg };
+      }
+
+      const json = (await res.json()) as any;
+      const sitemaps: GscSitemapItem[] = (json.sitemap || []).map((s: any) => ({
+        path: s.path,
+        lastSubmitted: s.lastSubmitted,
+        isPending: s.isPending,
+        isSitemapsIndex: s.isSitemapsIndex,
+        type: s.type,
+        lastDownloaded: s.lastDownloaded,
+        warnings: s.warnings,
+        errors: s.errors,
+        contents: s.contents,
+      }));
+
+      return { success: true, authMethod, data: sitemaps };
+    } catch (err: any) {
+      return { success: false, authMethod, error: redactSecrets(err.message) };
+    }
+  }
+
+  public async submitSitemap(feedpath: string, siteUrl?: string): Promise<GscClientResult<boolean>> {
+    const authMethod = this.getAuthMethod();
+    if (authMethod === 'NONE') {
+      return {
+        success: false,
+        authMethod: 'NONE',
+        error: 'Authentication not configured',
+        missingConfigInstructions: this.getMissingConfigInstructions(),
+      };
+    }
+
+    try {
+      const token = await this.getAccessToken();
+      const targetSite = siteUrl || this.config.gscSiteUrl;
+      const encodedSite = encodeURIComponent(targetSite);
+      const encodedFeed = encodeURIComponent(feedpath);
+      const url = `https://www.googleapis.com/webmasters/v3/sites/${encodedSite}/sitemaps/${encodedFeed}`;
+
+      const res = await fetch(url, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        return { success: false, authMethod, error: `GSC sitemaps.submit failed (${res.status}): ${redactSecrets(text)}` };
+      }
+
+      return { success: true, authMethod, data: true };
     } catch (err: any) {
       return { success: false, authMethod, error: redactSecrets(err.message) };
     }

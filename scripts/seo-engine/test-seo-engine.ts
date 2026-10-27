@@ -32,6 +32,11 @@ async function runTests() {
   const redacted = redactSecrets(sampleWithSecret);
   assert(!redacted.includes('rzp_live_test_secret_123456'), 'Redacts known credentials');
   assert(redacted.includes('[REDACTED'), 'Inserts [REDACTED] placeholder');
+  const sampleWithKey = 'Error: -----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC...\n-----END PRIVATE KEY----- and "private_key": "secret_key_data"';
+  const redactedKey = redactSecrets(sampleWithKey);
+  assert(!redactedKey.includes('MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC'), 'Redacts RSA private key blocks');
+  assert(redactedKey.includes('[REDACTED_PRIVATE_KEY]'), 'Inserts [REDACTED_PRIVATE_KEY] placeholder');
+  assert(redactedKey.includes('"private_key": "[REDACTED]"'), 'Redacts private_key JSON field');
 
   // 2. Sitemap Validation Unit Test (Mocked XML)
   console.log('\n2. Testing Sitemap XML Validation:');
@@ -183,11 +188,23 @@ async function runTests() {
 
   // 6. GSC Client Missing Configuration & Error Handling
   console.log('\n6. Testing GSC & Bing Error Handling:');
-  const gscClient = new GoogleSearchConsoleClient();
-  assert(gscClient.getAuthMethod() === 'NONE', 'Identifies unconfigured GSC credentials');
-  const gscRes = await gscClient.listSites();
+  const unconfiguredClient = new GoogleSearchConsoleClient({
+    googleClientId: undefined,
+    googleClientSecret: undefined,
+    googleRefreshToken: undefined,
+    googleApplicationCredentials: undefined,
+    googleApplicationCredentialsJson: undefined,
+  });
+  assert(unconfiguredClient.getAuthMethod() === 'NONE', 'Identifies unconfigured GSC credentials');
+  const gscRes = await unconfiguredClient.listSites();
   assert(gscRes.success === false, 'Returns clean failure object without throwing');
   assert(gscRes.missingConfigInstructions?.includes('Service Account'), 'Provides detailed setup instructions');
+  const gscSitemapsRes = await unconfiguredClient.listSitemaps();
+  assert(gscSitemapsRes.success === false, 'Handles unconfigured sitemaps list gracefully');
+  const gscSubmitRes = await unconfiguredClient.submitSitemap('https://nyutaelite.com/sitemap.xml');
+  assert(gscSubmitRes.success === false, 'Handles unconfigured sitemap submit gracefully');
+  const saCredsCheck = unconfiguredClient.parseServiceAccountCredentials();
+  assert(saCredsCheck.creds === undefined, 'Gracefully handles unconfigured service account credentials');
 
   const bingClient = new BingWebmasterClient();
   assert(bingClient.isConfigured() === false, 'Identifies unconfigured Bing API key');

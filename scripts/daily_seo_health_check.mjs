@@ -23,9 +23,10 @@ const endpoints = [
   { name: 'Robots TXT', url: 'https://nyutaelite.com/robots.txt', expectStatus: 200 },
   { name: 'API Proxy', url: 'https://nyutaelite.com/api/products', expectStatus: 200, isJson: true },
   { name: 'Quality Guide', url: 'https://nyutaelite.com/learn/how-to-choose-good-quality-makhana', expectStatus: 200 },
+  { name: 'Health Benefits', url: 'https://nyutaelite.com/learn/makhana-benefits-health', expectStatus: 200 },
 ];
 
-function checkEndpoint(item) {
+function checkEndpoint(item, retries = 1) {
   return new Promise((resolve) => {
     const parsed = new URL(item.url);
     const req = https.request(
@@ -56,10 +57,22 @@ function checkEndpoint(item) {
         });
       }
     );
-    req.on('error', (err) => resolve({ name: item.name, status: 0, error: err.message }));
-    req.on('timeout', () => {
+    req.on('error', async (err) => {
+      if (retries > 0) {
+        await new Promise((r) => setTimeout(r, 1000));
+        resolve(await checkEndpoint(item, retries - 1));
+      } else {
+        resolve({ name: item.name, status: 0, error: err.message });
+      }
+    });
+    req.on('timeout', async () => {
       req.destroy();
-      resolve({ name: item.name, status: 408, error: 'Timeout' });
+      if (retries > 0) {
+        await new Promise((r) => setTimeout(r, 1000));
+        resolve(await checkEndpoint(item, retries - 1));
+      } else {
+        resolve({ name: item.name, status: 408, error: 'Timeout' });
+      }
     });
     req.end();
   });

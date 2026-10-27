@@ -29,3 +29,11 @@ dist-ssr
 backend/debug_env.js
 scratch/
 data/seo/
+
+# Google Cloud and Search Console credentials
+credentials/
+*service-account*.json
+*credentials*.json
+gsc-*.json
+*.pem
+*.key
