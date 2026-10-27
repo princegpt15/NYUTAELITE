@@ -36,6 +36,12 @@ import logoImage from '../assets/images/brand-emblem.png';
 import CategoryCard from '../components/CategoryCard';
 
 // ── Botanical SVG background decoration for the hero ──────────────
+export const seo = {
+  title: 'NYUTA ELITE Makhana – Premium Fox Nuts',
+  description:
+    'Shop NYUTA ELITE premium fox nuts (makhana) from Bihar. Hand‑sorted, air‑popped, 100 % natural snack for health & taste.',
+};
+
 function HeroBotanicalPattern() {
   return (
     <svg
