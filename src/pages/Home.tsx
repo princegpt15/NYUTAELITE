@@ -691,7 +691,7 @@ export const Home: React.FC = () => {
 
               {/* Headline */}
               <h1 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold leading-[1.04] text-[#092218] tracking-tight hero-headline-animate">
-                NYUTA ELITE MAKHANA – Premium Makhana
+                NYUTA ELITE MAKHANA – Premium Fox Nuts from Bihar
               </h1>
 
               {/* Description */}
