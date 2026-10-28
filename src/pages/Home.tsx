@@ -38,19 +38,19 @@ import { PRODUCTION_ORIGIN, DEFAULT_OG_IMAGE } from '../utils/seo';
 
 // ── Botanical SVG background decoration for the hero ──────────────
 export const seo = {
-  title: 'NYUTAELITE | NYUTA ELITE MAKHANA – Premium Fox Nuts',
-  description: 'Shop NYUTA ELITE MAKHANA, premium fox nuts from Bihar. Explore available makhana packs in different sizes and grades for everyday snacking.',
+  title: 'NYUTA ELITE MAKHANA | Premium Makhana & Fox Nuts from Bihar',
+  description: 'Shop NYUTA ELITE MAKHANA — premium Bihar fox nuts in 100g, 200g & 250g pouches. Premium and Normal grades. Pan-India delivery. FSSAI Reg. 20426021000494.',
   canonicalUrl: `${PRODUCTION_ORIGIN}/`,
   robots: 'index, follow',
   ogType: 'website',
-  ogTitle: 'NYUTAELITE | NYUTA ELITE MAKHANA – Premium Fox Nuts',
-  ogDescription: 'Shop NYUTA ELITE MAKHANA, premium fox nuts from Bihar. Explore available makhana packs in different sizes and grades for everyday snacking.',
+  ogTitle: 'NYUTA ELITE MAKHANA | Premium Makhana & Fox Nuts from Bihar',
+  ogDescription: 'Shop NYUTA ELITE MAKHANA — premium Bihar fox nuts in 100g, 200g & 250g pouches. Premium and Normal grades. Pan-India delivery. FSSAI Reg. 20426021000494.',
   ogImage: DEFAULT_OG_IMAGE,
   ogUrl: PRODUCTION_ORIGIN,
   ogSiteName: 'NYUTA ELITE MAKHANA',
   twitterCard: 'summary_large_image',
-  twitterTitle: 'NYUTAELITE | NYUTA ELITE MAKHANA – Premium Fox Nuts',
-  twitterDescription: 'Shop NYUTA ELITE MAKHANA, premium fox nuts from Bihar. Explore available makhana packs in different sizes and grades for everyday snacking.',
+  twitterTitle: 'NYUTA ELITE MAKHANA | Premium Makhana & Fox Nuts from Bihar',
+  twitterDescription: 'Shop NYUTA ELITE MAKHANA — premium Bihar fox nuts in 100g, 200g & 250g pouches. Premium and Normal grades. Pan-India delivery. FSSAI Reg. 20426021000494.',
   twitterImage: DEFAULT_OG_IMAGE,
   jsonLd: [],
 };

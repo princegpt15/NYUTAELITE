@@ -171,7 +171,7 @@ function resolveSeoForRequest(url) {
       title: `Shop Premium & Normal Bihar Makhana Packs (100g–250g) | ${SITE}`,
       desc:  `Explore ${BRAND} makhana in Premium jumbo-grade and Normal everyday-grade fox nuts. 100g, 200g, 250g air-tight pantry pouches. Pan-India delivery.`,
       canonical: canonicalUrl, ogType: 'website',
-      ogImage: `${ORIGIN}/nyuta-elite-logo.png`,
+      ogImage: `${ORIGIN}/nyuta-elite-logo.webp`,
       jsonLd: [
         buildBreadcrumb([
           { name: 'Home',         url: `${ORIGIN}/` },
@@ -222,7 +222,7 @@ function resolveSeoForRequest(url) {
       title: `All Makhana Packs | Shop Bihar Fox Nuts Online | ${SITE}`,
       desc:  `Browse all ${BRAND} makhana packs — Premium and Normal grades in 100g, 200g, and 250g. Free pan-India shipping.`,
       canonical: `${ORIGIN}/categories`, ogType: 'website',
-      ogImage: `${ORIGIN}/nyuta-elite-logo.png`,
+      ogImage: `${ORIGIN}/nyuta-elite-logo.webp`,
       jsonLd: [
         buildBreadcrumb([
           { name: 'Home',             url: `${ORIGIN}/` },
@@ -238,7 +238,7 @@ function resolveSeoForRequest(url) {
       title: `About Our Bihar Makhana Heritage & Quality | ${SITE}`,
       desc:  `Learn how ${BRAND} sources unbleached, naturally air-popped Euryale ferox from traditional harvesting communities in Mithila, Bihar.`,
       canonical: `${ORIGIN}/about`, ogType: 'website',
-      ogImage: `${ORIGIN}/nyuta-elite-logo.png`,
+      ogImage: `${ORIGIN}/nyuta-elite-logo.webp`,
       jsonLd: [],
     };
   }
@@ -249,7 +249,7 @@ function resolveSeoForRequest(url) {
       title: `FAQ — Makhana Grades, Pack Sizes & Shipping | ${SITE}`,
       desc:  `Answers on ${BRAND} Premium vs Normal grades, 100g–250g sizes, roasting tips, pan-India delivery, and returns.`,
       canonical: `${ORIGIN}/faq`, ogType: 'website',
-      ogImage: `${ORIGIN}/nyuta-elite-logo.png`,
+      ogImage: `${ORIGIN}/nyuta-elite-logo.webp`,
       jsonLd: [
         {
           '@context': 'https://schema.org',
@@ -299,7 +299,7 @@ function resolveSeoForRequest(url) {
       title: `Contact Customer Care | ${SITE}`,
       desc:  `Get in touch with ${BRAND} MAKHANA for order tracking, product enquiries, bulk orders, or delivery assistance.`,
       canonical: `${ORIGIN}/contact`, ogType: 'website',
-      ogImage: `${ORIGIN}/nyuta-elite-logo.png`,
+      ogImage: `${ORIGIN}/nyuta-elite-logo.webp`,
       jsonLd: [],
     };
   }
@@ -328,7 +328,7 @@ function resolveSeoForRequest(url) {
         name: 'NYUTA ELITE MAKHANA',
         logo: {
           '@type': 'ImageObject',
-          url: `${ORIGIN}/nyuta-elite-logo.png`,
+          url: `${ORIGIN}/nyuta-elite-logo.webp`,
         },
       },
     };
@@ -371,7 +371,7 @@ function resolveSeoForRequest(url) {
         name: 'NYUTA ELITE MAKHANA',
         logo: {
           '@type': 'ImageObject',
-          url: `${ORIGIN}/nyuta-elite-logo.png`,
+          url: `${ORIGIN}/nyuta-elite-logo.webp`,
         },
       },
     };
@@ -407,7 +407,7 @@ function resolveSeoForRequest(url) {
       dateModified: '2026-10-28T00:00:00+05:30',
       mainEntityOfPage: canonicalUrl,
       author: { '@type': 'Organization', name: 'NYUTA ELITE MAKHANA', url: `${ORIGIN}/` },
-      publisher: { '@type': 'Organization', name: 'NYUTA ELITE MAKHANA', logo: { '@type': 'ImageObject', url: `${ORIGIN}/nyuta-elite-logo.png` } },
+      publisher: { '@type': 'Organization', name: 'NYUTA ELITE MAKHANA', logo: { '@type': 'ImageObject', url: `${ORIGIN}/nyuta-elite-logo.webp` } },
     };
     const breadcrumbJsonLd = buildBreadcrumb([
       { name: 'Home', url: `${ORIGIN}/` },
@@ -436,7 +436,7 @@ function resolveSeoForRequest(url) {
       dateModified: '2026-10-28T00:00:00+05:30',
       mainEntityOfPage: canonicalUrl,
       author: { '@type': 'Organization', name: 'NYUTA ELITE MAKHANA', url: `${ORIGIN}/` },
-      publisher: { '@type': 'Organization', name: 'NYUTA ELITE MAKHANA', logo: { '@type': 'ImageObject', url: `${ORIGIN}/nyuta-elite-logo.png` } },
+      publisher: { '@type': 'Organization', name: 'NYUTA ELITE MAKHANA', logo: { '@type': 'ImageObject', url: `${ORIGIN}/nyuta-elite-logo.webp` } },
     };
     const breadcrumbJsonLd = buildBreadcrumb([
       { name: 'Home', url: `${ORIGIN}/` },
@@ -472,7 +472,7 @@ function resolveSeoForRequest(url) {
         name: 'NYUTA ELITE MAKHANA',
         logo: {
           '@type': 'ImageObject',
-          url: `${ORIGIN}/nyuta-elite-logo.png`,
+          url: `${ORIGIN}/nyuta-elite-logo.webp`,
         },
       },
     };
@@ -497,16 +497,48 @@ function resolveSeoForRequest(url) {
       title: `Bulk Makhana Orders | Wholesale Fox Nuts India | ${SITE}`,
       desc:  `Order ${BRAND} makhana in bulk — Grade 4, 5, 5.5, and 6 Sutta wholesale packs for retailers, restaurants, and manufacturers.`,
       canonical: `${ORIGIN}/bulk-order/qualities`, ogType: 'website',
-      ogImage: `${ORIGIN}/nyuta-elite-logo.png`, jsonLd: [],
+      ogImage: `${ORIGIN}/nyuta-elite-logo.webp`, jsonLd: [],
     };
   }
 
   // Default / homepage
   return {
-    title: 'NYUTAELITE | NYUTA ELITE MAKHANA – Premium Fox Nuts',
-    desc:  'Shop NYUTA ELITE MAKHANA, premium fox nuts from Bihar. Explore available makhana packs in different sizes and grades for everyday snacking.',
+    title: 'NYUTA ELITE MAKHANA | Premium Makhana & Fox Nuts from Bihar',
+    desc:  'Shop NYUTA ELITE MAKHANA — premium Bihar fox nuts in 100g, 200g & 250g pouches. Premium and Normal grades. Pan-India delivery. FSSAI Reg. 20426021000494.',
     canonical: `${ORIGIN}/`, ogType: 'website',
-    ogImage: `${ORIGIN}/nyuta-elite-logo.png`, jsonLd: [],
+    ogImage: `${ORIGIN}/nyuta-elite-logo.webp`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'NYUTA ELITE MAKHANA',
+        alternateName: ['NYUTAELITE', 'NYUTA ELITE'],
+        url: `${ORIGIN}/`,
+        logo: {
+          '@type': 'ImageObject',
+          url: `${ORIGIN}/nyuta-elite-logo.webp`,
+          width: 512,
+          height: 512,
+        },
+        description: 'NYUTA ELITE MAKHANA is a premium Indian makhana brand offering handpicked fox nuts from Bihar. Available online in 100g, 200g, and 250g packs — Premium and Normal grade.',
+        areaServed: 'IN',
+        contactPoint: {
+          '@type': 'ContactPoint',
+          telephone: '+918102875852',
+          contactType: 'customer service',
+          areaServed: 'IN',
+          availableLanguage: ['en', 'hi'],
+          email: 'info@nyutaelite.com',
+        },
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'NYUTA ELITE MAKHANA',
+        alternateName: ['NYUTAELITE', 'NYUTA ELITE'],
+        url: `${ORIGIN}/`,
+      },
+    ],
   };
 }
 
@@ -528,7 +560,7 @@ function renderRouteBody(url, seo) {
       <header class="bg-[#123B2A] text-white py-4 px-6 border-b border-[#092218]">
         <div class="max-w-[1280px] mx-auto flex items-center justify-between">
           <a href="/" class="flex items-center gap-3">
-            <img src="/nyuta-elite-logo.png" alt="NYUTA ELITE MAKHANA logo" class="w-10 h-10 rounded-full border border-[#C6A15B] object-cover" width="40" height="40" />
+            <img src="/nyuta-elite-logo.webp" alt="NYUTA ELITE MAKHANA logo" class="w-10 h-10 rounded-full border border-[#C6A15B] object-cover" width="40" height="40" />
             <span class="font-serif text-xl font-bold tracking-wider text-white">NYUTA ELITE MAKHANA</span>
           </a>
           <nav aria-label="Main Navigation" class="hidden md:flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-[#D5DED6]">

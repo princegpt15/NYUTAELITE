@@ -995,9 +995,9 @@ export function resolveRouteSeo(
 
 // 5. Default / Homepage (/)
   const canonicalUrl = `${PRODUCTION_ORIGIN}/`;
-  const title = 'NYUTAELITE | NYUTA ELITE MAKHANA – Premium Fox Nuts';
+  const title = 'NYUTA ELITE MAKHANA | Premium Makhana & Fox Nuts from Bihar';
   const description =
-    'Shop NYUTA ELITE MAKHANA, premium fox nuts from Bihar. Explore available makhana packs in different sizes and grades for everyday snacking.';
+    'Shop NYUTA ELITE MAKHANA — premium Bihar fox nuts in 100g, 200g & 250g pouches. Premium and Normal grades. Pan-India delivery. FSSAI Reg. 20426021000494.';
   return {
     title,
     description,
