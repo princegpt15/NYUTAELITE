@@ -256,11 +256,31 @@ function printSetupGuide() {
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
-  const rawJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  // Resolve credentials: prefer env var (CI / GitHub Actions), fall back to local file.
+  let rawJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+
+  if (!rawJson) {
+    // Try the local credentials file used during development.
+    const credentialPaths = [
+      path.join(ROOT, 'credentials', 'gsc-key.json'),
+      path.join(ROOT, 'credentials', 'nyutaelite-seo-bot.json'),
+    ];
+    for (const credPath of credentialPaths) {
+      if (fs.existsSync(credPath)) {
+        try {
+          rawJson = fs.readFileSync(credPath, 'utf8');
+          console.log(`🔐  Loaded credentials from: ${path.relative(ROOT, credPath)}`);
+          break;
+        } catch {
+          // ignore read errors, try next
+        }
+      }
+    }
+  }
 
   if (!rawJson) {
     printSetupGuide();
-    console.log('ℹ  Skipping GSC query — no credentials. Exiting cleanly.');
+    console.log('ℹ  Skipping GSC query — no credentials found. Exiting cleanly.');
     process.exit(0);
   }
 
@@ -268,7 +288,7 @@ async function main() {
   try {
     serviceAccount = JSON.parse(rawJson);
   } catch (e) {
-    console.error('✖  GOOGLE_SERVICE_ACCOUNT_JSON is not valid JSON:', e.message);
+    console.error('✖  Credential JSON is not valid JSON:', e.message);
     process.exit(1);
   }
 
@@ -286,6 +306,14 @@ async function main() {
   const reportFile = path.join(LOG_DIR, `gsc-weekly-${isoDate()}.txt`);
   fs.writeFileSync(reportFile, report, 'utf8');
   console.log(`✅  Report saved → ${reportFile}`);
+
+  // Optionally save raw JSON data for downstream processing
+  const saveJson = process.argv.includes('--save-json');
+  if (saveJson) {
+    const jsonFile = path.join(LOG_DIR, `gsc-data-${isoDate()}.json`);
+    fs.writeFileSync(jsonFile, JSON.stringify(data, null, 2), 'utf8');
+    console.log(`✅  Raw GSC JSON saved → ${jsonFile}`);
+  }
 
   // Append summary line to daily health log
   const summary = `[${new Date().toISOString()}] GSC Weekly Report: ${(data.topQueries.rows || []).length} queries tracked. Report: ${reportFile}\n`;

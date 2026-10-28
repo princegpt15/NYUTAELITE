@@ -1118,6 +1118,7 @@ const NOINDEX_PREFIXES = [
   '/admin', '/cart', '/checkout', '/orders',
   '/account', '/wishlist', '/login', '/register',
   '/bulk-order/enquiry', '/api/',
+  '/play', // Interactive stories page — not a search landing page; keep noindex
 ];
 function isNoindexRoute(pathname) {
   return NOINDEX_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'));

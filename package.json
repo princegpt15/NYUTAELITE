@@ -13,6 +13,11 @@
     "seo:test": "npx tsx scripts/seo-engine/test-seo-engine.ts",
     "seo:health": "node scripts/daily_seo_health_check.mjs",
     "seo:gsc": "node scripts/gsc-rank-monitor.mjs",
+    "seo:gsc:save": "node scripts/gsc-rank-monitor.mjs --save-json",
+    "seo:inventory": "node scripts/generate-url-inventory.mjs",
+    "seo:queue": "node scripts/seo-engine/indexing-queue.mjs --dry-run",
+    "seo:queue:live": "node scripts/seo-engine/indexing-queue.mjs",
+    "seo:live": "node scripts/verify-live-suite.cjs",
     "seo:webp": "node scripts/phase14-webp-convert.cjs",
     "deploy:prod": "node scripts/deploy_and_verify.mjs"
   },

@@ -59,10 +59,22 @@ jobs:
             npm run seo:daily
           fi
 
+      - name: Run GSC Rank Monitor
+        if: always()
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GSC_SERVICE_ACCOUNT_JSON }}
+        run: |
+          node scripts/gsc-rank-monitor.mjs --save-json || echo "GSC monitor exited non-zero — check credentials secret GSC_SERVICE_ACCOUNT_JSON"
+
+      - name: Run Live Production Endpoint Audit
+        if: always()
+        run: node scripts/verify-live-suite.cjs || echo "Live audit returned failures — check report artifact"
+
       - name: Archive SEO Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: seo-audit-reports
-          path: reports/seo/
+          name: seo-audit-reports-${{ github.run_number }}
+          path: scripts/seo-reports/
           retention-days: 30
+          if-no-files-found: warn

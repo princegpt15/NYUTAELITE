@@ -38,6 +38,8 @@ gsc-*.json
 *.pem
 *.key
 
-# GSC weekly reports (local only)
+# Generated SEO reports — local only, never commit runtime data
 scripts/seo-reports/*.txt
+scripts/seo-reports/*.json
+scripts/seo-reports/*.csv
 scripts/daily_health.log
