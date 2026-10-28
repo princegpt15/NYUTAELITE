@@ -212,7 +212,7 @@ export const wishlistService = {
         slug: product.slug || product.id,
         price: product.price,
         compareAtPrice: product.mrp ?? product.price,
-        images: product.image ? [product.image] : ['/assets/product-main.png'],
+        images: product.image ? [product.image] : ['/assets/product-main.webp'],
         weight: product.weightGrams ? `${product.weightGrams}g` : null,
         stock: product.stock ?? 100,
         isActive: true,

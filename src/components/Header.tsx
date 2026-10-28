@@ -91,7 +91,7 @@ export const Header: React.FC = () => {
             {/* BRAND LOGO */}
             <Link to="/" className="flex items-center gap-2.5 group">
               <img
-                src="/nyuta-elite-logo.png"
+                src="/nyuta-elite-logo.webp"
                 alt="NYUTA ELITE MAKHANA Logo"
                 className="h-9 w-9 sm:h-10 sm:w-10 rounded-full border border-[#C6A15B] object-cover shadow-xs transition-transform group-hover:scale-105"
               />

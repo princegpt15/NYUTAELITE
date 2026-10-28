@@ -27,7 +27,7 @@ import { resolveRouteSeo, applySeoToDocument, finalizeSeo } from '../utils/seo';
 import { Toast } from '../components/Toast';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { authService } from '../services/auth';
-import defaultProductImage from '../assets/images/product-main.png';
+import defaultProductImage from '../assets/images/product-main.webp';
 
 export const Product: React.FC = () => {
   const [searchParams] = useSearchParams();

@@ -3,7 +3,7 @@ import type { CartItem } from '../types';
 import { api } from './api';
 import { authService } from './auth';
 import { trackAddToCart, trackRemoveFromCart } from './analytics';
-import productImage from '../assets/images/product-main.png';
+import productImage from '../assets/images/product-main.webp';
 
 // Guest cart uses localStorage key
 const CART_STORAGE_KEY = 'nyutaelite_cart';

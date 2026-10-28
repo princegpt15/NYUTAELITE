@@ -97,7 +97,7 @@ export const NormalMakhanaSection: React.FC<NormalMakhanaSectionProps> = ({
                 : 0;
 
             const imageSrc =
-              product.image || `/images/products/normal-makhana-${product.weightGrams}g.png`;
+              product.image || `/images/products/normal-makhana-${product.weightGrams}g.webp`;
 
             return (
               <article
@@ -128,7 +128,7 @@ export const NormalMakhanaSection: React.FC<NormalMakhanaSectionProps> = ({
                       className="block h-full w-full object-contain object-center transition-transform duration-500 group-hover:scale-104"
                       loading="lazy"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = `/images/products/normal-makhana-${product.weightGrams}g.png`;
+                        (e.target as HTMLImageElement).src = `/images/products/normal-makhana-${product.weightGrams}g.webp`;
                       }}
                     />
                   </Link>

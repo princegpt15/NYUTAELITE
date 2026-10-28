@@ -164,7 +164,7 @@ export const Categories: React.FC = () => {
 
                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-[#FAF7EF] p-1.5 border border-[#E8DECB]/60 shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
                   <img
-                    src="/images/products/premium-makhana-250g.png"
+                    src="/images/products/premium-makhana-250g.webp"
                     alt="NYUTA ELITE Premium Makhana pouch packaging"
                     className="w-full h-full object-contain object-center group-hover:scale-105 transition-transform duration-300"
                     width={96}
@@ -221,7 +221,7 @@ export const Categories: React.FC = () => {
 
                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-[#FAF7EF] p-1.5 border border-[#E8DECB]/60 shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
                   <img
-                    src="/images/products/normal-makhana-250g.png"
+                    src="/images/products/normal-makhana-250g.webp"
                     alt="Regular Makhana silver pouch packaging"
                     className="w-full h-full object-contain object-center group-hover:scale-105 transition-transform duration-300"
                     width={96}

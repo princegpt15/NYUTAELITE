@@ -28,7 +28,7 @@ const PRODUCTS = {
     stock: 150,
     description:
       'Handpicked jumbo-grade Bihar fox nuts, 100g Premium pack. Uniform size, crisp air-popped crunch, minimal shell residue. SKU: NYM-PREM-100.',
-    image: '/images/products/premium-makhana-100g.png',
+    image: '/images/products/premium-makhana-100g.webp',
   },
   'premium-200g': {
     sku: 'NYM-PREM-200',
@@ -39,7 +39,7 @@ const PRODUCTS = {
     stock: 120,
     description:
       'Selected jumbo Bihar fox nuts in a 200g family pack, perfect for daily mindful snacking. SKU: NYM-PREM-200.',
-    image: '/images/products/premium-makhana-200g.png',
+    image: '/images/products/premium-makhana-200g.webp',
   },
   'premium-250g': {
     sku: 'NYM-PREM-250',
@@ -50,7 +50,7 @@ const PRODUCTS = {
     stock: 100,
     description:
       'Highest-grade Bihar fox nuts in a generous 250g pantry pack. Exceptional uniform size and crisp crunch. SKU: NYM-PREM-250.',
-    image: '/images/products/premium-makhana-250g.png',
+    image: '/images/products/premium-makhana-250g.webp',
   },
   'normal-100g': {
     sku: 'NYM-NORM-100',
@@ -61,7 +61,7 @@ const PRODUCTS = {
     stock: 200,
     description:
       'Everyday Bihar fox nuts for dry roasting, seasoning, and traditional cooking. Air-tight 100g pouch. SKU: NYM-NORM-100.',
-    image: '/images/products/normal-makhana-100g.png',
+    image: '/images/products/normal-makhana-100g.webp',
   },
   'normal-200g': {
     sku: 'NYM-NORM-200',
@@ -72,7 +72,7 @@ const PRODUCTS = {
     stock: 180,
     description:
       'Everyday Bihar fox nuts in a 200g pantry pouch. Perfect for daily roasting and home-spiced snacks. SKU: NYM-NORM-200.',
-    image: '/images/products/normal-makhana-200g.png',
+    image: '/images/products/normal-makhana-200g.webp',
   },
   'normal-250g': {
     sku: 'NYM-NORM-250',
@@ -83,7 +83,7 @@ const PRODUCTS = {
     stock: 160,
     description:
       'Everyday Bihar fox nuts in a 250g pantry size. Great value for regular home roasting and cooking. SKU: NYM-NORM-250.',
-    image: '/images/products/normal-makhana-250g.png',
+    image: '/images/products/normal-makhana-250g.webp',
   },
 };
 
@@ -191,7 +191,7 @@ function resolveSeoForRequest(url) {
         desc: `Shop NYUTA ELITE Premium Grade Bihar Makhana. Handpicked jumbo-sized fox nuts with crisp crunch in 100g, 200g, and 250g pouches. Free pan-India delivery.`,
         canonical: canonicalUrl,
         ogType: 'website',
-        ogImage: `${ORIGIN}/images/products/premium-makhana-100g.png`,
+        ogImage: `${ORIGIN}/images/products/premium-makhana-100g.webp`,
         jsonLd: [
           buildBreadcrumb([
             { name: 'Home', url: `${ORIGIN}/` },
@@ -208,7 +208,7 @@ function resolveSeoForRequest(url) {
         desc: `Shop NYUTA ELITE Normal Grade Bihar Makhana. Wholesome everyday fox nuts perfect for daily roasting, snacks, and cooking in 100g, 200g, and 250g pouches.`,
         canonical: canonicalUrl,
         ogType: 'website',
-        ogImage: `${ORIGIN}/images/products/normal-makhana-100g.png`,
+        ogImage: `${ORIGIN}/images/products/normal-makhana-100g.webp`,
         jsonLd: [
           buildBreadcrumb([
             { name: 'Home', url: `${ORIGIN}/` },
@@ -314,7 +314,7 @@ function resolveSeoForRequest(url) {
       '@type': 'Article',
       headline: 'How to Choose Good-Quality Makhana: A Complete Buyer’s Guide',
       description: desc,
-      image: [`${ORIGIN}/images/products/premium-makhana-100g.png`],
+      image: [`${ORIGIN}/images/products/premium-makhana-100g.webp`],
       datePublished: '2026-10-25T00:00:00+05:30',
       dateModified: '2026-10-25T00:00:00+05:30',
       mainEntityOfPage: canonicalUrl,
@@ -342,7 +342,7 @@ function resolveSeoForRequest(url) {
       desc,
       canonical: canonicalUrl,
       ogType: 'article',
-      ogImage: `${ORIGIN}/images/products/premium-makhana-100g.png`,
+      ogImage: `${ORIGIN}/images/products/premium-makhana-100g.webp`,
       jsonLd: [breadcrumbJsonLd, articleJsonLd],
     };
   }
@@ -357,7 +357,7 @@ function resolveSeoForRequest(url) {
       '@type': 'Article',
       headline: 'Makhana Benefits: 7 Reasons to Eat Fox Nuts Every Day',
       description: desc,
-      image: [`${ORIGIN}/images/products/premium-makhana-100g.png`],
+      image: [`${ORIGIN}/images/products/premium-makhana-100g.webp`],
       datePublished: '2026-10-26T00:00:00+05:30',
       dateModified: '2026-10-26T00:00:00+05:30',
       mainEntityOfPage: canonicalUrl,
@@ -385,7 +385,7 @@ function resolveSeoForRequest(url) {
       desc,
       canonical: canonicalUrl,
       ogType: 'article',
-      ogImage: `${ORIGIN}/images/products/premium-makhana-100g.png`,
+      ogImage: `${ORIGIN}/images/products/premium-makhana-100g.webp`,
       jsonLd: [breadcrumbJsonLd, articleJsonLd],
     };
   }
@@ -402,7 +402,7 @@ function resolveSeoForRequest(url) {
       '@type': 'Article',
       headline: 'How to Store Makhana to Keep It Crisp for Months',
       description: desc,
-      image: [`${ORIGIN}/images/products/premium-makhana-100g.png`],
+      image: [`${ORIGIN}/images/products/premium-makhana-100g.webp`],
       datePublished: '2026-10-28T00:00:00+05:30',
       dateModified: '2026-10-28T00:00:00+05:30',
       mainEntityOfPage: canonicalUrl,
@@ -416,7 +416,7 @@ function resolveSeoForRequest(url) {
     ]);
     return {
       title, desc, canonical: canonicalUrl, ogType: 'article',
-      ogImage: `${ORIGIN}/images/products/premium-makhana-100g.png`,
+      ogImage: `${ORIGIN}/images/products/premium-makhana-100g.webp`,
       jsonLd: [breadcrumbJsonLd, articleJsonLd],
     };
   }
@@ -431,7 +431,7 @@ function resolveSeoForRequest(url) {
       '@type': 'Article',
       headline: 'Ordering Makhana Online in India: Shipping, Freshness & What to Expect',
       description: desc,
-      image: [`${ORIGIN}/images/products/premium-makhana-100g.png`],
+      image: [`${ORIGIN}/images/products/premium-makhana-100g.webp`],
       datePublished: '2026-10-28T00:00:00+05:30',
       dateModified: '2026-10-28T00:00:00+05:30',
       mainEntityOfPage: canonicalUrl,
@@ -445,7 +445,7 @@ function resolveSeoForRequest(url) {
     ]);
     return {
       title, desc, canonical: canonicalUrl, ogType: 'article',
-      ogImage: `${ORIGIN}/images/products/premium-makhana-100g.png`,
+      ogImage: `${ORIGIN}/images/products/premium-makhana-100g.webp`,
       jsonLd: [breadcrumbJsonLd, articleJsonLd],
     };
   }
@@ -458,7 +458,7 @@ function resolveSeoForRequest(url) {
       '@type': 'Article',
       headline: 'Choosing the Right Makhana Pack Size: 100g, 200g or 250g?',
       description: desc,
-      image: [`${ORIGIN}/images/products/premium-makhana-100g.png`],
+      image: [`${ORIGIN}/images/products/premium-makhana-100g.webp`],
       datePublished: '2026-10-28T00:00:00+05:30',
       dateModified: '2026-10-28T00:00:00+05:30',
       mainEntityOfPage: canonicalUrl,
@@ -486,7 +486,7 @@ function resolveSeoForRequest(url) {
       desc,
       canonical: canonicalUrl,
       ogType: 'article',
-      ogImage: `${ORIGIN}/images/products/premium-makhana-100g.png`,
+      ogImage: `${ORIGIN}/images/products/premium-makhana-100g.webp`,
       jsonLd: [breadcrumbJsonLd, articleJsonLd],
     };
   }

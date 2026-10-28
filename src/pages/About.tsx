@@ -15,7 +15,7 @@ import {
   UserCheck,
 } from 'lucide-react';
 
-const brandEmblem = '/nyuta-elite-logo.png';
+const brandEmblem = '/nyuta-elite-logo.webp';
 
 export const About: React.FC = () => {
   return (

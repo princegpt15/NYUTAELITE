@@ -13,7 +13,7 @@ export const Footer: React.FC = () => {
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2.5">
               <img
-                src="/nyuta-elite-logo.png"
+                src="/nyuta-elite-logo.webp"
                 alt="NYUTA ELITE Makhana"
                 className="h-10 w-10 rounded-full border border-[#C6A15B] object-cover shadow-xs"
               />

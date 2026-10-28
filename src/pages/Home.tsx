@@ -29,10 +29,10 @@ import { trackViewItemList } from '../services/analytics';
 import { Toast } from '../components/Toast';
 import { BulkOrderChoiceModal } from '../components/BulkOrderChoiceModal';
 
-import heroImage from '../assets/images/brand/makhana-hero.png';
-import macroImage from '../assets/images/brand/makhana-macro.png';
-import featuredImage from '../assets/images/product-featured.png';
-import logoImage from '../assets/images/brand-emblem.png';
+import heroImage from '../assets/images/brand/makhana-hero.webp';
+import macroImage from '../assets/images/brand/makhana-macro.webp';
+import featuredImage from '../assets/images/product-featured.webp';
+import logoImage from '../assets/images/brand-emblem.webp';
 import CategoryCard from '../components/CategoryCard';
 import { PRODUCTION_ORIGIN, DEFAULT_OG_IMAGE } from '../utils/seo';
 
@@ -840,35 +840,35 @@ export const Home: React.FC = () => {
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
             {/* Card 1 — Premium Makhana */}
             <CategoryCard
-              imageSrc="/images/products/premium-makhana-250g.png"
+              imageSrc="/images/products/premium-makhana-250g.webp"
               title="Premium Makhana"
               subtitle="Jumbo 6-suta grade"
               href="/categories?type=Premium"
             />
             {/* Card 2 — Normal Makhana */}
             <CategoryCard
-              imageSrc="/images/products/normal-makhana-250g.png"
+              imageSrc="/images/products/normal-makhana-250g.webp"
               title="Normal Makhana"
               subtitle="Everyday snack"
               href="/categories?type=Normal"
             />
             {/* Card 3 — 100g Pouches */}
             <CategoryCard
-              imageSrc="/images/products/premium-makhana-100g.png"
+              imageSrc="/images/products/premium-makhana-100g.webp"
               title="100g Pouches"
               subtitle="Desk &amp; travel pack"
               href="/products/makhana?sku=premium-100g"
             />
             {/* Card 4 — 200g Pouches */}
             <CategoryCard
-              imageSrc="/images/products/premium-makhana-200g.png"
+              imageSrc="/images/products/premium-makhana-200g.webp"
               title="200g Pouches"
               subtitle="Family pantry pack"
               href="/products/makhana?sku=premium-200g"
             />
             {/* Card 5 — 250g Pouches */}
             <CategoryCard
-              imageSrc="/images/products/premium-makhana-250g.png"
+              imageSrc="/images/products/premium-makhana-250g.webp"
               title="250g Pouches"
               subtitle="Best-value bulk pack"
               href="/products/makhana?sku=premium-250g"

@@ -4,7 +4,7 @@ import { FAQS } from '../data/faqs';
 import { PANTRY_PRODUCTS } from '../data/product';
 
 export const PRODUCTION_ORIGIN = 'https://nyutaelite.com';
-export const DEFAULT_OG_IMAGE = `${PRODUCTION_ORIGIN}/nyuta-elite-logo.png`; // TODO: replace with /images/og-cover.jpg once created
+export const DEFAULT_OG_IMAGE = `${PRODUCTION_ORIGIN}/nyuta-elite-logo.webp`; // TODO: replace with /images/og-cover.jpg once created
 // AUDIT FIX F8: Brand name aligned to NYUTAELITE for GMC consistency
 export const SITE_NAME = 'NYUTA ELITE MAKHANA';
 export const BRAND_NAME = 'NYUTAELITE';
@@ -115,7 +115,7 @@ export function buildOrganizationJsonLd(): Record<string, any> {
     url: `${PRODUCTION_ORIGIN}/`,
     logo: {
       '@type': 'ImageObject',
-      url: `${PRODUCTION_ORIGIN}/nyuta-elite-logo.png`,
+      url: `${PRODUCTION_ORIGIN}/nyuta-elite-logo.webp`,
       width: 512,
       height: 512,
     },
@@ -594,7 +594,7 @@ export function resolveRouteSeo(
       const title = `Buy Premium Jumbo Makhana Online (100g, 200g, 250g) | ${SITE_NAME}`;
       const description =
         `Shop NYUTA ELITE Premium Grade Bihar Makhana. Handpicked jumbo-sized fox nuts with crisp crunch in 100g, 200g, and 250g pouches. Free pan-India delivery.`;
-      const ogImage = `${PRODUCTION_ORIGIN}/images/products/premium-makhana-100g.png`;
+      const ogImage = `${PRODUCTION_ORIGIN}/images/products/premium-makhana-100g.webp`;
       return {
         title,
         description,
@@ -626,7 +626,7 @@ export function resolveRouteSeo(
       const title = `Normal Everyday Makhana Packs (100g, 200g, 250g) | ${SITE_NAME}`;
       const description =
         `Shop NYUTA ELITE Normal Grade Bihar Makhana. Wholesome everyday fox nuts perfect for daily roasting, snacks, and cooking in 100g, 200g, and 250g pouches.`;
-      const ogImage = `${PRODUCTION_ORIGIN}/images/products/normal-makhana-100g.png`;
+      const ogImage = `${PRODUCTION_ORIGIN}/images/products/normal-makhana-100g.webp`;
       return {
         title,
         description,
@@ -714,7 +714,7 @@ export function resolveRouteSeo(
     const title = `How to Choose Good-Quality Makhana: Complete Buyer's Guide | ${SITE_NAME}`;
     const description =
       `Learn how to choose good-quality Bihar makhana. Understand Suta sizing (4 Suta vs 5+ Suta jumbo), unbleached vs bleached fox nuts, crispness checks, and storage tips.`;
-    const ogImage = `${PRODUCTION_ORIGIN}/images/products/premium-makhana-100g.png`;
+    const ogImage = `${PRODUCTION_ORIGIN}/images/products/premium-makhana-100g.webp`;
     const articleJsonLd = {
       '@context': 'https://schema.org',
       '@type': 'Article',
@@ -734,7 +734,7 @@ export function resolveRouteSeo(
         name: 'NYUTA ELITE MAKHANA',
         logo: {
           '@type': 'ImageObject',
-          url: `${PRODUCTION_ORIGIN}/nyuta-elite-logo.png`,
+          url: `${PRODUCTION_ORIGIN}/nyuta-elite-logo.webp`,
         },
       },
     };
@@ -771,7 +771,7 @@ export function resolveRouteSeo(
     const title = `Makhana Benefits: 7 Reasons to Eat Fox Nuts Every Day | ${SITE_NAME}`;
     const description =
       `Discover 7 evidence-informed health benefits of makhana (fox nuts). Learn how Bihar Euryale ferox supports weight management, heart health, digestion, and bone strength.`;
-    const ogImage = `${PRODUCTION_ORIGIN}/images/products/premium-makhana-100g.png`;
+    const ogImage = `${PRODUCTION_ORIGIN}/images/products/premium-makhana-100g.webp`;
     const articleJsonLd = {
       '@context': 'https://schema.org',
       '@type': 'Article',
@@ -791,7 +791,7 @@ export function resolveRouteSeo(
         name: 'NYUTA ELITE MAKHANA',
         logo: {
           '@type': 'ImageObject',
-          url: `${PRODUCTION_ORIGIN}/nyuta-elite-logo.png`,
+          url: `${PRODUCTION_ORIGIN}/nyuta-elite-logo.webp`,
         },
       },
     };
@@ -828,7 +828,7 @@ export function resolveRouteSeo(
     const title = `How to Store Makhana to Keep It Crisp for Months | ${SITE_NAME}`;
     const description =
       `Learn how to store makhana (fox nuts) to keep them crisp for months. Tips on airtight containers, humidity control, monsoon storage, and reviving soggy fox nuts.`;
-    const ogImage = `${PRODUCTION_ORIGIN}/images/products/premium-makhana-100g.png`;
+    const ogImage = `${PRODUCTION_ORIGIN}/images/products/premium-makhana-100g.webp`;
     const articleJsonLd = {
       '@context': 'https://schema.org',
       '@type': 'Article',
@@ -848,7 +848,7 @@ export function resolveRouteSeo(
         name: 'NYUTA ELITE MAKHANA',
         logo: {
           '@type': 'ImageObject',
-          url: `${PRODUCTION_ORIGIN}/nyuta-elite-logo.png`,
+          url: `${PRODUCTION_ORIGIN}/nyuta-elite-logo.webp`,
         },
       },
     };
@@ -885,7 +885,7 @@ export function resolveRouteSeo(
     const title = `Makhana Pack Size Guide: 100g, 200g or 250g? | ${SITE_NAME}`;
     const description =
       `Not sure which makhana pack size to buy? Compare 100g, 200g and 250g fox nut packs by servings, value, and use case to find the right size for you.`;
-    const ogImage = `${PRODUCTION_ORIGIN}/images/products/premium-makhana-100g.png`;
+    const ogImage = `${PRODUCTION_ORIGIN}/images/products/premium-makhana-100g.webp`;
     const articleJsonLd = {
       '@context': 'https://schema.org',
       '@type': 'Article',
@@ -905,7 +905,7 @@ export function resolveRouteSeo(
         name: 'NYUTA ELITE MAKHANA',
         logo: {
           '@type': 'ImageObject',
-          url: `${PRODUCTION_ORIGIN}/nyuta-elite-logo.png`,
+          url: `${PRODUCTION_ORIGIN}/nyuta-elite-logo.webp`,
         },
       },
     };
@@ -942,7 +942,7 @@ export function resolveRouteSeo(
     const title = `Ordering Makhana Online in India: Shipping, Freshness & FAQ | ${SITE_NAME}`;
     const description =
       `Find out how to order NYUTAELITE makhana online in India. Covers delivery timelines, freshness protection during transit, FSSAI compliance, and the 48-hour damage replacement policy.`;
-    const ogImage = `${PRODUCTION_ORIGIN}/images/products/premium-makhana-100g.png`;
+    const ogImage = `${PRODUCTION_ORIGIN}/images/products/premium-makhana-100g.webp`;
     const articleJsonLd = {
       '@context': 'https://schema.org',
       '@type': 'Article',
@@ -962,7 +962,7 @@ export function resolveRouteSeo(
         name: 'NYUTA ELITE MAKHANA',
         logo: {
           '@type': 'ImageObject',
-          url: `${PRODUCTION_ORIGIN}/nyuta-elite-logo.png`,
+          url: `${PRODUCTION_ORIGIN}/nyuta-elite-logo.webp`,
         },
       },
     };

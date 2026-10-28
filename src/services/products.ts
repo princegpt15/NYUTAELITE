@@ -1,7 +1,7 @@
 // src/services/products.ts
 import { api } from './api';
 import type { PantryProduct } from '../types';
-import productImage from '../assets/images/product-main.png';
+import productImage from '../assets/images/product-main.webp';
 import { PANTRY_PRODUCTS } from '../data/product';
 
 // Define the shape of the backend product as returned by the API
@@ -92,9 +92,9 @@ export const fetchProducts = async (params?: {
       }
 
       if (quality === 'Premium' && (imageUrl === productImage || !imageUrl || imageUrl.includes('product-main'))) {
-        imageUrl = `/images/products/premium-makhana-${weightGrams}g.png`;
+        imageUrl = `/images/products/premium-makhana-${weightGrams}g.webp`;
       } else if (quality === 'Normal' && (imageUrl === productImage || !imageUrl || imageUrl.includes('product-main') || (Array.isArray(p.images) && p.images.length === 0))) {
-        imageUrl = `/images/products/normal-makhana-${weightGrams}g.png`;
+        imageUrl = `/images/products/normal-makhana-${weightGrams}g.webp`;
       }
 
       const mrp = p.compareAtPrice ?? p.price;

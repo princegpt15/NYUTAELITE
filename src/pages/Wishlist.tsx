@@ -180,7 +180,7 @@ export const Wishlist: React.FC = () => {
                   ? product.images[0]
                   : typeof product.images === 'string'
                   ? product.images
-                  : '/assets/product-main.png';
+                  : '/assets/product-main.webp';
 
               return (
                 <div
@@ -194,7 +194,7 @@ export const Wishlist: React.FC = () => {
                         alt={product.name}
                         className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/assets/product-main.png';
+                          (e.target as HTMLImageElement).src = '/assets/product-main.webp';
                         }}
                       />
                       {isOutOfStock && (

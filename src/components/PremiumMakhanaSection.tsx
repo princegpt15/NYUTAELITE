@@ -97,7 +97,7 @@ export const PremiumMakhanaSection: React.FC<PremiumMakhanaSectionProps> = ({
                 : 0;
 
             const imageSrc =
-              product.image || `/images/products/premium-makhana-${product.weightGrams}g.png`;
+              product.image || `/images/products/premium-makhana-${product.weightGrams}g.webp`;
 
             return (
               <article
@@ -128,7 +128,7 @@ export const PremiumMakhanaSection: React.FC<PremiumMakhanaSectionProps> = ({
                       className="block h-full w-full object-contain object-center transition-transform duration-500 group-hover:scale-104"
                       loading="lazy"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = `/images/products/premium-makhana-${product.weightGrams}g.png`;
+                        (e.target as HTMLImageElement).src = `/images/products/premium-makhana-${product.weightGrams}g.webp`;
                       }}
                     />
                   </Link>
