@@ -11,6 +11,9 @@
     "seo:audit": "npx tsx scripts/seo-engine/run.ts --dry-run",
     "seo:daily": "npx tsx scripts/seo-engine/run.ts --full",
     "seo:test": "npx tsx scripts/seo-engine/test-seo-engine.ts",
+    "seo:health": "node scripts/daily_seo_health_check.mjs",
+    "seo:gsc": "node scripts/gsc-rank-monitor.mjs",
+    "seo:webp": "node scripts/phase14-webp-convert.cjs",
     "deploy:prod": "node scripts/deploy_and_verify.mjs"
   },
   "dependencies": {

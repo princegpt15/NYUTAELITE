@@ -37,3 +37,7 @@ credentials/
 gsc-*.json
 *.pem
 *.key
+
+# GSC weekly reports (local only)
+scripts/seo-reports/*.txt
+scripts/daily_health.log

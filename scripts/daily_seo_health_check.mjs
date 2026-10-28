@@ -24,6 +24,9 @@ const endpoints = [
   { name: 'API Proxy', url: 'https://nyutaelite.com/api/products', expectStatus: 200, isJson: true },
   { name: 'Quality Guide', url: 'https://nyutaelite.com/learn/how-to-choose-good-quality-makhana', expectStatus: 200 },
   { name: 'Health Benefits', url: 'https://nyutaelite.com/learn/makhana-benefits-health', expectStatus: 200 },
+  { name: 'Storage Guide', url: 'https://nyutaelite.com/learn/how-to-store-makhana', expectStatus: 200 },
+  { name: 'Pack Size Guide', url: 'https://nyutaelite.com/learn/makhana-pack-size-guide', expectStatus: 200 },
+  { name: 'Ordering Guide', url: 'https://nyutaelite.com/learn/ordering-makhana-online-india', expectStatus: 200 },
 ];
 
 function checkEndpoint(item, retries = 1) {
