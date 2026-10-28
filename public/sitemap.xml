@@ -205,4 +205,18 @@
     </image:image>
   </url>
 
+
+  <!-- Ordering Guide: Ordering Makhana Online in India -->
+  <url>
+    <loc>https://nyutaelite.com/learn/ordering-makhana-online-india</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+    <lastmod>2026-10-28</lastmod>
+    <image:image>
+      <image:loc>https://nyutaelite.com/images/products/premium-makhana-100g.png</image:loc>
+      <image:title>Ordering Makhana Online India — NYUTAELITE</image:title>
+      <image:caption>Shipping, freshness protection and FSSAI compliance for online makhana orders</image:caption>
+    </image:image>
+  </url>
+
 </urlset>

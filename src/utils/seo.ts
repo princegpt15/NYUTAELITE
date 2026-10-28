@@ -936,7 +936,64 @@ export function resolveRouteSeo(
     };
   }
 
-  // 5. Default / Homepage (/)
+    // Ordering Guide (/learn/ordering-makhana-online-india)
+  if (normalizedPath === '/learn/ordering-makhana-online-india') {
+    const canonicalUrl = `${PRODUCTION_ORIGIN}/learn/ordering-makhana-online-india`;
+    const title = `Ordering Makhana Online in India: Shipping, Freshness & FAQ | ${SITE_NAME}`;
+    const description =
+      `Find out how to order NYUTAELITE makhana online in India. Covers delivery timelines, freshness protection during transit, FSSAI compliance, and the 48-hour damage replacement policy.`;
+    const ogImage = `${PRODUCTION_ORIGIN}/images/products/premium-makhana-100g.png`;
+    const articleJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: 'Ordering Makhana Online in India: Shipping, Freshness & What to Expect',
+      description,
+      image: [ogImage],
+      datePublished: '2026-10-28T00:00:00+05:30',
+      dateModified: '2026-10-28T00:00:00+05:30',
+      mainEntityOfPage: canonicalUrl,
+      author: {
+        '@type': 'Organization',
+        name: 'NYUTA ELITE MAKHANA',
+        url: `${PRODUCTION_ORIGIN}/`,
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'NYUTA ELITE MAKHANA',
+        logo: {
+          '@type': 'ImageObject',
+          url: `${PRODUCTION_ORIGIN}/nyuta-elite-logo.png`,
+        },
+      },
+    };
+    return {
+      title,
+      description,
+      canonicalUrl,
+      robots: 'index, follow',
+      ogType: 'article' as 'article',
+      ogTitle: title,
+      ogDescription: description,
+      ogImage,
+      ogUrl: canonicalUrl,
+      ogSiteName: SITE_NAME,
+      twitterCard: 'summary_large_image' as const,
+      twitterTitle: title,
+      twitterDescription: description,
+      twitterImage: ogImage,
+      ...(verificationToken ? { googleSiteVerification: verificationToken } : {}),
+      jsonLd: [
+        buildBreadcrumbJsonLd([
+          { name: 'Home', url: `${PRODUCTION_ORIGIN}/` },
+          { name: 'Ordering Guide', url: `${PRODUCTION_ORIGIN}/categories` },
+          { name: 'Ordering Makhana Online', url: canonicalUrl },
+        ]),
+        articleJsonLd,
+      ],
+    };
+  }
+
+// 5. Default / Homepage (/)
   const canonicalUrl = `${PRODUCTION_ORIGIN}/`;
   const title = 'NYUTAELITE | NYUTA ELITE MAKHANA – Premium Fox Nuts';
   const description =

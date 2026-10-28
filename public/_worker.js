@@ -420,6 +420,35 @@ function resolveSeoForRequest(url) {
       jsonLd: [breadcrumbJsonLd, articleJsonLd],
     };
   }
+
+  // Ordering Guide: /learn/ordering-makhana-online-india
+  if (path === '/learn/ordering-makhana-online-india') {
+    const canonicalUrl = `${ORIGIN}/learn/ordering-makhana-online-india`;
+    const title = `Ordering Makhana Online in India: Shipping, Freshness & FAQ | ${SITE}`;
+    const desc  = `Find out how to order NYUTAELITE makhana online in India. Covers delivery timelines, freshness protection during transit, FSSAI compliance, and the 48-hour damage replacement policy.`;
+    const articleJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: 'Ordering Makhana Online in India: Shipping, Freshness & What to Expect',
+      description: desc,
+      image: [`${ORIGIN}/images/products/premium-makhana-100g.png`],
+      datePublished: '2026-10-28T00:00:00+05:30',
+      dateModified: '2026-10-28T00:00:00+05:30',
+      mainEntityOfPage: canonicalUrl,
+      author: { '@type': 'Organization', name: 'NYUTA ELITE MAKHANA', url: `${ORIGIN}/` },
+      publisher: { '@type': 'Organization', name: 'NYUTA ELITE MAKHANA', logo: { '@type': 'ImageObject', url: `${ORIGIN}/nyuta-elite-logo.png` } },
+    };
+    const breadcrumbJsonLd = buildBreadcrumb([
+      { name: 'Home', url: `${ORIGIN}/` },
+      { name: 'Ordering Guide', url: `${ORIGIN}/categories` },
+      { name: 'Ordering Makhana Online', url: canonicalUrl },
+    ]);
+    return {
+      title, desc, canonical: canonicalUrl, ogType: 'article',
+      ogImage: `${ORIGIN}/images/products/premium-makhana-100g.png`,
+      jsonLd: [breadcrumbJsonLd, articleJsonLd],
+    };
+  }
   if (path === '/learn/makhana-pack-size-guide') {
     const canonicalUrl = `${ORIGIN}/learn/makhana-pack-size-guide`;
     const title = `Makhana Pack Size Guide: 100g, 200g or 250g? | ${SITE}`;
@@ -527,6 +556,7 @@ function renderRouteBody(url, seo) {
             <a href="/learn/makhana-benefits-health" class="hover:text-white">Makhana Benefits</a>
             <a href="/learn/how-to-store-makhana" class="hover:text-white">Storage Tips</a>
             <a href="/learn/makhana-pack-size-guide" class="hover:text-white">Pack Size Guide</a>
+            <a href="/learn/ordering-makhana-online-india" class="hover:text-white">Ordering Guide</a>
           </div>
         </div>
       </footer>`;
@@ -898,6 +928,39 @@ function renderRouteBody(url, seo) {
             <a href="/learn/how-to-choose-good-quality-makhana" class="text-xs font-bold text-[#123B2A] hover:underline block">How to Choose Good-Quality Makhana →</a>
             <a href="/learn/makhana-benefits-health" class="text-xs font-bold text-[#123B2A] hover:underline block">Makhana Benefits: 7 Reasons to Eat Fox Nuts Daily →</a>
             <a href="/learn/how-to-store-makhana" class="text-xs font-bold text-[#123B2A] hover:underline block">How to Store Makhana to Keep It Crisp →</a>
+          </div>
+        </article>
+      </main>
+      ${footerHtml}`;
+  }
+
+
+  // Ordering Guide Article: /learn/ordering-makhana-online-india
+  if (path === '/learn/ordering-makhana-online-india') {
+    return `
+      ${headerHtml}
+      <main class="py-12 px-6 max-w-[960px] mx-auto space-y-6">
+        <nav aria-label="Breadcrumb" class="text-xs text-[#68756E] flex items-center gap-2">
+          <a href="/" class="hover:underline">Home</a> &gt;
+          <a href="/categories" class="hover:underline">Ordering Guide</a> &gt;
+          <span class="text-[#123B2A] font-semibold">Ordering Makhana Online</span>
+        </nav>
+        <article class="space-y-4">
+          <h1 class="font-serif text-3xl sm:text-5xl font-bold text-[#092218]">Ordering Makhana Online in India: Shipping, Freshness &amp; What to Expect</h1>
+          <p class="text-base text-[#68756E] leading-relaxed">
+            Buying makhana online is straightforward when you know what to expect. Orders are dispatched within 1–2 business days and delivered pan-India in 4–9 business days. Each pack is sealed in a food-grade moisture-barrier pouch. FSSAI registration number: 20426021000494. 48-hour damage replacement guarantee on every order.
+          </p>
+          <div class="pt-4 space-y-3">
+            <a href="/products/makhana" class="bg-[#123B2A] text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider inline-block">Shop All Makhana Packs</a>
+            <a href="/faq" class="ml-3 border border-[#123B2A] text-[#123B2A] px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider inline-block">View Full FAQ</a>
+          </div>
+          <div class="pt-6 border-t border-[#E8DECB] space-y-3"><h2 class="font-serif text-xl font-bold text-[#092218]">Available Pack Sizes</h2><div class="grid grid-cols-2 sm:grid-cols-3 gap-3"><a href="/products/makhana?sku=premium-100g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Premium 100g</p><p class="text-[#123B2A] font-semibold mt-1">₹160</p></a><a href="/products/makhana?sku=premium-200g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Premium 200g</p><p class="text-[#123B2A] font-semibold mt-1">₹310</p></a><a href="/products/makhana?sku=premium-250g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Premium 250g</p><p class="text-[#123B2A] font-semibold mt-1">₹380</p></a><a href="/products/makhana?sku=normal-100g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Normal 100g</p><p class="text-[#123B2A] font-semibold mt-1">₹120</p></a><a href="/products/makhana?sku=normal-200g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Normal 200g</p><p class="text-[#123B2A] font-semibold mt-1">₹230</p></a><a href="/products/makhana?sku=normal-250g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Normal 250g</p><p class="text-[#123B2A] font-semibold mt-1">₹280</p></a></div></div>
+          <div class="pt-4 border-t border-[#E8DECB] space-y-2">
+            <p class="text-xs text-[#68756E] mb-1">Related guides:</p>
+            <a href="/learn/how-to-choose-good-quality-makhana" class="text-xs font-bold text-[#123B2A] hover:underline block">How to Choose Good-Quality Makhana →</a>
+            <a href="/learn/makhana-benefits-health" class="text-xs font-bold text-[#123B2A] hover:underline block">Makhana Benefits: 7 Reasons to Eat Fox Nuts Daily →</a>
+            <a href="/learn/how-to-store-makhana" class="text-xs font-bold text-[#123B2A] hover:underline block">How to Store Makhana to Keep It Crisp →</a>
+            <a href="/learn/makhana-pack-size-guide" class="text-xs font-bold text-[#123B2A] hover:underline block">Makhana Pack Size Guide: 100g, 200g or 250g? →</a>
           </div>
         </article>
       </main>
