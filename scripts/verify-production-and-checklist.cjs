@@ -87,9 +87,18 @@ async function verify() {
     const liveH1 = home.body.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
     console.log('Live Homepage H1:             ', liveH1 ? liveH1[1].trim().replace(/\s+/g, ' ') : 'NONE');
     
-    // Check if live has JSON-LD
-    const jsonLdMatches = home.body.match(/<script type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/gi) || [];
+    // Check if live has JSON-LD (support any attribute order)
+    const jsonLdMatches = home.body.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi) || [];
     console.log('Live Homepage JSON-LD blocks: ', jsonLdMatches.length);
+    jsonLdMatches.forEach((scriptTag, idx) => {
+      const content = scriptTag.replace(/<script[^>]*>|<\/script>/gi, '').trim();
+      try {
+        const parsed = JSON.parse(content);
+        console.log(`  Block #${idx + 1} @type:          `, parsed['@type'], parsed.name ? `("${parsed.name}")` : '');
+      } catch (e) {
+        console.log(`  Block #${idx + 1} JSON parse error:`, e.message);
+      }
+    });
   }
 
   const logoRes = await fetchUrl('https://nyutaelite.com/nyuta-elite-logo.webp');
