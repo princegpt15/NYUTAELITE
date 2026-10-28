@@ -390,6 +390,78 @@ function resolveSeoForRequest(url) {
     };
   }
 
+  // Educational Article 4: /learn/makhana-pack-size-guide
+
+  // Storage Guide: /learn/how-to-store-makhana
+  if (path === '/learn/how-to-store-makhana') {
+    const canonicalUrl = `${ORIGIN}/learn/how-to-store-makhana`;
+    const title = `How to Store Makhana to Keep It Crisp for Months | ${SITE}`;
+    const desc  = `Learn how to store makhana (fox nuts) to keep them crisp for months. Tips on airtight containers, humidity control, monsoon storage, and reviving soggy fox nuts.`;
+    const articleJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: 'How to Store Makhana to Keep It Crisp for Months',
+      description: desc,
+      image: [`${ORIGIN}/images/products/premium-makhana-100g.png`],
+      datePublished: '2026-10-28T00:00:00+05:30',
+      dateModified: '2026-10-28T00:00:00+05:30',
+      mainEntityOfPage: canonicalUrl,
+      author: { '@type': 'Organization', name: 'NYUTA ELITE MAKHANA', url: `${ORIGIN}/` },
+      publisher: { '@type': 'Organization', name: 'NYUTA ELITE MAKHANA', logo: { '@type': 'ImageObject', url: `${ORIGIN}/nyuta-elite-logo.png` } },
+    };
+    const breadcrumbJsonLd = buildBreadcrumb([
+      { name: 'Home', url: `${ORIGIN}/` },
+      { name: 'Storage Guide', url: `${ORIGIN}/categories` },
+      { name: 'How to Store Makhana', url: canonicalUrl },
+    ]);
+    return {
+      title, desc, canonical: canonicalUrl, ogType: 'article',
+      ogImage: `${ORIGIN}/images/products/premium-makhana-100g.png`,
+      jsonLd: [breadcrumbJsonLd, articleJsonLd],
+    };
+  }
+  if (path === '/learn/makhana-pack-size-guide') {
+    const canonicalUrl = `${ORIGIN}/learn/makhana-pack-size-guide`;
+    const title = `Makhana Pack Size Guide: 100g, 200g or 250g? | ${SITE}`;
+    const desc  = `Not sure which makhana pack size to buy? Our guide compares 100g, 200g and 250g fox nut packs by servings, value, and use case to help you choose the right size.`;
+    const articleJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: 'Choosing the Right Makhana Pack Size: 100g, 200g or 250g?',
+      description: desc,
+      image: [`${ORIGIN}/images/products/premium-makhana-100g.png`],
+      datePublished: '2026-10-28T00:00:00+05:30',
+      dateModified: '2026-10-28T00:00:00+05:30',
+      mainEntityOfPage: canonicalUrl,
+      author: {
+        '@type': 'Organization',
+        name: 'NYUTA ELITE MAKHANA',
+        url: `${ORIGIN}/`,
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'NYUTA ELITE MAKHANA',
+        logo: {
+          '@type': 'ImageObject',
+          url: `${ORIGIN}/nyuta-elite-logo.png`,
+        },
+      },
+    };
+    const breadcrumbJsonLd = buildBreadcrumb([
+      { name: 'Home', url: `${ORIGIN}/` },
+      { name: 'Pack Size Guide', url: `${ORIGIN}/categories` },
+      { name: 'Makhana Pack Size Guide', url: canonicalUrl },
+    ]);
+    return {
+      title,
+      desc,
+      canonical: canonicalUrl,
+      ogType: 'article',
+      ogImage: `${ORIGIN}/images/products/premium-makhana-100g.png`,
+      jsonLd: [breadcrumbJsonLd, articleJsonLd],
+    };
+  }
+
   // Bulk order
   if (path === '/bulk-order/qualities') {
     return {
@@ -453,6 +525,8 @@ function renderRouteBody(url, seo) {
             <a href="/categories" class="hover:text-white">All Packs</a>
             <a href="/learn/how-to-choose-good-quality-makhana" class="hover:text-white">Buyer's Guide</a>
             <a href="/learn/makhana-benefits-health" class="hover:text-white">Makhana Benefits</a>
+            <a href="/learn/how-to-store-makhana" class="hover:text-white">Storage Tips</a>
+            <a href="/learn/makhana-pack-size-guide" class="hover:text-white">Pack Size Guide</a>
           </div>
         </div>
       </footer>`;
@@ -747,7 +821,90 @@ function renderRouteBody(url, seo) {
       ${footerHtml}`;
   }
 
-  return null;
+  
+  // Storage Guide Article: /learn/how-to-store-makhana
+  if (path === '/learn/how-to-store-makhana') {
+    return `
+      ${headerHtml}
+      <main class="py-12 px-6 max-w-[960px] mx-auto space-y-6">
+        <nav aria-label="Breadcrumb" class="text-xs text-[#68756E] flex items-center gap-2">
+          <a href="/" class="hover:underline">Home</a> &gt;
+          <a href="/categories" class="hover:underline">Storage Guide</a> &gt;
+          <span class="text-[#123B2A] font-semibold">How to Store Makhana</span>
+        </nav>
+        <article class="space-y-4">
+          <h1 class="font-serif text-3xl sm:text-5xl font-bold text-[#092218]">How to Store Makhana to Keep It Crisp for Months</h1>
+          <p class="text-base text-[#68756E] leading-relaxed">
+            Makhana (fox nuts) are hygroscopic — they absorb ambient humidity within minutes of unsealing. Their porous air-popped structure makes them more moisture-sensitive than regular nuts. Correct storage preserves the crisp snap for 4–6 weeks after opening and up to 9 months sealed.
+          </p>
+          <div class="pt-4 space-y-3">
+            <a href="/categories?type=Premium" class="bg-[#123B2A] text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider inline-block">Shop Premium Makhana</a>
+            <a href="/categories?type=Normal" class="ml-3 border border-[#123B2A] text-[#123B2A] px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider inline-block">Shop Normal Makhana</a>
+          </div>
+            <div class="pt-6 border-t border-[#E8DECB] space-y-3">
+            <h2 class="font-serif text-xl font-bold text-[#092218]">Available Pack Sizes</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <a href="/products/makhana?sku=premium-100g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Premium 100g</p><p class="text-[#123B2A] font-semibold mt-1">₹160</p></a>
+              <a href="/products/makhana?sku=premium-200g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Premium 200g</p><p class="text-[#123B2A] font-semibold mt-1">₹310</p></a>
+              <a href="/products/makhana?sku=premium-250g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Premium 250g</p><p class="text-[#123B2A] font-semibold mt-1">₹380</p></a>
+              <a href="/products/makhana?sku=normal-100g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Normal 100g</p><p class="text-[#123B2A] font-semibold mt-1">₹120</p></a>
+              <a href="/products/makhana?sku=normal-200g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Normal 200g</p><p class="text-[#123B2A] font-semibold mt-1">₹230</p></a>
+              <a href="/products/makhana?sku=normal-250g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Normal 250g</p><p class="text-[#123B2A] font-semibold mt-1">₹280</p></a>
+            </div>
+          </div>
+          <div class="pt-4 border-t border-[#E8DECB] space-y-2">
+            <p class="text-xs text-[#68756E] mb-1">Related guides:</p>
+            <a href="/learn/how-to-choose-good-quality-makhana" class="text-xs font-bold text-[#123B2A] hover:underline block">How to Choose Good-Quality Makhana →</a>
+            <a href="/learn/makhana-benefits-health" class="text-xs font-bold text-[#123B2A] hover:underline block">Makhana Benefits: 7 Reasons to Eat Fox Nuts Daily →</a>
+            <a href="/learn/makhana-pack-size-guide" class="text-xs font-bold text-[#123B2A] hover:underline block">Makhana Pack Size Guide: 100g, 200g or 250g? →</a>
+          </div>
+        </article>
+      </main>
+      ${footerHtml}`;
+  }
+
+  // Pack Size Guide Article: /learn/makhana-pack-size-guide
+  if (path === '/learn/makhana-pack-size-guide') {
+    return `
+      ${headerHtml}
+      <main class="py-12 px-6 max-w-[960px] mx-auto space-y-6">
+        <nav aria-label="Breadcrumb" class="text-xs text-[#68756E] flex items-center gap-2">
+          <a href="/" class="hover:underline">Home</a> &gt;
+          <a href="/categories" class="hover:underline">Buyer's Guide</a> &gt;
+          <span class="text-[#123B2A] font-semibold">Pack Size Guide</span>
+        </nav>
+        <article class="space-y-4">
+          <h1 class="font-serif text-3xl sm:text-5xl font-bold text-[#092218]">Choosing the Right Makhana Pack Size: 100g, 200g or 250g?</h1>
+          <p class="text-base text-[#68756E] leading-relaxed">
+            A healthy single serving of makhana is approximately 25–30g (one small bowl). The 100g pack gives 3–4 servings ideal for first-time buyers, the 200g pack gives 7–8 servings for couples or weekly snacking, and the 250g pantry pack gives 9–10 servings with the best per-gram value.
+          </p>
+          <div class="pt-4 space-y-3">
+            <a href="/categories?type=Premium" class="bg-[#123B2A] text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider inline-block">Shop Premium Makhana</a>
+            <a href="/categories?type=Normal" class="ml-3 border border-[#123B2A] text-[#123B2A] px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider inline-block">Shop Normal Makhana</a>
+          </div>
+            <div class="pt-6 border-t border-[#E8DECB] space-y-3">
+            <h2 class="font-serif text-xl font-bold text-[#092218]">Available Pack Sizes</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <a href="/products/makhana?sku=premium-100g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Premium 100g</p><p class="text-[#123B2A] font-semibold mt-1">₹160</p></a>
+              <a href="/products/makhana?sku=premium-200g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Premium 200g</p><p class="text-[#123B2A] font-semibold mt-1">₹310</p></a>
+              <a href="/products/makhana?sku=premium-250g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Premium 250g</p><p class="text-[#123B2A] font-semibold mt-1">₹380</p></a>
+              <a href="/products/makhana?sku=normal-100g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Normal 100g</p><p class="text-[#123B2A] font-semibold mt-1">₹120</p></a>
+              <a href="/products/makhana?sku=normal-200g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Normal 200g</p><p class="text-[#123B2A] font-semibold mt-1">₹230</p></a>
+              <a href="/products/makhana?sku=normal-250g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Normal 250g</p><p class="text-[#123B2A] font-semibold mt-1">₹280</p></a>
+            </div>
+          </div>
+          <div class="pt-4 border-t border-[#E8DECB] space-y-2">
+            <p class="text-xs text-[#68756E] mb-1">Related guides:</p>
+            <a href="/learn/how-to-choose-good-quality-makhana" class="text-xs font-bold text-[#123B2A] hover:underline block">How to Choose Good-Quality Makhana →</a>
+            <a href="/learn/makhana-benefits-health" class="text-xs font-bold text-[#123B2A] hover:underline block">Makhana Benefits: 7 Reasons to Eat Fox Nuts Daily →</a>
+            <a href="/learn/how-to-store-makhana" class="text-xs font-bold text-[#123B2A] hover:underline block">How to Store Makhana to Keep It Crisp →</a>
+          </div>
+        </article>
+      </main>
+      ${footerHtml}`;
+  }
+
+return null;
 }
 
 // ─── Inject SEO tags and pre-rendered body into HTML ──────────────────────────

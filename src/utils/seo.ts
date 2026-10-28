@@ -21,7 +21,7 @@ export interface RouteSeoMetadata {
   description: string;
   canonicalUrl: string;
   robots: 'index, follow' | 'noindex, nofollow';
-  ogType: 'website' | 'product';
+  ogType: 'website' | 'product' | 'article';
   ogTitle: string;
   ogDescription: string;
   ogImage: string;
@@ -816,6 +816,120 @@ export function resolveRouteSeo(
           { name: 'Home', url: `${PRODUCTION_ORIGIN}/` },
           { name: 'Nutrition Guide', url: `${PRODUCTION_ORIGIN}/categories` },
           { name: 'Makhana Benefits', url: canonicalUrl },
+        ]),
+        articleJsonLd,
+      ],
+    };
+  }
+
+  // Storage Guide (/learn/how-to-store-makhana)
+  if (normalizedPath === '/learn/how-to-store-makhana') {
+    const canonicalUrl = `${PRODUCTION_ORIGIN}/learn/how-to-store-makhana`;
+    const title = `How to Store Makhana to Keep It Crisp for Months | ${SITE_NAME}`;
+    const description =
+      `Learn how to store makhana (fox nuts) to keep them crisp for months. Tips on airtight containers, humidity control, monsoon storage, and reviving soggy fox nuts.`;
+    const ogImage = `${PRODUCTION_ORIGIN}/images/products/premium-makhana-100g.png`;
+    const articleJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: 'How to Store Makhana to Keep It Crisp for Months',
+      description,
+      image: [ogImage],
+      datePublished: '2026-10-28T00:00:00+05:30',
+      dateModified: '2026-10-28T00:00:00+05:30',
+      mainEntityOfPage: canonicalUrl,
+      author: {
+        '@type': 'Organization',
+        name: 'NYUTA ELITE MAKHANA',
+        url: `${PRODUCTION_ORIGIN}/`,
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'NYUTA ELITE MAKHANA',
+        logo: {
+          '@type': 'ImageObject',
+          url: `${PRODUCTION_ORIGIN}/nyuta-elite-logo.png`,
+        },
+      },
+    };
+    return {
+      title,
+      description,
+      canonicalUrl,
+      robots: 'index, follow',
+      ogType: 'article' as 'article',
+      ogTitle: title,
+      ogDescription: description,
+      ogImage,
+      ogUrl: canonicalUrl,
+      ogSiteName: SITE_NAME,
+      twitterCard: 'summary_large_image' as const,
+      twitterTitle: title,
+      twitterDescription: description,
+      twitterImage: ogImage,
+      ...(verificationToken ? { googleSiteVerification: verificationToken } : {}),
+      jsonLd: [
+        buildBreadcrumbJsonLd([
+          { name: 'Home', url: `${PRODUCTION_ORIGIN}/` },
+          { name: 'Storage Guide', url: `${PRODUCTION_ORIGIN}/categories` },
+          { name: 'How to Store Makhana', url: canonicalUrl },
+        ]),
+        articleJsonLd,
+      ],
+    };
+  }
+
+  // Pack Size Guide (/learn/makhana-pack-size-guide)
+  if (normalizedPath === '/learn/makhana-pack-size-guide') {
+    const canonicalUrl = `${PRODUCTION_ORIGIN}/learn/makhana-pack-size-guide`;
+    const title = `Makhana Pack Size Guide: 100g, 200g or 250g? | ${SITE_NAME}`;
+    const description =
+      `Not sure which makhana pack size to buy? Compare 100g, 200g and 250g fox nut packs by servings, value, and use case to find the right size for you.`;
+    const ogImage = `${PRODUCTION_ORIGIN}/images/products/premium-makhana-100g.png`;
+    const articleJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: 'Choosing the Right Makhana Pack Size: 100g, 200g or 250g?',
+      description,
+      image: [ogImage],
+      datePublished: '2026-10-28T00:00:00+05:30',
+      dateModified: '2026-10-28T00:00:00+05:30',
+      mainEntityOfPage: canonicalUrl,
+      author: {
+        '@type': 'Organization',
+        name: 'NYUTA ELITE MAKHANA',
+        url: `${PRODUCTION_ORIGIN}/`,
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'NYUTA ELITE MAKHANA',
+        logo: {
+          '@type': 'ImageObject',
+          url: `${PRODUCTION_ORIGIN}/nyuta-elite-logo.png`,
+        },
+      },
+    };
+    return {
+      title,
+      description,
+      canonicalUrl,
+      robots: 'index, follow',
+      ogType: 'article' as 'article',
+      ogTitle: title,
+      ogDescription: description,
+      ogImage,
+      ogUrl: canonicalUrl,
+      ogSiteName: SITE_NAME,
+      twitterCard: 'summary_large_image' as const,
+      twitterTitle: title,
+      twitterDescription: description,
+      twitterImage: ogImage,
+      ...(verificationToken ? { googleSiteVerification: verificationToken } : {}),
+      jsonLd: [
+        buildBreadcrumbJsonLd([
+          { name: 'Home', url: `${PRODUCTION_ORIGIN}/` },
+          { name: "Buyer's Guide", url: `${PRODUCTION_ORIGIN}/categories` },
+          { name: 'Pack Size Guide', url: canonicalUrl },
         ]),
         articleJsonLd,
       ],

@@ -178,4 +178,31 @@
     </image:image>
   </url>
 
+
+  <!-- Storage Guide: How to Store Makhana -->
+  <url>
+    <loc>https://nyutaelite.com/learn/how-to-store-makhana</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-10-28</lastmod>
+    <image:image>
+      <image:loc>https://nyutaelite.com/images/products/premium-makhana-100g.png</image:loc>
+      <image:title>How to Store Makhana Crisp — NYUTAELITE</image:title>
+      <image:caption>Storage guide for keeping Bihar makhana fresh and crisp for months</image:caption>
+    </image:image>
+  </url>
+
+  <!-- Pack Size Guide: 100g vs 200g vs 250g Makhana -->
+  <url>
+    <loc>https://nyutaelite.com/learn/makhana-pack-size-guide</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-10-28</lastmod>
+    <image:image>
+      <image:loc>https://nyutaelite.com/images/products/premium-makhana-100g.png</image:loc>
+      <image:title>Makhana Pack Size Guide — NYUTAELITE</image:title>
+      <image:caption>Compare 100g, 200g and 250g makhana packs by servings and value</image:caption>
+    </image:image>
+  </url>
+
 </urlset>
