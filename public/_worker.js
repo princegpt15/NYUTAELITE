@@ -92,11 +92,11 @@ function buildProductJsonLd(sku, p, canonicalUrl) {
   return {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: p.name,
+    name: `NYUTA ELITE Makhana – ${p.quality} ${p.weight}g`,
     description: p.description,
     image: [`${ORIGIN}${p.image}`],
     sku: p.sku,
-    brand: { '@type': 'Brand', name: BRAND },
+    brand: { '@type': 'Brand', name: 'NYUTA ELITE MAKHANA' },
     category: `${p.quality} Grade Makhana`,
     weight: { '@type': 'QuantitativeValue', value: p.weight, unitCode: 'GRM' },
     offers: {
@@ -107,7 +107,7 @@ function buildProductJsonLd(sku, p, canonicalUrl) {
       availability:
         p.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
       itemCondition: 'https://schema.org/NewCondition',
-      seller: { '@type': 'Organization', name: BRAND, url: `${ORIGIN}/` },
+      seller: { '@type': 'Organization', name: 'NYUTA ELITE MAKHANA', url: `${ORIGIN}/` },
       shippingDetails: {
         '@type': 'OfferShippingDetails',
         shippingRate: { '@type': 'MonetaryAmount', value: '0', currency: 'INR' },
@@ -153,13 +153,13 @@ function resolveSeoForRequest(url) {
     const p   = PRODUCTS[sku];
     if (p) {
       const canonicalUrl = `${ORIGIN}/products/makhana?sku=${encodeURIComponent(sku)}`;
-      const title = `Buy ${p.name} Online | ${p.quality} Grade Bihar Fox Nuts | ${SITE}`;
-      const desc  = `${p.description} Buy at ₹${p.price}. Freshly packed with pan-India delivery.`;
+      const title = `NYUTA ELITE Makhana – ${p.quality} ${p.weight}g | Buy Online`;
+      const desc  = `Shop NYUTA ELITE ${p.quality} Makhana (${p.weight}g). Handpicked Bihar fox nuts at ₹${p.price}. Freshly packed in airtight pouches with pan-India shipping.`;
       const jsonLd = [
         buildBreadcrumb([
           { name: 'Home',               url: `${ORIGIN}/` },
-          { name: 'Makhana Collection', url: `${ORIGIN}/products/makhana` },
-          { name: `${p.name}`,          url: canonicalUrl },
+          { name: 'Shop Makhana',       url: `${ORIGIN}/categories` },
+          { name: `NYUTA ELITE Makhana – ${p.quality} ${p.weight}g`, url: canonicalUrl },
         ]),
         buildProductJsonLd(sku, p, canonicalUrl),
       ];
@@ -171,12 +171,53 @@ function resolveSeoForRequest(url) {
       title: `Shop Premium & Normal Bihar Makhana Packs (100g–250g) | ${SITE}`,
       desc:  `Explore ${BRAND} makhana in Premium jumbo-grade and Normal everyday-grade fox nuts. 100g, 200g, 250g air-tight pantry pouches. Pan-India delivery.`,
       canonical: canonicalUrl, ogType: 'website',
-      ogImage: `${ORIGIN}/nyuta-elite-logo.png`, jsonLd: [],
+      ogImage: `${ORIGIN}/nyuta-elite-logo.png`,
+      jsonLd: [
+        buildBreadcrumb([
+          { name: 'Home',         url: `${ORIGIN}/` },
+          { name: 'Shop Makhana', url: canonicalUrl },
+        ]),
+      ],
     };
   }
 
   // Categories / shop
   if (path === '/categories') {
+    const typeParam = params.get('type')?.toLowerCase();
+    if (typeParam === 'premium') {
+      const canonicalUrl = `${ORIGIN}/categories?type=Premium`;
+      return {
+        title: `Buy Premium Jumbo Makhana Online (100g, 200g, 250g) | ${SITE}`,
+        desc: `Shop NYUTA ELITE Premium Grade Bihar Makhana. Handpicked jumbo-sized fox nuts with crisp crunch in 100g, 200g, and 250g pouches. Free pan-India delivery.`,
+        canonical: canonicalUrl,
+        ogType: 'website',
+        ogImage: `${ORIGIN}/images/products/premium-makhana-100g.png`,
+        jsonLd: [
+          buildBreadcrumb([
+            { name: 'Home', url: `${ORIGIN}/` },
+            { name: 'Shop All Makhana', url: `${ORIGIN}/categories` },
+            { name: 'Premium Makhana', url: canonicalUrl },
+          ]),
+        ],
+      };
+    }
+    if (typeParam === 'normal') {
+      const canonicalUrl = `${ORIGIN}/categories?type=Normal`;
+      return {
+        title: `Normal Everyday Makhana Packs (100g, 200g, 250g) | ${SITE}`,
+        desc: `Shop NYUTA ELITE Normal Grade Bihar Makhana. Wholesome everyday fox nuts perfect for daily roasting, snacks, and cooking in 100g, 200g, and 250g pouches.`,
+        canonical: canonicalUrl,
+        ogType: 'website',
+        ogImage: `${ORIGIN}/images/products/normal-makhana-100g.png`,
+        jsonLd: [
+          buildBreadcrumb([
+            { name: 'Home', url: `${ORIGIN}/` },
+            { name: 'Shop All Makhana', url: `${ORIGIN}/categories` },
+            { name: 'Normal Makhana', url: canonicalUrl },
+          ]),
+        ],
+      };
+    }
     return {
       title: `All Makhana Packs | Shop Bihar Fox Nuts Online | ${SITE}`,
       desc:  `Browse all ${BRAND} makhana packs — Premium and Normal grades in 100g, 200g, and 250g. Free pan-India shipping.`,
@@ -184,8 +225,8 @@ function resolveSeoForRequest(url) {
       ogImage: `${ORIGIN}/nyuta-elite-logo.png`,
       jsonLd: [
         buildBreadcrumb([
-          { name: 'Home',      url: `${ORIGIN}/` },
-          { name: 'All Packs', url: `${ORIGIN}/categories` },
+          { name: 'Home',             url: `${ORIGIN}/` },
+          { name: 'Shop All Makhana', url: `${ORIGIN}/categories` },
         ]),
       ],
     };
@@ -198,12 +239,7 @@ function resolveSeoForRequest(url) {
       desc:  `Learn how ${BRAND} sources unbleached, naturally air-popped Euryale ferox from traditional harvesting communities in Mithila, Bihar.`,
       canonical: `${ORIGIN}/about`, ogType: 'website',
       ogImage: `${ORIGIN}/nyuta-elite-logo.png`,
-      jsonLd: [
-        buildBreadcrumb([
-          { name: 'Home',  url: `${ORIGIN}/` },
-          { name: 'About', url: `${ORIGIN}/about` },
-        ]),
-      ],
+      jsonLd: [],
     };
   }
 
@@ -215,10 +251,44 @@ function resolveSeoForRequest(url) {
       canonical: `${ORIGIN}/faq`, ogType: 'website',
       ogImage: `${ORIGIN}/nyuta-elite-logo.png`,
       jsonLd: [
-        buildBreadcrumb([
-          { name: 'Home', url: `${ORIGIN}/` },
-          { name: 'FAQ',  url: `${ORIGIN}/faq` },
-        ]),
+        {
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: [
+            {
+              '@type': 'Question',
+              name: 'What is makhana (fox nuts)?',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Makhana (also known as fox nuts, gorgon nuts, or puffed lotus seeds) is a natural plant-based food harvested from Euryale ferox water plants. Naturally light and crisp, it provides plant protein, dietary fiber, and essential minerals.',
+              },
+            },
+            {
+              '@type': 'Question',
+              name: 'What is the difference between Premium and Normal Quality?',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Premium Quality is selected for larger nut size (jumbo expansion), uniform round kernels, and minimal shell residue. Normal Quality is our everyday grade with slightly varied nut sizes, ideal for daily cooking and roasting.',
+              },
+            },
+            {
+              '@type': 'Question',
+              name: 'What pack sizes are available?',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Both grades are offered in 100g, 200g, and 250g pouches, sealed in air-tight packaging to preserve crispness.',
+              },
+            },
+            {
+              '@type': 'Question',
+              name: 'How long does delivery take?',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Orders are dispatched within 1–2 business days. Courier transit takes 5–7 business days to most serviceable Indian PIN codes.',
+              },
+            },
+          ],
+        },
       ],
     };
   }
@@ -230,12 +300,7 @@ function resolveSeoForRequest(url) {
       desc:  `Get in touch with ${BRAND} MAKHANA for order tracking, product enquiries, bulk orders, or delivery assistance.`,
       canonical: `${ORIGIN}/contact`, ogType: 'website',
       ogImage: `${ORIGIN}/nyuta-elite-logo.png`,
-      jsonLd: [
-        buildBreadcrumb([
-          { name: 'Home',    url: `${ORIGIN}/` },
-          { name: 'Contact', url: `${ORIGIN}/contact` },
-        ]),
-      ],
+      jsonLd: [],
     };
   }
 
@@ -255,12 +320,12 @@ function resolveSeoForRequest(url) {
       mainEntityOfPage: canonicalUrl,
       author: {
         '@type': 'Organization',
-        name: BRAND,
+        name: 'NYUTA ELITE MAKHANA',
         url: `${ORIGIN}/`,
       },
       publisher: {
         '@type': 'Organization',
-        name: BRAND,
+        name: 'NYUTA ELITE MAKHANA',
         logo: {
           '@type': 'ImageObject',
           url: `${ORIGIN}/nyuta-elite-logo.png`,
@@ -269,7 +334,7 @@ function resolveSeoForRequest(url) {
     };
     const breadcrumbJsonLd = buildBreadcrumb([
       { name: 'Home', url: `${ORIGIN}/` },
-      { name: 'Learn', url: `${ORIGIN}/categories` },
+      { name: "Buyer's Guide", url: `${ORIGIN}/categories` },
       { name: 'How to Choose Good-Quality Makhana', url: canonicalUrl },
     ]);
     return {
@@ -278,7 +343,7 @@ function resolveSeoForRequest(url) {
       canonical: canonicalUrl,
       ogType: 'article',
       ogImage: `${ORIGIN}/images/products/premium-makhana-100g.png`,
-      jsonLd: [articleJsonLd, breadcrumbJsonLd],
+      jsonLd: [breadcrumbJsonLd, articleJsonLd],
     };
   }
 
@@ -298,12 +363,12 @@ function resolveSeoForRequest(url) {
       mainEntityOfPage: canonicalUrl,
       author: {
         '@type': 'Organization',
-        name: BRAND,
+        name: 'NYUTA ELITE MAKHANA',
         url: `${ORIGIN}/`,
       },
       publisher: {
         '@type': 'Organization',
-        name: BRAND,
+        name: 'NYUTA ELITE MAKHANA',
         logo: {
           '@type': 'ImageObject',
           url: `${ORIGIN}/nyuta-elite-logo.png`,
@@ -312,7 +377,7 @@ function resolveSeoForRequest(url) {
     };
     const breadcrumbJsonLd = buildBreadcrumb([
       { name: 'Home', url: `${ORIGIN}/` },
-      { name: 'Learn', url: `${ORIGIN}/categories` },
+      { name: 'Nutrition Guide', url: `${ORIGIN}/categories` },
       { name: 'Makhana Benefits', url: canonicalUrl },
     ]);
     return {
@@ -321,7 +386,7 @@ function resolveSeoForRequest(url) {
       canonical: canonicalUrl,
       ogType: 'article',
       ogImage: `${ORIGIN}/images/products/premium-makhana-100g.png`,
-      jsonLd: [articleJsonLd, breadcrumbJsonLd],
+      jsonLd: [breadcrumbJsonLd, articleJsonLd],
     };
   }
 
@@ -337,8 +402,8 @@ function resolveSeoForRequest(url) {
 
   // Default / homepage
   return {
-    title: 'NYUTA ELITE MAKHANA | Premium Makhana & Fox Nuts',
-    desc:  'Discover NYUTA ELITE MAKHANA and explore our range of makhana (fox nuts). Find product details, pack sizes, quality information, and ordering options.',
+    title: 'NYUTAELITE | NYUTA ELITE MAKHANA – Premium Fox Nuts',
+    desc:  'Shop NYUTA ELITE MAKHANA, premium fox nuts from Bihar. Explore available makhana packs in different sizes and grades for everyday snacking.',
     canonical: `${ORIGIN}/`, ogType: 'website',
     ogImage: `${ORIGIN}/nyuta-elite-logo.png`, jsonLd: [],
   };
@@ -353,11 +418,340 @@ function esc(str) {
     .replace(/>/g, '&gt;');
 }
 
-// ─── Inject SEO tags into the initial HTML <head> ─────────────────────────────
-// Replaces ONLY the static homepage placeholders (title, description, canonical,
-// og tags) and appends Product JSON-LD. The React app will continue to update
-// the DOM client-side normally.
-function injectSeo(html, seo) {
+// ─── Render Route-Specific Body for Search Crawlers & Pre-JS Rendering ─────────
+function renderRouteBody(url, seo) {
+  const path = url.pathname;
+  const params = url.searchParams;
+
+  const headerHtml = `
+      <header class="bg-[#123B2A] text-white py-4 px-6 border-b border-[#092218]">
+        <div class="max-w-[1280px] mx-auto flex items-center justify-between">
+          <a href="/" class="flex items-center gap-3">
+            <img src="/nyuta-elite-logo.png" alt="NYUTA ELITE MAKHANA logo" class="w-10 h-10 rounded-full border border-[#C6A15B] object-cover" width="40" height="40" />
+            <span class="font-serif text-xl font-bold tracking-wider text-white">NYUTA ELITE MAKHANA</span>
+          </a>
+          <nav aria-label="Main Navigation" class="hidden md:flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-[#D5DED6]">
+            <a href="/" class="text-white hover:text-[#C6A15B]">Home</a>
+            <a href="/categories" class="hover:text-white">Shop Makhana</a>
+            <a href="/categories?type=Premium" class="hover:text-white">Premium Quality</a>
+            <a href="/categories?type=Normal" class="hover:text-white">Normal Quality</a>
+            <a href="/about" class="hover:text-white">About Us</a>
+            <a href="/contact" class="hover:text-white">Contact</a>
+            <a href="/faq" class="hover:text-white">FAQ</a>
+          </nav>
+        </div>
+      </header>`;
+
+  const footerHtml = `
+      <footer class="bg-[#123B2A] text-white py-10 px-6">
+        <div class="max-w-[1280px] mx-auto flex flex-wrap justify-between gap-6 text-xs text-[#D5DED6]">
+          <p>© 2026 NYUTA ELITE MAKHANA. All rights reserved.</p>
+          <div class="flex flex-wrap gap-4">
+            <a href="/about" class="hover:text-white">About Us</a>
+            <a href="/contact" class="hover:text-white">Contact</a>
+            <a href="/faq" class="hover:text-white">FAQ</a>
+            <a href="/categories" class="hover:text-white">All Packs</a>
+            <a href="/learn/how-to-choose-good-quality-makhana" class="hover:text-white">Buyer's Guide</a>
+            <a href="/learn/makhana-benefits-health" class="hover:text-white">Makhana Benefits</a>
+          </div>
+        </div>
+      </footer>`;
+
+  // 1. Product detail page
+  if (path === '/products/makhana' || path.startsWith('/products/')) {
+    const sku = params.get('sku') || path.replace('/products/', '');
+    const p = PRODUCTS[sku];
+    if (p) {
+      const otherSkus = Object.keys(PRODUCTS).filter((k) => k !== sku);
+      return `
+      ${headerHtml}
+      <main class="py-12 px-6 max-w-[1100px] mx-auto space-y-8">
+        <nav aria-label="Breadcrumb" class="text-xs text-[#68756E] flex items-center gap-2">
+          <a href="/" class="hover:underline">Home</a> &gt;
+          <a href="/categories" class="hover:underline">Makhana Collection</a> &gt;
+          <span class="text-[#123B2A] font-semibold">${esc(p.name)}</span>
+        </nav>
+        <div class="grid md:grid-cols-2 gap-10 bg-white p-6 sm:p-10 rounded-3xl border border-[#E8DECB] shadow-xs">
+          <div class="aspect-square rounded-2xl bg-[#FAF7EF] border border-[#E8DECB] flex items-center justify-center p-6">
+            <img src="${esc(p.image)}" alt="${esc(p.name)} — ${esc(p.quality)} Grade Bihar Fox Nuts (Makhana)" class="max-h-full object-contain" />
+          </div>
+          <div class="space-y-4">
+            <span class="text-xs font-bold uppercase tracking-widest text-[#C6A15B]">${esc(p.quality)} Quality Grade</span>
+            <h1 class="font-serif text-2xl sm:text-4xl font-bold text-[#092218]">${esc(p.name)}</h1>
+            <p class="text-2xl font-extrabold text-[#123B2A]">₹${p.price} <span class="text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full ml-2">In Stock</span></p>
+            <p class="text-sm text-[#68756E] leading-relaxed">${esc(p.description)}</p>
+            <div class="pt-4 border-t border-[#E8DECB] space-y-2 text-xs text-[#1C1C1C]">
+              <p><strong>Net Weight:</strong> ${p.weight}g</p>
+              <p><strong>Grade:</strong> ${esc(p.quality)} Quality Hand-Sorted Fox Nuts</p>
+              <p><strong>Origin:</strong> Mithila Wetland Region, Bihar, India</p>
+              <p><strong>Packaging:</strong> Sealed food-grade barrier pouch for lasting crispness</p>
+            </div>
+            <div class="pt-4">
+              <a href="/cart" class="bg-[#123B2A] text-white px-8 py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider inline-block">Order Now</a>
+            </div>
+          </div>
+        </div>
+        <div class="space-y-4">
+          <h2 class="font-serif text-xl font-bold text-[#092218]">Explore Other Pack Sizes</h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+            ${otherSkus
+              .map((k) => {
+                const op = PRODUCTS[k];
+                return `<a href="/products/makhana?sku=${encodeURIComponent(k)}" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block">
+                <p class="font-bold text-[#092218] truncate">${esc(op.name)}</p>
+                <p class="text-[#123B2A] font-semibold mt-1">₹${op.price}</p>
+              </a>`;
+              })
+              .join('')}
+          </div>
+        </div>
+      </main>
+      ${footerHtml}`;
+    }
+  }
+
+  // 2. Categories page
+  if (path === '/categories') {
+    const typeParam = params.get('type')?.toLowerCase();
+    const isPremium = typeParam === 'premium';
+    const isNormal = typeParam === 'normal';
+
+    const breadcrumbHtml = isPremium
+      ? `<nav aria-label="Breadcrumb" class="text-xs text-[#68756E] flex items-center gap-2">
+          <a href="/" class="hover:underline">Home</a> &gt;
+          <a href="/categories" class="hover:underline">Shop All Makhana</a> &gt;
+          <span class="text-[#123B2A] font-semibold">Premium Makhana</span>
+        </nav>`
+      : isNormal
+      ? `<nav aria-label="Breadcrumb" class="text-xs text-[#68756E] flex items-center gap-2">
+          <a href="/" class="hover:underline">Home</a> &gt;
+          <a href="/categories" class="hover:underline">Shop All Makhana</a> &gt;
+          <span class="text-[#123B2A] font-semibold">Normal Makhana</span>
+        </nav>`
+      : `<nav aria-label="Breadcrumb" class="text-xs text-[#68756E] flex items-center gap-2">
+          <a href="/" class="hover:underline">Home</a> &gt;
+          <span class="text-[#123B2A] font-semibold">All Makhana Packs</span>
+        </nav>`;
+
+    const headingTitle = isPremium
+      ? 'Buy Premium Jumbo Makhana Online'
+      : isNormal
+      ? 'Buy Normal Everyday Makhana Online'
+      : 'Shop NYUTA ELITE Makhana';
+
+    const headingDesc = isPremium
+      ? 'Handpicked jumbo-grade Bihar fox nuts with uniform size, pristine crisp crunch, and minimal shell residue. Available in 100g, 200g, and 250g pouches.'
+      : isNormal
+      ? 'Wholesome, naturally popped everyday Bihar fox nuts. Perfect for daily roasting, home spicing, and cooking in 100g, 200g, and 250g pouches.'
+      : 'Browse our complete collection of Bihar fox nuts. Available in Premium Jumbo and Normal Everyday grades across 100g, 200g, and 250g air-tight pouches.';
+
+    const displayedKeys = Object.keys(PRODUCTS).filter((k) => {
+      if (isPremium) return PRODUCTS[k].quality === 'Premium';
+      if (isNormal) return PRODUCTS[k].quality === 'Normal';
+      return true;
+    });
+
+    return `
+      ${headerHtml}
+      <main class="py-12 px-6 max-w-[1280px] mx-auto space-y-8">
+        ${breadcrumbHtml}
+        <div class="space-y-2">
+          <h1 class="font-serif text-3xl sm:text-5xl font-bold text-[#092218]">${headingTitle}</h1>
+          <p class="text-sm text-[#68756E] max-w-2xl">${headingDesc}</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          ${displayedKeys
+            .map((k) => {
+              const p = PRODUCTS[k];
+              return `<article class="bg-white p-6 rounded-2xl border border-[#E8DECB] shadow-xs space-y-3">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-[#C6A15B]">${esc(p.quality)} Grade</span>
+              <h2 class="font-serif text-lg font-bold text-[#092218]">${esc(p.name)}</h2>
+              <p class="text-xs text-[#68756E]">${esc(p.description)}</p>
+              <div class="flex items-center justify-between pt-2">
+                <span class="text-lg font-extrabold text-[#123B2A]">₹${p.price}</span>
+                <a href="/products/makhana?sku=${encodeURIComponent(k)}" class="bg-[#123B2A] text-white text-xs font-bold uppercase px-4 py-2 rounded-lg">View Pack</a>
+              </div>
+            </article>`;
+            })
+            .join('')}
+        </div>
+        <section class="bg-[#F7F1E5] rounded-2xl p-6 border border-[#E8DECB] space-y-4">
+          <h2 class="font-serif text-lg font-bold text-[#092218]">Helpful Makhana Resources</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <a href="/learn/how-to-choose-good-quality-makhana" class="bg-white p-4 rounded-xl border border-[#E8DECB] block space-y-1">
+              <span class="text-[10px] font-bold uppercase tracking-widest text-[#C6A15B]">Buyer's Guide</span>
+              <p class="font-serif font-bold text-sm text-[#092218]">How to Choose Good-Quality Makhana</p>
+              <p class="text-xs text-[#68756E]">Suta sizing, unbleached sourcing, crispness checks, and storage tips.</p>
+            </a>
+            <a href="/learn/makhana-benefits-health" class="bg-white p-4 rounded-xl border border-[#E8DECB] block space-y-1">
+              <span class="text-[10px] font-bold uppercase tracking-widest text-[#C6A15B]">Nutrition &amp; Lifestyle</span>
+              <p class="font-serif font-bold text-sm text-[#092218]">Makhana Benefits: 7 Reasons to Eat Fox Nuts Every Day</p>
+              <p class="text-xs text-[#68756E]">Evidence-informed look at protein, fiber, magnesium, and heart health.</p>
+            </a>
+          </div>
+          <div class="pt-1 flex flex-wrap gap-3 text-xs">
+            <a href="/faq" class="text-[#123B2A] font-bold">FAQ — Delivery, Grades &amp; Returns</a>
+            <a href="/bulk-order/qualities" class="text-[#123B2A] font-bold">Bulk / Wholesale Orders</a>
+            <a href="/about" class="text-[#123B2A] font-bold">About NYUTA ELITE MAKHANA</a>
+          </div>
+        </section>
+      </main>
+      ${footerHtml}`;
+  }
+
+  // 3. About page
+  if (path === '/about') {
+    return `
+      ${headerHtml}
+      <main class="py-12 px-6 max-w-[960px] mx-auto space-y-6">
+        <h1 class="font-serif text-3xl sm:text-5xl font-bold text-[#092218]">About NYUTA ELITE MAKHANA</h1>
+        <p class="text-base text-[#68756E] leading-relaxed">
+          NYUTA ELITE MAKHANA is an Indian brand dedicated to delivering pure, unadulterated fox nuts from the freshwater wetlands of Bihar. We partner with traditional harvesting communities in Mithila, where Euryale ferox seeds are carefully collected, cleaned, hand-roasted, and popped with traditional expertise.
+        </p>
+        <p class="text-base text-[#68756E] leading-relaxed">
+          Every pack is machine-screened and hand-graded for nut diameter, puffing density, and purity before being sealed into moisture-barrier pouches. We offer both Premium Jumbo-grade and Normal Everyday-grade fox nuts in 100g, 200g, and 250g packs.
+        </p>
+        <div class="pt-4">
+          <a href="/categories" class="bg-[#123B2A] text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider inline-block">Explore Our Pantry</a>
+        </div>
+      </main>
+      ${footerHtml}`;
+  }
+
+  // 4. Contact page
+  if (path === '/contact') {
+    return `
+      ${headerHtml}
+      <main class="py-12 px-6 max-w-[960px] mx-auto space-y-6">
+        <h1 class="font-serif text-3xl sm:text-5xl font-bold text-[#092218]">Contact Customer Care</h1>
+        <p class="text-base text-[#68756E] leading-relaxed">
+          We are here to help with your orders, bulk purchase enquiries, delivery tracking, and questions about our makhana harvest.
+        </p>
+        <div class="grid md:grid-cols-2 gap-6 pt-4">
+          <div class="bg-white p-6 rounded-2xl border border-[#E8DECB] space-y-2">
+            <h2 class="font-serif text-lg font-bold text-[#092218]">Email Assistance</h2>
+            <p class="text-sm text-[#68756E]">Send enquiries anytime to <a href="mailto:info@nyutaelite.com" class="font-semibold text-[#123B2A] underline">info@nyutaelite.com</a></p>
+          </div>
+          <div class="bg-white p-6 rounded-2xl border border-[#E8DECB] space-y-2">
+            <h2 class="font-serif text-lg font-bold text-[#092218]">Phone &amp; WhatsApp</h2>
+            <p class="text-sm text-[#68756E]">Support helpline: <a href="tel:+918102875852" class="font-semibold text-[#123B2A] underline">+91 81028 75852</a></p>
+          </div>
+        </div>
+      </main>
+      ${footerHtml}`;
+  }
+
+  // 5. FAQ page
+  if (path === '/faq') {
+    return `
+      ${headerHtml}
+      <main class="py-12 px-6 max-w-[960px] mx-auto space-y-6">
+        <h1 class="font-serif text-3xl sm:text-5xl font-bold text-[#092218]">Frequently Asked Questions</h1>
+        <div class="space-y-4 pt-4">
+          <div class="bg-white p-6 rounded-2xl border border-[#E8DECB] space-y-2">
+            <h2 class="font-serif text-base font-bold text-[#092218]">What is makhana (fox nuts)?</h2>
+            <p class="text-xs sm:text-sm text-[#68756E] leading-relaxed">Makhana is a natural plant-based food harvested from Euryale ferox water plants. Naturally light and crisp, it provides plant protein, dietary fiber, and essential minerals.</p>
+          </div>
+          <div class="bg-white p-6 rounded-2xl border border-[#E8DECB] space-y-2">
+            <h2 class="font-serif text-base font-bold text-[#092218]">What is the difference between Premium and Normal Quality?</h2>
+            <p class="text-xs sm:text-sm text-[#68756E] leading-relaxed">Premium Quality is selected for larger nut size (jumbo expansion), uniform round kernels, and minimal shell residue. Normal Quality is our everyday grade with slightly varied nut sizes, ideal for daily cooking and roasting.</p>
+          </div>
+          <div class="bg-white p-6 rounded-2xl border border-[#E8DECB] space-y-2">
+            <h2 class="font-serif text-base font-bold text-[#092218]">What pack sizes are available?</h2>
+            <p class="text-xs sm:text-sm text-[#68756E] leading-relaxed">Both grades are offered in 100g, 200g, and 250g pouches, sealed in air-tight packaging to preserve crispness.</p>
+          </div>
+          <div class="bg-white p-6 rounded-2xl border border-[#E8DECB] space-y-2">
+            <h2 class="font-serif text-base font-bold text-[#092218]">How long does delivery take?</h2>
+            <p class="text-xs sm:text-sm text-[#68756E] leading-relaxed">Orders are dispatched within 1–2 business days. Courier transit takes 5–7 business days to most serviceable Indian PIN codes.</p>
+          </div>
+        </div>
+      </main>
+      ${footerHtml}`;
+  }
+
+  // 6. Educational Guide 1: /learn/how-to-choose-good-quality-makhana
+  if (path === '/learn/how-to-choose-good-quality-makhana') {
+    return `
+      ${headerHtml}
+      <main class="py-12 px-6 max-w-[960px] mx-auto space-y-6">
+        <nav aria-label="Breadcrumb" class="text-xs text-[#68756E] flex items-center gap-2">
+          <a href="/" class="hover:underline">Home</a> &gt;
+          <a href="/categories" class="hover:underline">Buyer's Guide</a> &gt;
+          <span class="text-[#123B2A] font-semibold">How to Choose Good-Quality Makhana</span>
+        </nav>
+        <article class="space-y-4">
+          <h1 class="font-serif text-3xl sm:text-5xl font-bold text-[#092218]">How to Choose Good-Quality Makhana: Complete Buyer's Guide</h1>
+          <p class="text-base text-[#68756E] leading-relaxed">
+            When buying makhana (fox nuts) online, assessing quality requires examining kernel sizing, shell purity, color, and packaging moisture protection. In the Indian market, grading is historically based on the Suta measurement system, where 5+ Suta kernels represent jumbo expansion.
+          </p>
+          <div class="pt-4 space-y-3">
+            <a href="/categories?type=Premium" class="bg-[#123B2A] text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider inline-block">Shop Premium Makhana</a>
+            <a href="/categories?type=Normal" class="ml-3 border border-[#123B2A] text-[#123B2A] px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider inline-block">Shop Normal Makhana</a>
+          </div>
+          <div class="pt-6 border-t border-[#E8DECB] space-y-3">
+            <h2 class="font-serif text-xl font-bold text-[#092218]">Available Pack Sizes</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <a href="/products/makhana?sku=premium-100g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Premium 100g</p><p class="text-[#123B2A] font-semibold mt-1">₹160</p></a>
+              <a href="/products/makhana?sku=premium-200g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Premium 200g</p><p class="text-[#123B2A] font-semibold mt-1">₹310</p></a>
+              <a href="/products/makhana?sku=premium-250g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Premium 250g</p><p class="text-[#123B2A] font-semibold mt-1">₹380</p></a>
+              <a href="/products/makhana?sku=normal-100g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Normal 100g</p><p class="text-[#123B2A] font-semibold mt-1">₹120</p></a>
+              <a href="/products/makhana?sku=normal-200g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Normal 200g</p><p class="text-[#123B2A] font-semibold mt-1">₹230</p></a>
+              <a href="/products/makhana?sku=normal-250g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Normal 250g</p><p class="text-[#123B2A] font-semibold mt-1">₹280</p></a>
+            </div>
+          </div>
+          <div class="pt-4 border-t border-[#E8DECB]">
+            <p class="text-xs text-[#68756E] mb-2">Related article:</p>
+            <a href="/learn/makhana-benefits-health" class="text-xs font-bold text-[#123B2A] hover:underline">Makhana Benefits: 7 Reasons to Eat Fox Nuts Every Day →</a>
+          </div>
+        </article>
+      </main>
+      ${footerHtml}`;
+  }
+
+  // 7. Educational Guide 2: /learn/makhana-benefits-health
+  if (path === '/learn/makhana-benefits-health') {
+    return `
+      ${headerHtml}
+      <main class="py-12 px-6 max-w-[960px] mx-auto space-y-6">
+        <nav aria-label="Breadcrumb" class="text-xs text-[#68756E] flex items-center gap-2">
+          <a href="/" class="hover:underline">Home</a> &gt;
+          <a href="/categories" class="hover:underline">Nutrition Guide</a> &gt;
+          <span class="text-[#123B2A] font-semibold">Makhana Benefits</span>
+        </nav>
+        <article class="space-y-4">
+          <h1 class="font-serif text-3xl sm:text-5xl font-bold text-[#092218]">Makhana Benefits: 7 Reasons to Eat Fox Nuts Every Day</h1>
+          <p class="text-base text-[#68756E] leading-relaxed">
+            Makhana (Euryale ferox) is a nutrient-dense, naturally gluten-free snack harvested from Bihar. Rich in plant-based protein, dietary fiber, magnesium, and potassium, fox nuts offer clean satiety with low calorie density.
+          </p>
+          <div class="pt-4 space-y-3">
+            <a href="/categories?type=Premium" class="bg-[#123B2A] text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider inline-block">Shop Premium Makhana</a>
+            <a href="/categories?type=Normal" class="ml-3 border border-[#123B2A] text-[#123B2A] px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider inline-block">Shop Normal Makhana</a>
+          </div>
+          <div class="pt-6 border-t border-[#E8DECB] space-y-3">
+            <h2 class="font-serif text-xl font-bold text-[#092218]">Available Pack Sizes</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <a href="/products/makhana?sku=premium-100g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Premium 100g</p><p class="text-[#123B2A] font-semibold mt-1">₹160</p></a>
+              <a href="/products/makhana?sku=premium-200g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Premium 200g</p><p class="text-[#123B2A] font-semibold mt-1">₹310</p></a>
+              <a href="/products/makhana?sku=premium-250g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Premium 250g</p><p class="text-[#123B2A] font-semibold mt-1">₹380</p></a>
+              <a href="/products/makhana?sku=normal-100g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Normal 100g</p><p class="text-[#123B2A] font-semibold mt-1">₹120</p></a>
+              <a href="/products/makhana?sku=normal-200g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Normal 200g</p><p class="text-[#123B2A] font-semibold mt-1">₹230</p></a>
+              <a href="/products/makhana?sku=normal-250g" class="bg-white p-3 rounded-xl border border-[#E8DECB] text-xs hover:border-[#123B2A] block"><p class="font-bold text-[#092218]">Normal 250g</p><p class="text-[#123B2A] font-semibold mt-1">₹280</p></a>
+            </div>
+          </div>
+          <div class="pt-4 border-t border-[#E8DECB]">
+            <p class="text-xs text-[#68756E] mb-2">Related article:</p>
+            <a href="/learn/how-to-choose-good-quality-makhana" class="text-xs font-bold text-[#123B2A] hover:underline">How to Choose Good-Quality Makhana →</a>
+          </div>
+        </article>
+      </main>
+      ${footerHtml}`;
+  }
+
+  return null;
+}
+
+// ─── Inject SEO tags and pre-rendered body into HTML ──────────────────────────
+function injectSeo(html, seo, url) {
   // Replace <title>
   html = html.replace(
     /<title>[^<]*<\/title>/,
@@ -424,8 +818,13 @@ function injectSeo(html, seo) {
     `<meta name="twitter:image" content="${esc(seo.ogImage)}"`
   );
 
-  // Inject product JSON-LD blocks just before </head>
+  // Inject route-specific JSON-LD blocks just before </head>
   if (seo.jsonLd && seo.jsonLd.length > 0) {
+    // Strip static index.html fallback JSON-LD on route-specific requests so they don't duplicate
+    html = html.replace(/<script id="jsonld-organization"[\s\S]*?<\/script>\s*/, '');
+    html = html.replace(/<script id="jsonld-website"[\s\S]*?<\/script>\s*/, '');
+    html = html.replace(/<script id="jsonld-faq"[\s\S]*?<\/script>\s*/, '');
+
     const jsonLdScripts = seo.jsonLd
       .map(
         (obj) =>
@@ -433,6 +832,14 @@ function injectSeo(html, seo) {
       )
       .join('\n    ');
     html = html.replace('</head>', `  ${jsonLdScripts}\n  </head>`);
+  }
+
+  // Inject route-specific body if not homepage
+  if (url && url.pathname !== '/') {
+    const routeBody = renderRouteBody(url, seo);
+    if (routeBody) {
+      html = html.replace(/<div id="root">[\s\S]*?<\/div>/, `<div id="root">\n${routeBody}\n    </div>`);
+    }
   }
 
   return html;
@@ -454,16 +861,100 @@ function shouldInjectSeo(url, request) {
   return true;
 }
 
+// ─── Authoritative noindex route set ─────────────────────────────────────────
+const NOINDEX_PREFIXES = [
+  '/admin', '/cart', '/checkout', '/orders',
+  '/account', '/wishlist', '/login', '/register',
+  '/bulk-order/enquiry', '/api/',
+];
+function isNoindexRoute(pathname) {
+  return NOINDEX_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'));
+}
+
+// ─── Security and SEO response headers ───────────────────────────────────────
+// Applied to every HTML navigation response served from the edge.
+function addSecurityHeaders(headers, options = {}) {
+  const { noindex = false, canonical = null, isHtml = true } = options;
+
+  if (isHtml) {
+    // Prevent MIME-type sniffing
+    headers.set('X-Content-Type-Options', 'nosniff');
+    // Deny framing (clickjacking protection)
+    headers.set('X-Frame-Options', 'DENY');
+    // Strict referrer — send origin only on same-origin; no referrer cross-origin
+    headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    // Limit browser features not needed by this site
+    headers.set(
+      'Permissions-Policy',
+      'camera=(), microphone=(), geolocation=(), payment=(self)'
+    );
+    // Cache HTML for 60 s at edge, 0 s at browser (fresh navigation; 1-minute edge CDN window)
+    headers.set('Cache-Control', 'public, max-age=60, s-maxage=60, stale-while-revalidate=300');
+
+    // Belt-and-suspenders: add X-Robots-Tag on private routes
+    if (noindex) {
+      headers.set('X-Robots-Tag', 'noindex, nofollow');
+    }
+
+    // Inject Link: canonical HTTP header on indexable routes where we know the canonical
+    if (!noindex && canonical) {
+      headers.set('Link', `<${canonical}>; rel="canonical"`);
+    }
+  } else {
+    // Static assets: long-lived cache
+    headers.set('X-Content-Type-Options', 'nosniff');
+    headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+  }
+}
+
 // ─── Main fetch handler ────────────────────────────────────────────────────────
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // 1. Redirect www → apex (301 permanent)
+    // 1. Force HTTPS (301 permanent)
+    if (url.protocol === 'http:') {
+      const httpsUrl = new URL(request.url);
+      httpsUrl.protocol = 'https:';
+      return Response.redirect(httpsUrl.toString(), 301);
+    }
+
+    // 2. Redirect www → apex (301 permanent)
     if (url.hostname === 'www.nyutaelite.com') {
       const apexUrl = new URL(request.url);
       apexUrl.hostname = 'nyutaelite.com';
       return Response.redirect(apexUrl.toString(), 301);
+    }
+
+    // 3. Trailing slash normalization for non-root paths (e.g. /categories/ -> /categories)
+    if (url.pathname.length > 1 && url.pathname.endsWith('/')) {
+      const cleanPath = url.pathname.replace(/\/+$/, '');
+      const redirectUrl = new URL(`${url.origin}${cleanPath}${url.search}`);
+      return Response.redirect(redirectUrl.toString(), 301);
+    }
+
+    // 4. Policy direct route aliases (Edge 301 permanent redirects)
+    const policyRedirects = {
+      '/bulk-order': '/bulk-order/qualities',
+      '/shipping': '/about#shipping',
+      '/returns': '/about#refund',
+      '/refund': '/about#refund',
+      '/privacy': '/about#privacy',
+      '/terms': '/about#terms',
+      '/fssai': '/about#fssai',
+      '/grievance': '/about#grievance',
+      '/policies': '/about#shipping',
+    };
+    if (policyRedirects[url.pathname]) {
+      return Response.redirect(`${url.origin}${policyRedirects[url.pathname]}`, 301);
+    }
+
+    // 5. Alternative product path redirection: /products/:sku -> /products/makhana?sku=:sku
+    if (url.pathname.startsWith('/products/') && url.pathname !== '/products/makhana') {
+      const rawSlug = url.pathname.replace('/products/', '').toLowerCase();
+      if (PRODUCTS[rawSlug]) {
+        return Response.redirect(`${url.origin}/products/makhana?sku=${encodeURIComponent(rawSlug)}`, 301);
+      }
     }
 
     // 2. Proxy /api/* requests to the existing production API
@@ -539,21 +1030,31 @@ export default {
       res = await env.ASSETS.fetch(new Request(new URL('/index.html', request.url), request));
     }
 
+    const isHtmlResponse =
+      res.status === 200 && res.headers.get('Content-Type')?.includes('text/html');
+    const isStaticAsset = url.pathname.match(
+      /\.(js|css|png|jpg|jpeg|webp|svg|ico|woff2?|ttf|xml|txt|json|map)$/i
+    );
+    const noindex = isNoindexRoute(url.pathname);
+    const seo = !noindex && isHtmlResponse ? resolveSeoForRequest(url) : null;
+    const canonicalForHeader = seo?.canonical ?? null;
+
     // 4. Edge-side SEO injection for HTML navigation requests
-    if (
-      res.status === 200 &&
-      res.headers.get('Content-Type')?.includes('text/html') &&
-      shouldInjectSeo(url, request)
-    ) {
+    if (isHtmlResponse && shouldInjectSeo(url, request)) {
       try {
-        const seo  = resolveSeoForRequest(url);
-        const html = await res.text();
+        const seoData = seo ?? resolveSeoForRequest(url);
+        const html    = await res.text();
         // Only inject if we can identify the SPA shell (presence of id="root")
         if (html.includes('id="root"')) {
-          const injected = injectSeo(html, seo);
+          const injected   = injectSeo(html, seoData, url);
           const newHeaders = new Headers(res.headers);
           // Remove Content-Length since the body size has changed
           newHeaders.delete('Content-Length');
+          addSecurityHeaders(newHeaders, {
+            noindex,
+            canonical: canonicalForHeader,
+            isHtml: true,
+          });
           return new Response(injected, {
             status: res.status,
             statusText: res.statusText,
@@ -567,6 +1068,19 @@ export default {
       }
     }
 
-    return res;
+    // 5. Apply headers to all other responses (non-injected HTML + static assets)
+    const finalHeaders = new Headers(res.headers);
+    if (isHtmlResponse) {
+      // Non-SPA or fallback HTML (e.g. a direct /index.html fetch)
+      addSecurityHeaders(finalHeaders, { noindex, canonical: canonicalForHeader, isHtml: true });
+    } else if (isStaticAsset) {
+      addSecurityHeaders(finalHeaders, { isHtml: false });
+    }
+
+    return new Response(res.body, {
+      status: res.status,
+      statusText: res.statusText,
+      headers: finalHeaders,
+    });
   },
 };

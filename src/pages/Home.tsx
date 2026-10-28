@@ -34,12 +34,25 @@ import macroImage from '../assets/images/brand/makhana-macro.png';
 import featuredImage from '../assets/images/product-featured.png';
 import logoImage from '../assets/images/brand-emblem.png';
 import CategoryCard from '../components/CategoryCard';
+import { PRODUCTION_ORIGIN, DEFAULT_OG_IMAGE } from '../utils/seo';
 
 // ── Botanical SVG background decoration for the hero ──────────────
 export const seo = {
-  title: 'NYUTA ELITE Makhana – Premium Fox Nuts',
-  description:
-    'Shop NYUTA ELITE premium fox nuts (makhana) from Bihar. Hand‑sorted, air‑popped, 100 % natural snack for health & taste.',
+  title: 'NYUTAELITE | NYUTA ELITE MAKHANA – Premium Fox Nuts',
+  description: 'Shop NYUTA ELITE MAKHANA, premium fox nuts from Bihar. Explore available makhana packs in different sizes and grades for everyday snacking.',
+  canonicalUrl: `${PRODUCTION_ORIGIN}/`,
+  robots: 'index, follow',
+  ogType: 'website',
+  ogTitle: 'NYUTAELITE | NYUTA ELITE MAKHANA – Premium Fox Nuts',
+  ogDescription: 'Shop NYUTA ELITE MAKHANA, premium fox nuts from Bihar. Explore available makhana packs in different sizes and grades for everyday snacking.',
+  ogImage: DEFAULT_OG_IMAGE,
+  ogUrl: PRODUCTION_ORIGIN,
+  ogSiteName: 'NYUTA ELITE MAKHANA',
+  twitterCard: 'summary_large_image',
+  twitterTitle: 'NYUTAELITE | NYUTA ELITE MAKHANA – Premium Fox Nuts',
+  twitterDescription: 'Shop NYUTA ELITE MAKHANA, premium fox nuts from Bihar. Explore available makhana packs in different sizes and grades for everyday snacking.',
+  twitterImage: DEFAULT_OG_IMAGE,
+  jsonLd: [],
 };
 
 function HeroBotanicalPattern() {
@@ -696,13 +709,18 @@ export const Home: React.FC = () => {
               </div>
 
               {/* Headline */}
-              <h1 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold leading-[1.04] text-[#092218] tracking-tight hero-headline-animate">
+              <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold leading-[1.08] text-[#092218] tracking-tight hero-headline-animate">
                 NYUTA ELITE MAKHANA – Premium Fox Nuts from Bihar
               </h1>
 
-              {/* Description */}
-              <p className="text-base sm:text-xl leading-relaxed text-[#68756E] max-w-lg font-medium hero-desc-animate">
-                Discover NYUTA ELITE MAKHANA, crafted for mindful everyday snacking. Hand-sorted jumbo Bihar fox nuts from pristine freshwater ponds.
+              {/* Supporting headline */}
+              <p className="text-lg sm:text-2xl font-serif font-bold text-[#123B2A] tracking-tight hero-desc-animate">
+                Better Snacking Starts with Quality Makhana
+              </p>
+
+              {/* Introductory copy */}
+              <p className="text-sm sm:text-base leading-relaxed text-[#68756E] max-w-lg font-medium hero-desc-animate">
+                Discover NYUTA ELITE MAKHANA, a brand focused on makhana, also known as fox nuts. Explore our available products, compare pack sizes and grades, and choose the option that suits your snacking needs.
               </p>
 
               {/* CTA Buttons */}
@@ -1479,7 +1497,60 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* 10. FINAL BANNER CTA */}
+      {/* 10. CUSTOMER SERVICE & BUSINESS POLICIES */}
+      <section className="bg-[#FAF7EE] py-12 sm:py-16 border-b border-[#E8DECB]">
+        <div className="mx-auto max-w-[1280px] px-5 sm:px-8">
+          <div className="text-center max-w-xl mx-auto mb-10">
+            <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#C6A15B]">
+              SERVICE &amp; POLICIES
+            </span>
+            <h2 className="font-serif text-2xl sm:text-4xl font-bold text-[#092218] mt-1">
+              CUSTOMER CARE &amp; ORDER COMMITMENTS
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white p-6 rounded-2xl border border-[#E8DECB] shadow-xs space-y-2.5">
+              <div className="flex items-center gap-2.5 text-[#123B2A] font-bold text-sm">
+                <Truck className="w-5 h-5 text-[#C6A15B] shrink-0" />
+                <h3 className="font-serif text-base font-bold text-[#092218]">Pan-India Delivery</h3>
+              </div>
+              <p className="text-xs text-[#68756E] leading-relaxed">
+                Orders are packed and dispatched from Bihar within 1–2 business days. Estimated courier transit is 5–7 business days to serviceable Indian PIN codes.
+              </p>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl border border-[#E8DECB] shadow-xs space-y-2.5">
+              <div className="flex items-center gap-2.5 text-[#123B2A] font-bold text-sm">
+                <ShieldCheck className="w-5 h-5 text-[#C6A15B]" />
+                <h3 className="font-serif text-base font-bold text-[#092218]">Freshness &amp; Returns</h3>
+              </div>
+              <p className="text-xs text-[#68756E] leading-relaxed">
+                Sealed in food-grade, moisture-barrier pouches. If your order arrives damaged or defective, report within 48 hours for an approved replacement or refund.
+              </p>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl border border-[#E8DECB] shadow-xs space-y-2.5">
+              <div className="flex items-center gap-2.5 text-[#123B2A] font-bold text-sm">
+                <Package className="w-5 h-5 text-[#C6A15B] shrink-0" />
+                <h3 className="font-serif text-base font-bold text-[#092218]">Contact &amp; Assistance</h3>
+              </div>
+              <p className="text-xs text-[#68756E] leading-relaxed">
+                Have questions about our packs, bulk orders, or your shipment? Email{' '}
+                <a href="mailto:info@nyutaelite.com" className="font-semibold text-[#123B2A] underline underline-offset-2">
+                  info@nyutaelite.com
+                </a>{' '}
+                or visit our{' '}
+                <Link to="/contact" className="font-semibold text-[#123B2A] underline underline-offset-2">
+                  Contact Page
+                </Link>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 11. FINAL BANNER CTA */}
       <section className="relative bg-[#123B2A] text-white py-20 sm:py-28 overflow-hidden">
         <div
           className="absolute inset-0 opacity-15 pointer-events-none"

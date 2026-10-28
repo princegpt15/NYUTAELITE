@@ -3,18 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams, useParams, useLocation } from 'react-router-dom';
 import {
   ArrowLeft,
-  ShoppingBag,
-  ShieldCheck,
-  Truck,
   RefreshCw,
   Heart,
   Star,
-  Bell,
-  MessageSquare,
-  CheckCircle2,
-  Leaf,
-  Award,
-  Sparkles,
 } from 'lucide-react';
 import { type PantryProduct } from '../types';
 import { fetchProducts } from '../services/products';
@@ -36,15 +27,7 @@ import { resolveRouteSeo, applySeoToDocument, finalizeSeo } from '../utils/seo';
 import { Toast } from '../components/Toast';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { authService } from '../services/auth';
-// Helper to truncate long strings without cutting words in half.
-function truncate(text: string, max: number): string {
-  if (text.length <= max) return text;
-  const trimmed = text.slice(0, max);
-  const lastSpace = trimmed.lastIndexOf(' ');
-  return (lastSpace > 0 ? trimmed.slice(0, lastSpace) : trimmed) + '…';
-}
-
-import { ProductJsonLd } from '../components/ProductJsonLd';
+import defaultProductImage from '../assets/images/product-main.png';
 
 export const Product: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -110,65 +93,25 @@ export const Product: React.FC = () => {
   };
 
   useEffect(() => {
-  if (product) {
-    const rawSeo = resolveRouteSeo({
-      pathname: location.pathname,
-      search: location.search,
-      product,
-    });
-    const seo = finalizeSeo(rawSeo);
-    applySeoToDocument(seo);
-    trackViewItem(product, 1);
-    loadRetentionData(product.id);
-  }
-}, [product, location.pathname, location.search]);
     loadProduct();
   }, [sku]);
 
   useEffect(() => {
-  if (product) {
-    const rawSeo = resolveRouteSeo({
-      pathname: location.pathname,
-      search: location.search,
-      product,
-    });
-    const seo = finalizeSeo(rawSeo);
-    applySeoToDocument(seo);
-    trackViewItem(product, 1);
-    loadRetentionData(product.id);
-  }
-}, [product, location.pathname, location.search]);
     if (product) {
-  const rawSeo = resolveRouteSeo({
-    pathname: location.pathname,
-    search: location.search,
-    product,
-  });
-  const seo = {
-    ...rawSeo,
-    title: truncate(rawSeo.title, 60),
-    description: truncate(rawSeo.description, 160),
-  };
-  applySeoToDocument(seo);
-  trackViewItem(product, 1);
-  loadRetentionData(product.id);
-}
+      const rawSeo = resolveRouteSeo({
+        pathname: location.pathname,
+        search: location.search,
+        product,
+      });
+      const seo = finalizeSeo(rawSeo);
+      applySeoToDocument(seo);
+      trackViewItem(product, 1);
+      loadRetentionData(product.id);
+    }
   }, [product, location.pathname, location.search]);
 
   // Synchronize wishlisted status
   useEffect(() => {
-  if (product) {
-    const rawSeo = resolveRouteSeo({
-      pathname: location.pathname,
-      search: location.search,
-      product,
-    });
-    const seo = finalizeSeo(rawSeo);
-    applySeoToDocument(seo);
-    trackViewItem(product, 1);
-    loadRetentionData(product.id);
-  }
-}, [product, location.pathname, location.search]);
     if (!product) return;
     setIsWishlisted(wishlistService.isWishlisted(product.id));
     const unsub = wishlistService.subscribe(() => {
@@ -215,11 +158,6 @@ export const Product: React.FC = () => {
   const isOutOfStock = product ? product.stock <= 0 : false;
   const isLowStock = product ? product.stock > 0 && product.stock <= 20 : false;
 
-  const handleSelectVariant = (quality: string, weight: number) => {
-    const targetSku = `${quality.toLowerCase()}-${weight}g`;
-    navigate(`/products/makhana?sku=${targetSku}`);
-  };
-
   const handleAddToCart = (goToCart = false) => {
     if (!product || isOutOfStock) return;
     setIsAdding(true);
@@ -253,6 +191,9 @@ export const Product: React.FC = () => {
         stock: product.stock,
       });
       setIsWishlisted(nowSaved);
+      if (nowSaved) {
+        trackAddToWishlist(product);
+      }
       setToastMessage(nowSaved ? `Saved ${product.name} to your wishlist!` : `Removed ${product.name} from wishlist.`);
     } catch (err: any) {
       setToastMessage(err?.message || 'Could not update wishlist');
@@ -320,7 +261,6 @@ export const Product: React.FC = () => {
       <div className="bg-[#FCFAF5] min-h-screen py-16 flex items-center justify-center">
         <div className="text-center space-y-3">
           <RefreshCw className="w-8 h-8 text-[#C6A15B] animate-spin mx-auto" />
-          {product && <ProductJsonLd product={product} />}
         </div>
       </div>
     );
@@ -336,7 +276,6 @@ export const Product: React.FC = () => {
               {error ?? "We couldn't locate this specific makhana variant in our pantry."}
             </p>
           </div>
-          <ProductJsonLd product={product} />
           <Link
             to="/#pantry"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#123B2A] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#092218]"
@@ -363,8 +302,6 @@ export const Product: React.FC = () => {
             ]}
           />
         </div>
-        {/* Insert JSON‑LD once */}
-        <ProductJsonLd product={product} />
         <div className="flex items-center justify-between">
           <Link
             to="/#pantry"
@@ -461,6 +398,32 @@ export const Product: React.FC = () => {
                   )}
                   <span className="text-xs font-medium text-[#68756E]">(Inclusive of all taxes)</span>
                 </div>
+
+                {/* Product Description */}
+                <p className="text-sm text-[#68756E] leading-relaxed mt-4">
+                  {product.description}
+                </p>
+
+                {/* Product Specifications */}
+                <div className="grid grid-cols-2 gap-2.5 pt-4 mt-4 border-t border-[#E8DECB]/60 text-xs text-[#1C1C1C]">
+                  <div>
+                    <span className="font-bold text-[#123B2A]">Quality Grade: </span>
+                    <span className="text-[#68756E]">{product.quality} Hand-Sorted</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-[#123B2A]">Pack Size: </span>
+                    <span className="text-[#68756E]">{product.weightGrams}g Pouch</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-[#123B2A]">Harvest Origin: </span>
+                    <span className="text-[#68756E]">Mithila, Bihar</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-[#123B2A]">Packaging: </span>
+                    <span className="text-[#68756E]">Airtight Barrier</span>
+                  </div>
+                </div>
+
                 {/* Quantity Selector and Add to Cart */}
                 <div className="flex items-center gap-4 mt-6">
                   <div className="flex items-center border border-[#E8DECB] rounded-md overflow-hidden">
@@ -470,6 +433,47 @@ export const Product: React.FC = () => {
                   </div>
                   <button onClick={() => handleAddToCart()} disabled={isAdding || isOutOfStock} className="px-6 py-2 bg-[#123B2A] text-white rounded-lg hover:bg-[#092218] disabled:opacity-50">Add to Cart</button>
                   <button onClick={() => handleAddToCart(true)} disabled={isAdding || isOutOfStock} className="px-6 py-2 bg-[#C6A15B] text-white rounded-lg hover:bg-[#A58F3D] disabled:opacity-50">Buy Now</button>
+                </div>
+
+                {/* Available Pack Sizes & Grade Options (Crawlable Internal Links) */}
+                <div className="mt-6 pt-5 border-t border-[#E8DECB] space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold uppercase tracking-wider text-[#123B2A]">
+                      Available {product.quality} Grade Sizes:
+                    </span>
+                    <Link to="/categories" className="text-[#C6A15B] font-semibold hover:underline">
+                      View All Packs
+                    </Link>
+                  </div>
+                  <div className="flex flex-wrap gap-2.5">
+                    {[100, 200, 250].map((wt) => {
+                      const targetSku = `${product.quality.toLowerCase()}-${wt}g`;
+                      const isCurrent = product.weightGrams === wt;
+                      return (
+                        <Link
+                          key={wt}
+                          to={`/products/makhana?sku=${targetSku}`}
+                          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                            isCurrent
+                              ? 'bg-[#123B2A] text-white border-[#123B2A] shadow-xs'
+                              : 'bg-white text-[#1C1C1C] border-[#E8DECB] hover:border-[#123B2A]'
+                          }`}
+                        >
+                          {wt}g Pack
+                        </Link>
+                      );
+                    })}
+                  </div>
+
+                  <div className="pt-2 text-xs">
+                    <span className="text-[#68756E]">Looking for everyday snacking? </span>
+                    <Link
+                      to={`/products/makhana?sku=${product.quality === 'Premium' ? 'normal' : 'premium'}-${product.weightGrams}g`}
+                      className="text-[#123B2A] font-bold underline hover:text-[#C6A15B]"
+                    >
+                      Explore {product.quality === 'Premium' ? 'Normal Everyday' : 'Premium Jumbo'} Grade ({product.weightGrams}g)
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
@@ -483,6 +487,34 @@ export const Product: React.FC = () => {
             </button>
           </div>
         )}
+        {/* ── Internal Content Links: Articles relevant to this product ── */}
+        <section aria-label="Learn more about makhana" className="bg-[#F7F1E5] rounded-2xl p-6 border border-[#E8DECB] space-y-4">
+          <h2 className="font-serif text-lg font-bold text-[#092218]">Learn More About Makhana</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Link
+              to="/learn/how-to-choose-good-quality-makhana"
+              className="bg-white p-4 rounded-xl border border-[#E8DECB] hover:border-[#123B2A] transition-colors group block space-y-1"
+            >
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#C6A15B]">Buyer's Guide</span>
+              <p className="font-serif font-bold text-sm text-[#092218] group-hover:underline">How to Choose Good-Quality Makhana</p>
+              <p className="text-xs text-[#68756E]">Understand Suta sizing, unbleached sourcing, crispness checks, and storage tips.</p>
+            </Link>
+            <Link
+              to="/learn/makhana-benefits-health"
+              className="bg-white p-4 rounded-xl border border-[#E8DECB] hover:border-[#123B2A] transition-colors group block space-y-1"
+            >
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#C6A15B]">Nutrition & Lifestyle</span>
+              <p className="font-serif font-bold text-sm text-[#092218] group-hover:underline">Makhana Benefits: 7 Reasons to Eat Fox Nuts Every Day</p>
+              <p className="text-xs text-[#68756E]">Evidence-informed look at protein, fiber, magnesium, and heart health support.</p>
+            </Link>
+          </div>
+          <div className="pt-1 flex flex-wrap gap-3 text-xs">
+            <Link to="/categories" className="text-[#123B2A] font-bold hover:underline">← All Makhana Packs</Link>
+            <Link to="/faq" className="text-[#123B2A] font-bold hover:underline">FAQ — Shipping, Grades & Returns</Link>
+            <Link to="/bulk-order/qualities" className="text-[#123B2A] font-bold hover:underline">Bulk / Wholesale Orders</Link>
+          </div>
+        </section>
+
         {/* Reviews Section */}
         <section id="reviews-section" className="mt-12">
           <h2 className="text-2xl font-semibold mb-4">Customer Reviews</h2>

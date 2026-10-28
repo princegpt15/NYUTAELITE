@@ -520,6 +520,17 @@ export const HowToChooseMakhana: React.FC = () => {
                   <span>Our Sourcing Story</span>
                 </Link>
               </div>
+              {/* Cross-article link */}
+              <div className="mt-4 pt-4 border-t border-[#C6A15B]/30">
+                <p className="text-xs text-[#D5DED6] mb-2">Related guide:</p>
+                <Link
+                  to="/learn/makhana-benefits-health"
+                  className="inline-flex items-center gap-2 text-xs font-bold text-[#C6A15B] hover:underline"
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>Makhana Benefits: 7 Reasons to Eat Fox Nuts Every Day →</span>
+                </Link>
+              </div>
             </section>
           </main>
 
@@ -541,13 +552,14 @@ export const HowToChooseMakhana: React.FC = () => {
                     <span className="text-xs font-bold text-[#C6A15B]">From ₹160</span>
                   </div>
                   <p className="text-[11px] text-[#68756E]">5+ Suta (~15–22+ mm). Ideal for ghee roasting.</p>
-                  <Link
-                    to="/products/makhana?sku=premium-100g"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#123B2A] hover:underline"
-                  >
-                    <span>View Premium Pack</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </Link>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {[['100g','premium-100g'],['200g','premium-200g'],['250g','premium-250g']].map(([label, sku]) => (
+                      <Link key={sku} to={`/products/makhana?sku=${sku}`}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-[#123B2A] bg-[#F7F1E5] px-2 py-1 rounded-lg border border-[#E8DECB] hover:border-[#123B2A]">
+                        {label}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-[#FCFAF5] border border-[#E8DECB] space-y-2">
@@ -556,13 +568,14 @@ export const HowToChooseMakhana: React.FC = () => {
                     <span className="text-xs font-bold text-[#C6A15B]">From ₹120</span>
                   </div>
                   <p className="text-[11px] text-[#68756E]">4+ Suta (~12–14 mm). Ideal for daily cooking.</p>
-                  <Link
-                    to="/products/makhana?sku=normal-100g"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#123B2A] hover:underline"
-                  >
-                    <span>View Normal Pack</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </Link>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {[['100g','normal-100g'],['200g','normal-200g'],['250g','normal-250g']].map(([label, sku]) => (
+                      <Link key={sku} to={`/products/makhana?sku=${sku}`}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-[#123B2A] bg-[#F7F1E5] px-2 py-1 rounded-lg border border-[#E8DECB] hover:border-[#123B2A]">
+                        {label}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               </div>
 

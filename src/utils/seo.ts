@@ -54,8 +54,6 @@ function getGoogleSiteVerificationToken(): string {
   }
   return '';
 }
-  // Existing implementation unchanged
-}
 
 // Helper to truncate long strings without cutting words.
 function truncate(text: string, max: number): string {
@@ -71,31 +69,6 @@ export function finalizeSeo(metadata: RouteSeoMetadata): RouteSeoMetadata {
     title: truncate(metadata.title, 60),
     description: truncate(metadata.description, 160),
   };
-}
-(metadata: RouteSeoMetadata): RouteSeoMetadata {
-  return {
-    ...metadata,
-    title: truncate(metadata.title, 60),
-    description: truncate(metadata.description, 160),
-  };
-}
-  try {
-    const metaEnv = (import.meta as any)?.env;
-    if (metaEnv && typeof metaEnv.VITE_GOOGLE_SITE_VERIFICATION === 'string') {
-      return metaEnv.VITE_GOOGLE_SITE_VERIFICATION.trim();
-    }
-  } catch {
-    // ignore
-  }
-  try {
-    const nodeEnv = (globalThis as any)?.process?.env;
-    if (nodeEnv && typeof nodeEnv.VITE_GOOGLE_SITE_VERIFICATION === 'string') {
-      return nodeEnv.VITE_GOOGLE_SITE_VERIFICATION.trim();
-    }
-  } catch {
-    // ignore
-  }
-  return '';
 }
 
 /**
@@ -137,7 +110,6 @@ export function buildOrganizationJsonLd(): Record<string, any> {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    // AUDIT FIX F8: Use BRAND_NAME constant for consistency
     name: 'NYUTA ELITE MAKHANA',
     alternateName: ['NYUTAELITE', 'NYUTA ELITE'],
     url: `${PRODUCTION_ORIGIN}/`,
@@ -148,9 +120,16 @@ export function buildOrganizationJsonLd(): Record<string, any> {
       height: 512,
     },
     description:
-      'NYUTAELITE is a premium Indian makhana brand offering handpicked fox nuts from Bihar. Available online in 100g, 200g, and 250g packs — Premium and Normal grade.',
+      'NYUTA ELITE MAKHANA is a premium Indian makhana brand offering handpicked fox nuts from Bihar. Available online in 100g, 200g, and 250g packs — Premium and Normal grade.',
     areaServed: 'IN',
-    sameAs: [],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      telephone: '+918102875852',
+      contactType: 'customer service',
+      areaServed: 'IN',
+      availableLanguage: ['en', 'hi'],
+      email: 'info@nyutaelite.com',
+    },
   };
 }
 
@@ -158,17 +137,9 @@ export function buildWebSiteJsonLd(): Record<string, any> {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: SITE_NAME,
-    alternateName: BRAND_NAME,
+    name: 'NYUTA ELITE MAKHANA',
+    alternateName: ['NYUTAELITE', 'NYUTA ELITE'],
     url: `${PRODUCTION_ORIGIN}/`,
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: {
-        '@type': 'EntryPoint',
-        urlTemplate: `${PRODUCTION_ORIGIN}/categories?q={search_term_string}`,
-      },
-      'query-input': 'required name=search_term_string',
-    },
   };
 }
 
@@ -210,10 +181,10 @@ export function buildProductJsonLd(
     canonicalUrl ||
     `${PRODUCTION_ORIGIN}/products/makhana?sku=${encodeURIComponent(canonicalSkuId)}`;
 
-  // AUDIT FIX F7: Concise, non-keyword-stuffed product name
-  const fullProductName = `${BRAND_NAME} ${product.name} ${product.weightGrams}g`;
+  // Concise, non-keyword-stuffed product name
+  const fullProductName = `NYUTA ELITE Makhana – ${product.quality} ${product.weightGrams}g`;
 
-  // AUDIT FIX F6: Use actual product image URL, not the site logo
+  // Use actual product image URL, not the site logo
   const imageUrl = toAbsoluteCanonicalImageUrl(product.image);
 
   return {
@@ -222,7 +193,7 @@ export function buildProductJsonLd(
     name: fullProductName,
     description:
       product.description ||
-      `${product.weightGrams}g pouch of ${BRAND_NAME} ${product.quality} Grade Bihar makhana (fox nuts).`,
+      `${product.weightGrams}g pouch of NYUTA ELITE ${product.quality} Grade Bihar makhana (fox nuts).`,
     image: [imageUrl],
     sku: product.sku || canonicalSkuId,
     // AUDIT FIX F8: Brand name is now NYUTAELITE
@@ -475,8 +446,8 @@ export function resolveRouteSeo(
     if (matchedProduct) {
       const canonicalSku = `${matchedProduct.quality.toLowerCase()}-${matchedProduct.weightGrams}g`;
       const canonicalUrl = `${PRODUCTION_ORIGIN}/products/makhana?sku=${canonicalSku}`;
-      const title = `Buy ${matchedProduct.name} ${matchedProduct.weightGrams}g Online | ${matchedProduct.quality} Grade Bihar Fox Nuts | ${SITE_NAME}`;
-      const description = `${matchedProduct.description} Buy authentic ${matchedProduct.weightGrams}g ${matchedProduct.quality} Grade Bihar makhana (SKU: ${matchedProduct.sku}) at \u20b9${matchedProduct.price}. Freshly packed with pan-India delivery.`;
+      const title = `NYUTA ELITE Makhana – ${matchedProduct.quality} ${matchedProduct.weightGrams}g | Buy Online`;
+      const description = `Shop NYUTA ELITE ${matchedProduct.quality} Makhana (${matchedProduct.weightGrams}g). Handpicked Bihar fox nuts at \u20b9${matchedProduct.price}. Freshly packed in airtight pouches with pan-India shipping.`;
       // AUDIT FIX F6: Use actual product image for OG, not the site logo
       const ogImage = toAbsoluteCanonicalImageUrl(matchedProduct.image);
 
@@ -497,12 +468,11 @@ export function resolveRouteSeo(
         twitterImage: ogImage,
         ...(verificationToken ? { googleSiteVerification: verificationToken } : {}),
         jsonLd: [
-          buildOrganizationJsonLd(),
           buildBreadcrumbJsonLd([
             { name: 'Home', url: `${PRODUCTION_ORIGIN}/` },
-            { name: 'Makhana Collection', url: `${PRODUCTION_ORIGIN}/products/makhana` },
+            { name: 'Shop Makhana', url: `${PRODUCTION_ORIGIN}/categories` },
             {
-              name: `${matchedProduct.name} (${matchedProduct.weightGrams}g)`,
+              name: `NYUTA ELITE Makhana – ${matchedProduct.quality} ${matchedProduct.weightGrams}g`,
               url: canonicalUrl,
             },
           ]),
@@ -533,10 +503,9 @@ export function resolveRouteSeo(
       twitterImage: DEFAULT_OG_IMAGE,
       ...(verificationToken ? { googleSiteVerification: verificationToken } : {}),
       jsonLd: [
-        buildOrganizationJsonLd(),
         buildBreadcrumbJsonLd([
           { name: 'Home', url: `${PRODUCTION_ORIGIN}/` },
-          { name: 'Makhana Collection', url: canonicalUrl },
+          { name: 'Shop Makhana', url: canonicalUrl },
         ]),
       ],
     };
@@ -564,13 +533,7 @@ export function resolveRouteSeo(
       twitterDescription: description,
       twitterImage: DEFAULT_OG_IMAGE,
       ...(verificationToken ? { googleSiteVerification: verificationToken } : {}),
-      jsonLd: [
-        buildOrganizationJsonLd(),
-        buildBreadcrumbJsonLd([
-          { name: 'Home', url: `${PRODUCTION_ORIGIN}/` },
-          { name: 'About Us', url: canonicalUrl },
-        ]),
-      ],
+      jsonLd: [],
     };
   }
 
@@ -595,14 +558,7 @@ export function resolveRouteSeo(
       twitterDescription: description,
       twitterImage: DEFAULT_OG_IMAGE,
       ...(verificationToken ? { googleSiteVerification: verificationToken } : {}),
-      jsonLd: [
-        buildOrganizationJsonLd(),
-        buildBreadcrumbJsonLd([
-          { name: 'Home', url: `${PRODUCTION_ORIGIN}/` },
-          { name: 'FAQ', url: canonicalUrl },
-        ]),
-        buildFaqPageJsonLd(),
-      ],
+      jsonLd: [buildFaqPageJsonLd()],
     };
   }
 
@@ -627,17 +583,77 @@ export function resolveRouteSeo(
       twitterDescription: description,
       twitterImage: DEFAULT_OG_IMAGE,
       ...(verificationToken ? { googleSiteVerification: verificationToken } : {}),
-      jsonLd: [
-        buildOrganizationJsonLd(),
-        buildBreadcrumbJsonLd([
-          { name: 'Home', url: `${PRODUCTION_ORIGIN}/` },
-          { name: 'Contact Us', url: canonicalUrl },
-        ]),
-      ],
+      jsonLd: [],
     };
   }
 
   if (normalizedPath === '/categories') {
+    const rawType = searchParams.get('type')?.toLowerCase();
+    if (rawType === 'premium') {
+      const canonicalUrl = `${PRODUCTION_ORIGIN}/categories?type=Premium`;
+      const title = `Buy Premium Jumbo Makhana Online (100g, 200g, 250g) | ${SITE_NAME}`;
+      const description =
+        `Shop NYUTA ELITE Premium Grade Bihar Makhana. Handpicked jumbo-sized fox nuts with crisp crunch in 100g, 200g, and 250g pouches. Free pan-India delivery.`;
+      const ogImage = `${PRODUCTION_ORIGIN}/images/products/premium-makhana-100g.png`;
+      return {
+        title,
+        description,
+        canonicalUrl,
+        robots: 'index, follow',
+        ogType: 'website',
+        ogTitle: title,
+        ogDescription: description,
+        ogImage,
+        ogUrl: canonicalUrl,
+        ogSiteName: SITE_NAME,
+        twitterCard: 'summary_large_image',
+        twitterTitle: title,
+        twitterDescription: description,
+        twitterImage: ogImage,
+        ...(verificationToken ? { googleSiteVerification: verificationToken } : {}),
+        jsonLd: [
+          buildBreadcrumbJsonLd([
+            { name: 'Home', url: `${PRODUCTION_ORIGIN}/` },
+            { name: 'Shop All Makhana', url: `${PRODUCTION_ORIGIN}/categories` },
+            { name: 'Premium Makhana', url: canonicalUrl },
+          ]),
+        ],
+      };
+    }
+
+    if (rawType === 'normal') {
+      const canonicalUrl = `${PRODUCTION_ORIGIN}/categories?type=Normal`;
+      const title = `Normal Everyday Makhana Packs (100g, 200g, 250g) | ${SITE_NAME}`;
+      const description =
+        `Shop NYUTA ELITE Normal Grade Bihar Makhana. Wholesome everyday fox nuts perfect for daily roasting, snacks, and cooking in 100g, 200g, and 250g pouches.`;
+      const ogImage = `${PRODUCTION_ORIGIN}/images/products/normal-makhana-100g.png`;
+      return {
+        title,
+        description,
+        canonicalUrl,
+        robots: 'index, follow',
+        ogType: 'website',
+        ogTitle: title,
+        ogDescription: description,
+        ogImage,
+        ogUrl: canonicalUrl,
+        ogSiteName: SITE_NAME,
+        twitterCard: 'summary_large_image',
+        twitterTitle: title,
+        twitterDescription: description,
+        twitterImage: ogImage,
+        ...(verificationToken ? { googleSiteVerification: verificationToken } : {}),
+        jsonLd: [
+          buildBreadcrumbJsonLd([
+            { name: 'Home', url: `${PRODUCTION_ORIGIN}/` },
+            { name: 'Shop All Makhana', url: `${PRODUCTION_ORIGIN}/categories` },
+            { name: 'Normal Makhana', url: canonicalUrl },
+          ]),
+        ],
+      };
+    }
+
+    // Default: All Makhana Packs (strips sorting/filtering/tracking noise from canonical)
     const canonicalUrl = `${PRODUCTION_ORIGIN}/categories`;
     const title = `All Makhana Packs | Shop Bihar Fox Nuts Online | ${SITE_NAME}`;
     const description =
@@ -659,10 +675,9 @@ export function resolveRouteSeo(
       twitterImage: DEFAULT_OG_IMAGE,
       ...(verificationToken ? { googleSiteVerification: verificationToken } : {}),
       jsonLd: [
-        buildOrganizationJsonLd(),
         buildBreadcrumbJsonLd([
           { name: 'Home', url: `${PRODUCTION_ORIGIN}/` },
-          { name: 'All Packs', url: canonicalUrl },
+          { name: 'Shop All Makhana', url: canonicalUrl },
         ]),
       ],
     };
@@ -689,13 +704,7 @@ export function resolveRouteSeo(
       twitterDescription: description,
       twitterImage: DEFAULT_OG_IMAGE,
       ...(verificationToken ? { googleSiteVerification: verificationToken } : {}),
-      jsonLd: [
-        buildOrganizationJsonLd(),
-        buildBreadcrumbJsonLd([
-          { name: 'Home', url: `${PRODUCTION_ORIGIN}/` },
-          { name: 'Bulk Wholesale Makhana', url: canonicalUrl },
-        ]),
-      ],
+      jsonLd: [],
     };
   }
 
@@ -746,10 +755,9 @@ export function resolveRouteSeo(
       twitterImage: ogImage,
       ...(verificationToken ? { googleSiteVerification: verificationToken } : {}),
       jsonLd: [
-        buildOrganizationJsonLd(),
         buildBreadcrumbJsonLd([
           { name: 'Home', url: `${PRODUCTION_ORIGIN}/` },
-          { name: 'Learn', url: `${PRODUCTION_ORIGIN}/categories` },
+          { name: "Buyer's Guide", url: `${PRODUCTION_ORIGIN}/categories` },
           { name: 'How to Choose Good-Quality Makhana', url: canonicalUrl },
         ]),
         articleJsonLd,
@@ -804,10 +812,9 @@ export function resolveRouteSeo(
       twitterImage: ogImage,
       ...(verificationToken ? { googleSiteVerification: verificationToken } : {}),
       jsonLd: [
-        buildOrganizationJsonLd(),
         buildBreadcrumbJsonLd([
           { name: 'Home', url: `${PRODUCTION_ORIGIN}/` },
-          { name: 'Learn', url: `${PRODUCTION_ORIGIN}/categories` },
+          { name: 'Nutrition Guide', url: `${PRODUCTION_ORIGIN}/categories` },
           { name: 'Makhana Benefits', url: canonicalUrl },
         ]),
         articleJsonLd,
@@ -817,9 +824,9 @@ export function resolveRouteSeo(
 
   // 5. Default / Homepage (/)
   const canonicalUrl = `${PRODUCTION_ORIGIN}/`;
-  const title = 'NYUTA ELITE MAKHANA | Premium Makhana & Fox Nuts';
+  const title = 'NYUTAELITE | NYUTA ELITE MAKHANA – Premium Fox Nuts';
   const description =
-    'Discover NYUTA ELITE MAKHANA and explore our range of makhana (fox nuts). Find product details, pack sizes, quality information, and ordering options.';
+    'Shop NYUTA ELITE MAKHANA, premium fox nuts from Bihar. Explore available makhana packs in different sizes and grades for everyday snacking.';
   return {
     title,
     description,
@@ -901,16 +908,14 @@ export function applySeoToDocument(seo: RouteSeoMetadata): void {
       upsertMetaTag('name', 'google-site-verification', seo.googleSiteVerification);
     }
 
-    // Dynamic JSON-LD script management
-    const existingDynamicScripts = document.head.querySelectorAll(
-      'script[data-nyuta-seo-jsonld="true"]'
+    // Dynamic JSON-LD script management: clean up both static and previously injected scripts
+    const existingScripts = document.head.querySelectorAll(
+      'script[data-nyuta-seo-jsonld="true"], #jsonld-organization, #jsonld-website, #jsonld-faq, script[data-edge-injected="true"]'
     );
-    existingDynamicScripts.forEach((node) => node.parentNode?.removeChild(node));
+    existingScripts.forEach((node) => node.parentNode?.removeChild(node));
 
-    // Skip injecting Product JSON‑LD here – the <ProductJsonLd> component handles it.
+    // Inject authoritative JSON-LD blocks for current route
     for (const schemaObj of seo.jsonLd) {
-      // Exclude Product schema; it will be rendered by ProductJsonLd component.
-      if ((schemaObj as any)['@type'] === 'Product') continue;
       const script = document.createElement('script');
       script.type = 'application/ld+json';
       script.setAttribute('data-nyuta-seo-jsonld', 'true');

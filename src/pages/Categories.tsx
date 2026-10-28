@@ -79,10 +79,24 @@ export const Categories: React.FC = () => {
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         {/* Breadcrumb Navigation */}
         <Breadcrumb
-          items={[
-            { label: 'Home', to: '/' },
-            { label: 'Shop All Makhana' },
-          ]}
+          items={
+            selectedQuality === 'Premium'
+              ? [
+                  { label: 'Home', to: '/' },
+                  { label: 'Shop All Makhana', to: '/categories' },
+                  { label: 'Premium Makhana' },
+                ]
+              : selectedQuality === 'Normal'
+              ? [
+                  { label: 'Home', to: '/' },
+                  { label: 'Shop All Makhana', to: '/categories' },
+                  { label: 'Normal Makhana' },
+                ]
+              : [
+                  { label: 'Home', to: '/' },
+                  { label: 'Shop All Makhana' },
+                ]
+          }
         />
 
         {/* Header Section */}
@@ -101,10 +115,18 @@ export const Categories: React.FC = () => {
               <span>SHOP BY GRADE &amp; PACK SIZE</span>
             </span>
             <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-black text-[#FCFAF5]">
-              Buy Fox Nuts Online — All Makhana Packs & Sizes
+              {selectedQuality === 'Premium'
+                ? 'Buy Premium Jumbo Makhana Online'
+                : selectedQuality === 'Normal'
+                ? 'Buy Normal Everyday Makhana Online'
+                : 'Buy Fox Nuts Online — All Makhana Packs & Sizes'}
             </h1>
             <p className="text-xs sm:text-sm font-medium text-[#D5DED6] leading-relaxed">
-              From hand-sorted Jumbo Premium grade to versatile everyday Normal harvest, choose the exact crunch and pouch size tailored to your pantry.
+              {selectedQuality === 'Premium'
+                ? 'Handpicked jumbo-grade Bihar fox nuts with uniform size, pristine crisp crunch, and minimal shell residue. Available in 100g, 200g, and 250g pouches.'
+                : selectedQuality === 'Normal'
+                ? 'Wholesome, naturally popped everyday Bihar fox nuts. Perfect for daily roasting, home spicing, and cooking in 100g, 200g, and 250g pouches.'
+                : 'From hand-sorted Jumbo Premium grade to versatile everyday Normal harvest, choose the exact crunch and pouch size tailored to your pantry.'}
             </p>
           </div>
 
@@ -334,6 +356,34 @@ export const Categories: React.FC = () => {
           </div>
         )}
       </div>
+
+        {/* ── Internal Content Links: Learn articles relevant to makhana shoppers ── */}
+        <section aria-label="Makhana buyer resources" className="bg-[#F7F1E5] rounded-2xl p-6 border border-[#E8DECB] space-y-4">
+          <h2 className="font-serif text-lg font-bold text-[#092218]">Helpful Makhana Resources</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <a
+              href="/learn/how-to-choose-good-quality-makhana"
+              className="bg-white p-4 rounded-xl border border-[#E8DECB] hover:border-[#123B2A] transition-colors group block space-y-1"
+            >
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#C6A15B]">Buyer's Guide</span>
+              <p className="font-serif font-bold text-sm text-[#092218] group-hover:underline">How to Choose Good-Quality Makhana</p>
+              <p className="text-xs text-[#68756E]">Suta sizing explained, unbleached vs bleached fox nuts, and storage tips.</p>
+            </a>
+            <a
+              href="/learn/makhana-benefits-health"
+              className="bg-white p-4 rounded-xl border border-[#E8DECB] hover:border-[#123B2A] transition-colors group block space-y-1"
+            >
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#C6A15B]">Nutrition & Lifestyle</span>
+              <p className="font-serif font-bold text-sm text-[#092218] group-hover:underline">Makhana Benefits: 7 Reasons to Eat Fox Nuts Every Day</p>
+              <p className="text-xs text-[#68756E]">Evidence-informed look at protein, fiber, magnesium, and heart health.</p>
+            </a>
+          </div>
+          <div className="pt-1 flex flex-wrap gap-3 text-xs">
+            <a href="/faq" className="text-[#123B2A] font-bold hover:underline">FAQ — Delivery, Grades & Returns</a>
+            <a href="/bulk-order/qualities" className="text-[#123B2A] font-bold hover:underline">Bulk / Wholesale Orders</a>
+            <a href="/about" className="text-[#123B2A] font-bold hover:underline">About NYUTA ELITE MAKHANA</a>
+          </div>
+        </section>
 
       {toastMsg && <Toast message={toastMsg} onClose={() => setToastMsg(null)} />}
     </div>

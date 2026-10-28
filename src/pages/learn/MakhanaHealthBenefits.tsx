@@ -703,19 +703,38 @@ export const MakhanaHealthBenefits: React.FC = () => {
                 density, and a flavonoid profile that includes kaempferol — all in a clean, whole-food snack rooted in
                 Bihar's centuries-old farming tradition.
               </p>
-              <div className="pt-2 flex flex-wrap gap-4">
+              {/* All 6 pack sizes */}
+              <div className="pt-2 space-y-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-[#C6A15B]">Choose Your Pack</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {([
+                    ['Premium 100g', '/products/makhana?sku=premium-100g', '₹160'],
+                    ['Premium 200g', '/products/makhana?sku=premium-200g', '₹310'],
+                    ['Premium 250g', '/products/makhana?sku=premium-250g', '₹380'],
+                    ['Normal 100g',  '/products/makhana?sku=normal-100g',  '₹120'],
+                    ['Normal 200g',  '/products/makhana?sku=normal-200g',  '₹230'],
+                    ['Normal 250g',  '/products/makhana?sku=normal-250g',  '₹280'],
+                  ] as [string, string, string][]).map(([label, href, price]) => (
+                    <Link
+                      key={href}
+                      to={href}
+                      className="bg-[#1A4D38] border border-[#C6A15B]/30 rounded-xl p-2.5 text-center hover:border-[#C6A15B] transition-colors"
+                    >
+                      <p className="text-[10px] font-bold text-[#D5DED6] uppercase tracking-wide">{label}</p>
+                      <p className="text-xs font-bold text-[#C6A15B] mt-0.5">{price}</p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+              {/* Cross-article link */}
+              <div className="mt-4 pt-4 border-t border-[#C6A15B]/30">
+                <p className="text-xs text-[#D5DED6] mb-2">Related guide:</p>
                 <Link
-                  to="/products/makhana?sku=premium-100g"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#C6A15B] text-[#092218] text-xs font-bold uppercase tracking-wider hover:bg-[#b5924d] transition-colors"
+                  to="/learn/how-to-choose-good-quality-makhana"
+                  className="inline-flex items-center gap-2 text-xs font-bold text-[#C6A15B] hover:underline"
                 >
-                  <span>Shop Premium — ₹160</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-                <Link
-                  to="/products/makhana?sku=normal-100g"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#1A4D38] border border-[#C6A15B]/30 text-white text-xs font-bold uppercase tracking-wider hover:bg-[#092218] transition-colors"
-                >
-                  <span>Shop Normal — ₹120</span>
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>How to Choose Good-Quality Makhana →</span>
                 </Link>
               </div>
             </section>
@@ -771,13 +790,14 @@ export const MakhanaHealthBenefits: React.FC = () => {
                     <span className="text-xs font-bold text-[#C6A15B]">From ₹120</span>
                   </div>
                   <p className="text-[11px] text-[#68756E]">4+ Suta (~12–14 mm). Ideal for daily cooking.</p>
-                  <Link
-                    to="/products/makhana?sku=normal-100g"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#123B2A] hover:underline"
-                  >
-                    <span>View Normal Pack</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </Link>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {[['100g','normal-100g'],['200g','normal-200g'],['250g','normal-250g']].map(([label, sku]) => (
+                      <Link key={sku} to={`/products/makhana?sku=${sku}`}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-[#123B2A] bg-[#F7F1E5] px-2 py-1 rounded-lg border border-[#E8DECB] hover:border-[#123B2A]">
+                        {label}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               </div>
 

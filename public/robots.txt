@@ -6,6 +6,7 @@ Allow: /about
 Allow: /faq
 Allow: /contact
 Allow: /bulk-order/qualities
+Allow: /learn/
 
 Disallow: /admin/
 Disallow: /cart
@@ -20,5 +21,6 @@ Disallow: /bulk-order/enquiry
 
 # Allow public crawling with canonical consolidation
 # Private transactional routes are disallowed above
+# /learn/ articles are explicitly allowed for crawling
 
 Sitemap: https://nyutaelite.com/sitemap.xml
