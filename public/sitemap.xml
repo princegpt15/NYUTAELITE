@@ -18,21 +18,6 @@
     <lastmod>2026-10-28</lastmod>
   </url>
 
-  <!-- Category: Premium Jumbo Makhana -->
-  <url>
-    <loc>https://nyutaelite.com/categories?type=Premium</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-    <lastmod>2026-10-28</lastmod>
-  </url>
-
-  <!-- Category: Normal Everyday Makhana -->
-  <url>
-    <loc>https://nyutaelite.com/categories?type=Normal</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-    <lastmod>2026-10-28</lastmod>
-  </url>
 
   <!-- Primary Makhana Product Collection Page -->
   <url>

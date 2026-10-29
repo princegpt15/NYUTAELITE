@@ -38,9 +38,9 @@ console.log('\n╔════════════════════�
 console.log('║  PHASE 2 — Homepage SEO Metadata                        ║');
 console.log('╚══════════════════════════════════════════════════════════╝');
 
-// index.html title — brand-name-first format (updated SEO investigation fix)
-ok('Title: NYUTA ELITE MAKHANA | Premium Makhana & Fox Nuts from Bihar',
-  indexHtml.includes('<title>NYUTA ELITE MAKHANA | Premium Makhana') &&
+// index.html title — brand-name-first format with NYUTAELITE token (updated SEO investigation fix)
+ok('Title: NYUTA ELITE MAKHANA (NYUTAELITE) | Premium Fox Nuts from Bihar',
+  indexHtml.includes('<title>NYUTA ELITE MAKHANA (NYUTAELITE)') &&
   indexHtml.includes('Fox Nuts from Bihar</title>'));
 
 // Meta description — specific with pack sizes and FSSAI
@@ -57,7 +57,7 @@ ok('robots = index, follow',
 
 // OG title
 ok('og:title matches page title',
-  indexHtml.includes('og:title" content="NYUTA ELITE MAKHANA | Premium Makhana'));
+  indexHtml.includes('og:title" content="NYUTA ELITE MAKHANA (NYUTAELITE)'));
 
 // OG description
 ok('og:description set',
@@ -112,7 +112,7 @@ ok(`Only ONE title tag in index.html (found ${titleCount})`,
 
 // seo.ts homepage title
 ok('seo.ts homepage title matches',
-  seoTs.includes("'NYUTA ELITE MAKHANA | Premium Makhana"));
+  seoTs.includes("'NYUTA ELITE MAKHANA (NYUTAELITE)"));
 
 // seo.ts homepage canonical
 ok('seo.ts homepage canonical = https://nyutaelite.com/',
@@ -137,7 +137,7 @@ ok('Supporting headline present: Better Snacking Starts with Quality Makhana',
 
 // Intro copy
 ok('Intro copy present',
-  indexHtml.includes('Discover NYUTA ELITE MAKHANA, a brand focused on makhana'));
+  indexHtml.includes('NYUTA ELITE MAKHANA, also known as NYUTAELITE'));
 
 // Product links in static prerender (all 6 SKUs)
 const skus = ['premium-100g','premium-200g','premium-250g','normal-100g','normal-200g','normal-250g'];
@@ -333,12 +333,12 @@ ok('seo.ts: categories?type=Premium has distinct canonical',
 ok('seo.ts: categories?type=Normal has distinct canonical',
   seoTs.includes('categories?type=Normal'));
 
-// Sitemap has filter URLs
-ok('sitemap.xml: categories?type=Premium in sitemap',
-  sitemapXml.includes('categories?type=Premium'));
+// Sitemap does NOT have non-canonical filter URLs (removed to prevent duplicate content)
+ok('sitemap.xml: categories?type=Premium NOT in sitemap (non-canonical)',
+  !sitemapXml.includes('categories?type=Premium'));
 
-ok('sitemap.xml: categories?type=Normal in sitemap',
-  sitemapXml.includes('categories?type=Normal'));
+ok('sitemap.xml: categories?type=Normal NOT in sitemap (non-canonical)',
+  !sitemapXml.includes('categories?type=Normal'));
 
 // Private routes are noindex
 ok('seo.ts: /cart, /checkout, /orders, /login are noindex',

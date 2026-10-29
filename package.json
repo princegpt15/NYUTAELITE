@@ -11,6 +11,7 @@
     "seo:audit": "npx tsx scripts/seo-engine/run.ts --dry-run",
     "seo:daily": "npx tsx scripts/seo-engine/run.ts --full",
     "seo:test": "npx tsx scripts/seo-engine/test-seo-engine.ts",
+    "seo:guard": "node scripts/test-worker-seo-guard.cjs",
     "seo:health": "node scripts/daily_seo_health_check.mjs",
     "seo:gsc": "node scripts/gsc-rank-monitor.mjs",
     "seo:gsc:save": "node scripts/gsc-rank-monitor.mjs --save-json",

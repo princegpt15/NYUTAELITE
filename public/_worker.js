@@ -503,8 +503,8 @@ function resolveSeoForRequest(url) {
 
   // Default / homepage
   return {
-    title: 'NYUTA ELITE MAKHANA | Premium Makhana & Fox Nuts from Bihar',
-    desc:  'Shop NYUTA ELITE MAKHANA — premium Bihar fox nuts in 100g, 200g & 250g pouches. Premium and Normal grades. Pan-India delivery. FSSAI Reg. 20426021000494.',
+    title: 'NYUTA ELITE MAKHANA (NYUTAELITE) | Premium Fox Nuts from Bihar',
+    desc:  'Shop NYUTA ELITE MAKHANA (NYUTAELITE) for premium and regular-grade fox nuts from Bihar. Available in 100g, 200g and 250g packs. Pan-India delivery. FSSAI Reg. 20426021000494.',
     canonical: `${ORIGIN}/`, ogType: 'website',
     ogImage: `${ORIGIN}/nyuta-elite-logo.webp`,
     jsonLd: [
@@ -520,7 +520,7 @@ function resolveSeoForRequest(url) {
           width: 512,
           height: 512,
         },
-        description: 'NYUTA ELITE MAKHANA is a premium Indian makhana brand offering handpicked fox nuts from Bihar. Available online in 100g, 200g, and 250g packs — Premium and Normal grade.',
+        description: 'NYUTA ELITE MAKHANA (NYUTAELITE) is a premium Indian makhana brand offering handpicked fox nuts from Bihar. Available online in 100g, 200g, and 250g packs — Premium and Normal grade.',
         areaServed: 'IN',
         contactPoint: {
           '@type': 'ContactPoint',
@@ -1098,18 +1098,26 @@ function injectSeo(html, seo, url) {
 }
 
 // ─── Should we inject SEO for this request? ───────────────────────────────────
-// Only inject for HTML navigation requests (not assets, not API, not bots fetching feeds).
-function shouldInjectSeo(url, request) {
+// Inject for all HTML navigation requests — including crawlers that may omit Accept.
+//
+// CRITICAL FIX: Do NOT gate injection on Accept: text/html being present.
+// Googlebot/2.1 (the text-mode crawler, distinct from the Chromium renderer) sends
+// requests without an Accept header or with Accept: */*. Requiring text/html caused
+// the worker to silently fall through and serve raw index.html (homepage metadata)
+// on every non-root route for those crawlers — a confirmed production defect.
+//
+// The asset extension check and isHtmlResponse guard (line ~1286) are sufficient
+// guards. The Accept header check is not needed and actively harmful for SEO.
+function shouldInjectSeo(url, _request) {
   const path = url.pathname;
-  // Skip asset requests
+  // Skip asset requests — static files identified by file extension
   if (path.match(/\.(js|css|png|jpg|jpeg|webp|svg|ico|woff2?|ttf|xml|txt|json|map)$/i)) return false;
-  // Skip API proxy
+  // Skip API proxy namespace
   if (path.startsWith('/api/')) return false;
-  // Skip admin (noindex anyway)
+  // Skip admin namespace
   if (path.startsWith('/admin')) return false;
-  // Skip private routes (noindex anyway — still inject for completeness)
-  const accept = request.headers.get('Accept') || '';
-  if (!accept.includes('text/html')) return false;
+  // All other paths are potential navigation requests — inject SEO for all of them.
+  // The isHtmlResponse check in the fetch handler ensures we only modify actual HTML.
   return true;
 }
 
@@ -1122,6 +1130,116 @@ const NOINDEX_PREFIXES = [
 ];
 function isNoindexRoute(pathname) {
   return NOINDEX_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'));
+}
+
+// ─── Authoritative known routes set (prevents Soft 404s) ──────────────────────
+const KNOWN_EXACT_ROUTES = new Set([
+  '/',
+  '/categories',
+  '/products/makhana',
+  '/about',
+  '/contact',
+  '/faq',
+  '/bulk-order',
+  '/bulk-order/qualities',
+  '/bulk-order/enquiry',
+  '/learn/how-to-choose-good-quality-makhana',
+  '/learn/makhana-benefits-health',
+  '/learn/how-to-store-makhana',
+  '/learn/makhana-pack-size-guide',
+  '/learn/ordering-makhana-online-india',
+  '/shipping',
+  '/returns',
+  '/refund',
+  '/privacy',
+  '/terms',
+  '/fssai',
+  '/grievance',
+  '/policies',
+  '/cart',
+  '/checkout',
+  '/orders',
+  '/account',
+  '/wishlist',
+  '/login',
+  '/register',
+  '/play',
+]);
+
+function isKnownRoute(pathname) {
+  if (KNOWN_EXACT_ROUTES.has(pathname)) return true;
+  if (pathname.startsWith('/products/')) {
+    const slug = pathname.replace('/products/', '').toLowerCase();
+    if (PRODUCTS[slug]) return true;
+  }
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) return true;
+  if (pathname === '/api' || pathname.startsWith('/api/')) return true;
+  return false;
+}
+
+// ─── Render branded 404 HTML for nonexistent routes ───────────────────────────
+function render404Html(html) {
+  const notFoundTitle = 'Page Not Found (404) | NYUTA ELITE MAKHANA';
+  const notFoundDesc  = 'The requested page could not be found on NYUTA ELITE MAKHANA.';
+
+  let out = html;
+  out = out.replace(/<title>[^<]*<\/title>/i, `<title>${notFoundTitle}</title>`);
+  out = out.replace(/<meta name="description" content="[^"]*"/i, `<meta name="description" content="${notFoundDesc}"`);
+  out = out.replace(/<meta name="robots" content="[^"]*"/i, '<meta name="robots" content="noindex, nofollow" />');
+  out = out.replace(/<link rel="canonical"[^>]*>\s*/i, '');
+  out = out.replace(/<script id="jsonld-organization"[\s\S]*?<\/script>\s*/, '');
+  out = out.replace(/<script id="jsonld-website"[\s\S]*?<\/script>\s*/, '');
+  out = out.replace(/<script id="jsonld-faq"[\s\S]*?<\/script>\s*/, '');
+  out = out.replace(/<meta property="og:title" content="[^"]*"/i, `<meta property="og:title" content="${notFoundTitle}"`);
+  out = out.replace(/<meta property="og:description" content="[^"]*"/i, `<meta property="og:description" content="${notFoundDesc}"`);
+  out = out.replace(/<meta name="twitter:title" content="[^"]*"/i, `<meta name="twitter:title" content="${notFoundTitle}"`);
+  out = out.replace(/<meta name="twitter:description" content="[^"]*"/i, `<meta name="twitter:description" content="${notFoundDesc}"`);
+
+  const body404 = `
+      <header class="bg-[#123B2A] text-white py-4 px-6 border-b border-[#092218]">
+        <div class="max-w-[1280px] mx-auto flex items-center justify-between">
+          <a href="/" class="flex items-center gap-3">
+            <img src="/nyuta-elite-logo.webp" alt="NYUTA ELITE MAKHANA logo" class="w-10 h-10 rounded-full border border-[#C6A15B] object-cover" width="40" height="40" />
+            <span class="font-serif text-xl font-bold tracking-wider text-white">NYUTA ELITE MAKHANA</span>
+          </a>
+          <nav aria-label="Main Navigation" class="hidden md:flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-[#D5DED6]">
+            <a href="/" class="text-white hover:text-[#C6A15B]">Home</a>
+            <a href="/categories" class="hover:text-white">Shop Makhana</a>
+            <a href="/categories?type=Premium" class="hover:text-white">Premium Quality</a>
+            <a href="/categories?type=Normal" class="hover:text-white">Normal Quality</a>
+            <a href="/about" class="hover:text-white">About Us</a>
+            <a href="/contact" class="hover:text-white">Contact</a>
+            <a href="/faq" class="hover:text-white">FAQ</a>
+          </nav>
+        </div>
+      </header>
+      <main class="min-h-[60vh] flex items-center justify-center py-20 px-6 bg-[#FCFAF5]">
+        <div class="max-w-md mx-auto text-center space-y-6">
+          <span class="inline-block px-3 py-1 bg-[#123B2A]/10 text-[#123B2A] text-xs font-extrabold uppercase tracking-widest rounded-full">404 Error</span>
+          <h1 class="font-serif text-4xl sm:text-5xl font-bold text-[#092218]">Page Not Found</h1>
+          <p class="text-sm text-[#68756E] leading-relaxed">
+            The makhana page or resource you are looking for does not exist or has been moved.
+          </p>
+          <div class="pt-4 flex flex-wrap justify-center gap-4">
+            <a href="/" class="bg-[#123B2A] text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider inline-block">Return to Home</a>
+            <a href="/categories" class="border border-[#123B2A] text-[#123B2A] bg-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider inline-block">Shop Makhana</a>
+          </div>
+        </div>
+      </main>
+      <footer class="bg-[#123B2A] text-white py-10 px-6">
+        <div class="max-w-[1280px] mx-auto flex flex-wrap justify-between gap-6 text-xs text-[#D5DED6]">
+          <p>© 2026 NYUTA ELITE MAKHANA. All rights reserved.</p>
+          <div class="flex flex-wrap gap-4">
+            <a href="/about" class="hover:text-white">About Us</a>
+            <a href="/contact" class="hover:text-white">Contact</a>
+            <a href="/faq" class="hover:text-white">FAQ</a>
+            <a href="/categories" class="hover:text-white">All Packs</a>
+          </div>
+        </div>
+      </footer>`;
+
+  out = out.replace(/<div id="root">[\s\S]*?<\/div>/, `<div id="root">\n${body404}\n    </div>`);
+  return out;
 }
 
 // ─── Security and SEO response headers ───────────────────────────────────────
@@ -1288,6 +1406,36 @@ export default {
     const isStaticAsset = url.pathname.match(
       /\.(js|css|png|jpg|jpeg|webp|svg|ico|woff2?|ttf|xml|txt|json|map)$/i
     );
+
+    // 4. Handle nonexistent routes with genuine 404 response (prevents Soft-404)
+    if (isHtmlResponse && !isKnownRoute(url.pathname)) {
+      try {
+        const html = await res.text();
+        const notFoundHtml = render404Html(html);
+        const notFoundHeaders = new Headers(res.headers);
+        notFoundHeaders.delete('Content-Length');
+        notFoundHeaders.set('Content-Type', 'text/html; charset=utf-8');
+        notFoundHeaders.set('X-Robots-Tag', 'noindex, nofollow');
+        notFoundHeaders.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+        notFoundHeaders.set('X-Content-Type-Options', 'nosniff');
+        notFoundHeaders.set('X-Frame-Options', 'DENY');
+        notFoundHeaders.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        return new Response(notFoundHtml, {
+          status: 404,
+          statusText: 'Not Found',
+          headers: notFoundHeaders,
+        });
+      } catch {
+        return new Response('Page Not Found', {
+          status: 404,
+          statusText: 'Not Found',
+          headers: new Headers({
+            'Content-Type': 'text/plain; charset=utf-8',
+            'X-Robots-Tag': 'noindex, nofollow',
+          }),
+        });
+      }
+    }
     const noindex = isNoindexRoute(url.pathname);
     const seo = !noindex && isHtmlResponse ? resolveSeoForRequest(url) : null;
     const canonicalForHeader = seo?.canonical ?? null;

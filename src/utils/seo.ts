@@ -120,7 +120,7 @@ export function buildOrganizationJsonLd(): Record<string, any> {
       height: 512,
     },
     description:
-      'NYUTA ELITE MAKHANA is a premium Indian makhana brand offering handpicked fox nuts from Bihar. Available online in 100g, 200g, and 250g packs — Premium and Normal grade.',
+      'NYUTA ELITE MAKHANA (NYUTAELITE) is a premium Indian makhana brand offering handpicked fox nuts from Bihar. Available online in 100g, 200g, and 250g packs — Premium and Normal grade.',
     areaServed: 'IN',
     contactPoint: {
       '@type': 'ContactPoint',
@@ -995,9 +995,9 @@ export function resolveRouteSeo(
 
 // 5. Default / Homepage (/)
   const canonicalUrl = `${PRODUCTION_ORIGIN}/`;
-  const title = 'NYUTA ELITE MAKHANA | Premium Makhana & Fox Nuts from Bihar';
+  const title = 'NYUTA ELITE MAKHANA (NYUTAELITE) | Premium Fox Nuts from Bihar';
   const description =
-    'Shop NYUTA ELITE MAKHANA — premium Bihar fox nuts in 100g, 200g & 250g pouches. Premium and Normal grades. Pan-India delivery. FSSAI Reg. 20426021000494.';
+    'Shop NYUTA ELITE MAKHANA (NYUTAELITE) for premium and regular-grade fox nuts from Bihar. Available in 100g, 200g and 250g packs. Pan-India delivery. FSSAI Reg. 20426021000494.';
   return {
     title,
     description,

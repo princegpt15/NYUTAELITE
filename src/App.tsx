@@ -52,6 +52,7 @@ const MakhanaPackSizeGuide = lazy(() =>
 const OrderingMakhanaOnline = lazy(() =>
   import('./pages/learn/OrderingMakhanaOnline').then((m) => ({ default: m.OrderingMakhanaOnline }))
 );
+const NotFound = lazy(() => import('./pages/NotFound').then((m) => ({ default: m.NotFound })));
 
 // Admin Portal Components (Lazy-loaded to keep customer bundle lean)
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin').then((m) => ({ default: m.AdminLogin })));
@@ -221,8 +222,8 @@ export function App() {
             <Route path="/fssai" element={<Navigate to="/about#fssai" replace />} />
             <Route path="/grievance" element={<Navigate to="/about#grievance" replace />} />
             <Route path="/policies" element={<Navigate to="/about#shipping" replace />} />
-            {/* Fallback route */}
-            <Route path="*" element={<Home />} />
+            {/* Fallback route — 404 Not Found */}
+            <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
       </BrowserRouter>

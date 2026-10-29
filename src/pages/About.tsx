@@ -30,7 +30,7 @@ export const About: React.FC = () => {
             Freshly Harvested Makhana for Mindful Snacking.
           </h1>
           <p className="text-sm sm:text-base text-[#D5DED6] leading-relaxed">
-            NYUTA ELITE MAKHANA is dedicated to bringing authentic, carefully selected Euryale ferox (fox nuts) directly from freshwater lotus ponds to your home pantry.
+            NYUTA ELITE MAKHANA (also known as NYUTAELITE) is dedicated to bringing authentic, carefully selected Euryale ferox (fox nuts) directly from freshwater lotus ponds to your home pantry.
           </p>
         </div>
       </section>
